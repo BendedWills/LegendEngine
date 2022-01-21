@@ -1,0 +1,3 @@
+[submodule "Vendor/Tether"]
+	path = Vendor/Tether
+	url = https://github.com/Squashbit/Tether
