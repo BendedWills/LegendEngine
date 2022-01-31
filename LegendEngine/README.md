@@ -45,3 +45,6 @@ add_definitions(-DFEATURE_HERE)
 
 *If compiled with -DTWO_DIM:*
 * box2d
+
+*If compiled with -DSHADER_COMPILATION:*
+* glslang

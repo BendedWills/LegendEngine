@@ -1,14 +1,44 @@
 #include <iostream>
 
-#include <LegendEngine/IEngine.hpp>
+#include <LegendEngine/Application.hpp>
+#include <LegendEngine/VulkanRenderer.hpp>
 
-#include <thread>
-#include <chrono>
-#include <math.h>
+using namespace LegendEngine;
 
-using namespace std::literals::chrono_literals;
+class Triangle : public Application
+{
+public:
+	bool OnInit()
+	{
+		renderer.SetValidationLayersEnabled(true);
+		renderer.Init(Get());
+		SetRenderer(&renderer);
+
+		return false;
+	}
+
+	void OnStop()
+	{
+		renderer.Dispose();
+	}
+private:
+	VulkanRenderer renderer;
+};
 
 int main()
 {
-	return 0;
+	{
+		Triangle triangle;
+		if (!triangle.Init("Triangle", true, true))
+			return EXIT_FAILURE;
+		
+		while (!triangle.IsCloseRequested())
+		{
+			triangle.ProcessFrame();
+		}
+		
+		triangle.Dispose();
+	}
+
+	return EXIT_SUCCESS;
 }
