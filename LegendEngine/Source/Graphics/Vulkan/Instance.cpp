@@ -172,7 +172,8 @@ QueueFamilyIndices Instance::FindQueueFamilies(
 	int i = 0;
 	for (const auto& queueFamily : families)
 	{
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT 
+			&& !queueFamilies.hasGraphicsFamily)
 		{
 			queueFamilies.hasGraphicsFamily = true;
 			queueFamilies.graphicsFamilyIndex = i;
@@ -181,7 +182,7 @@ QueueFamilyIndices Instance::FindQueueFamilies(
 		VkBool32 presentSupport = false;
 		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, 
 			pSurface->Get(), &presentSupport);
-		if (presentSupport)
+		if (presentSupport && !queueFamilies.hasPresentFamily)
 		{
 			queueFamilies.hasPresentFamily = true;
 			queueFamilies.presentFamilyIndex = i;

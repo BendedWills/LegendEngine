@@ -2,13 +2,13 @@
 #define _LEGENDENGINE_IRENDERER_HPP
 
 #include <LegendEngine/Common/IDisposable.hpp>
-#include <LegendEngine/Application.hpp>
+#include <LegendEngine/IApplication.hpp>
 
 namespace LegendEngine
 {
     class IRenderer : public IDisposable
     {
-        friend Application;
+        friend IApplication;
     public:
         IRenderer() {}
         
@@ -24,17 +24,27 @@ namespace LegendEngine
          *  should be created for.
          * 
          * @returns True if the renderer was successfully initialized;
-         *  Otherwise, false.
+         *  otherwise, false.
          */
-        bool Init(Application* pApplication);
+        bool Init(IApplication* pApplication);
 
-        Application* GetApplication();
+        IApplication* GetApplication();
     protected:
+        bool RenderFrame() { return OnRenderFrame(); }
+
+        /**
+         * @brief Called when a frame should be rendered
+         * 
+         * @returns True if the frame was successfully rendered;
+         *  otherwise, false.
+         */
+        virtual bool OnRenderFrame() = 0;
+
         /**
          * @brief Called when the renderer is initialized.
          * 
          * @returns True if the renderer was successfully initialized;
-         *  Otherwise, false.
+         *  otherwise, false.
          */
         virtual bool OnRendererInit() = 0;
         /**
@@ -44,7 +54,7 @@ namespace LegendEngine
     private:
         void OnDispose();
 
-        Application* pApplication = nullptr;
+        IApplication* pApplication = nullptr;
     };
 }
 

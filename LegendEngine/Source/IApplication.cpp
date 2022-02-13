@@ -1,15 +1,32 @@
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/IRenderer.hpp>
+#include <LegendEngine/IApplication.hpp>
+#include <LegendEngine/Graphics/IRenderer.hpp>
 
 #include <iostream>
 #include <chrono>
+#include <sstream>
 
 using namespace LegendEngine;
 
-bool Application::Init(
+void IApplication::DebugCallback::OnDebugLog(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
+)
+{
+    std::stringstream ss;
+    ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
+    
+    if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+        pApplication->Log(ss.str(), LogType::ERROR);
+    else
+        pApplication->Log(ss.str(), LogType::DEBUG);
+}
+
+bool IApplication::Init(
     const std::string& applicationName,
     bool logging,
-    bool debug
+    bool debug,
+    RenderingAPI api
 )
 {
     if (initialized)
@@ -18,6 +35,9 @@ bool Application::Init(
         return false;
     }
     
+    this->pRenderer = nullptr;
+    this->initializedApi = false;
+    this->initializedVulkan = false;
     this->applicationName = applicationName;
     this->logging = logging;
     this->debug = debug;
@@ -33,6 +53,30 @@ bool Application::Init(
 
     initialized = true;
 
+    initializedApi = true;
+    switch (api)
+    {
+        case RenderingAPI::VULKAN: 
+        {
+            if (!InitVulkan(debug))
+                return false;
+        }
+        break;
+
+        case RenderingAPI::AUTO_SELECT:
+        {
+            if (!InitVulkan(debug))
+                return false;
+        }
+        break;
+
+        default:
+        {
+            initializedApi = false;
+        }
+        break;
+    }
+
     OnInit();
     Log("Initialized application", LogType::INFO);
 
@@ -41,8 +85,10 @@ bool Application::Init(
     return true;
 }
 
-bool Application::SetRenderer(IRenderer* pRenderer)
+bool IApplication::SetRenderer(IRenderer* pRenderer)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+    
     if (!pRenderer)
     {
         this->pRenderer = nullptr;
@@ -64,35 +110,69 @@ bool Application::SetRenderer(IRenderer* pRenderer)
     return true;
 }
 
-Application* Application::Get()
+IRenderer* IApplication::GetRenderer()
+{
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
+    return pRenderer;
+}
+
+IApplication* IApplication::Get()
 {
     return this;
 }
 
-std::string Application::GetName()
+std::string IApplication::GetName()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET("");
     return applicationName;
 }
 
-Tether::IWindow* Application::GetWindow()
+Tether::IWindow* IApplication::GetWindow()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
     return &window;
 }
 
-bool Application::IsCloseRequested()
+bool IApplication::IsCloseRequested()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
     return window.IsCloseRequested();
 }
 
-bool Application::ProcessFrame()
+bool IApplication::IsApiInitialized()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+    return initializedApi;
+}
+
+void IApplication::SetFullscreen(bool fullscreen, int monitor)
+{
+    LEGENDENGINE_ASSERT_INITIALIZED();
+    window.SetFullscreen(fullscreen, monitor);
+}
+
+bool IApplication::IsVulkanInitialized()
+{
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+    return initializedVulkan;
+}
+
+Vulkan::Instance* IApplication::GetVulkanInstance()
+{
+    return &instance;
+}
+
+bool IApplication::ProcessFrame()
+{
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
     Update();
     Render();
 
     return true;
 }
 
-void Application::Log(const std::string& message, LogType type)
+void IApplication::Log(const std::string& message, LogType type)
 {
     // If debug isn't enabled, disable debug logs.
     if ((type == LogType::DEBUG && !debug) || !logging)
@@ -152,7 +232,7 @@ void Application::Log(const std::string& message, LogType type)
         << "\e[38;2;118;118;118m[\e[38;2;148;148;148m" 
         << time 
 		<< "\e[38;2;118;118;118m] " 
-        // Application name
+        // IApplication name
         << "\e[38;2;118;118;118m[\e[38;2;148;148;148m"
         << applicationName
         << "\e[38;2;118;118;118m] " 
@@ -164,7 +244,7 @@ void Application::Log(const std::string& message, LogType type)
     << std::endl;
 }
 
-bool Application::InitWindow(const std::string& title)
+bool IApplication::InitWindow(const std::string& title)
 {
     window.Hint(Tether::HintType::VISIBLE, false);
     if (!window.Init(1280, 720, title.c_str()))
@@ -173,18 +253,43 @@ bool Application::InitWindow(const std::string& title)
     return true;
 }
 
-void Application::Update()
+bool IApplication::InitVulkan(bool enableValidationLayers)
+{
+    if (initializedVulkan)
+        return false;
+    
+    callback.pApplication = this;
+    
+    instance.AddDebugMessenger(&callback);
+    if (!instance.Init(GetName().c_str(), "LegendEngine", 
+        enableValidationLayers))
+        return false;
+    
+    initializedVulkan = true;
+    return true;
+}
+
+void IApplication::Update()
 {
     window.PollEvents();
 }
 
-void Application::Render()
+void IApplication::Render()
 {
+    if (!pRenderer)
+        return;
     
+    pRenderer->RenderFrame();
 }
 
-void Application::OnDispose()
+void IApplication::OnDispose()
 {
     Log("Disposing application", LogType::INFO);
+
     OnStop();
+
+    window.Dispose();
+    instance.Dispose();
+
+    OnDisposed();
 }

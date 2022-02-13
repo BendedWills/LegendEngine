@@ -47,7 +47,7 @@ bool ShaderModule::FromSpirV(uint32_t* spv, uint64_t spvSize)
     
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = spvSize * sizeof(uint32_t);
+    createInfo.codeSize = spvSize;
     createInfo.pCode = spv;
 
     if (vkCreateShaderModule(pDevice->Get(), &createInfo, nullptr,

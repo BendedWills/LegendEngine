@@ -14,18 +14,10 @@ bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
     
     this->pInstance = pInstance;
 
-    // if (glfwCreateWindowSurface(
-    //         pInstance->Get(),
-    //         window,
-    //         nullptr,
-    //         &surface
-    //     ) != VK_SUCCESS)
-    //     return false;
-
 #ifdef __linux__
     VkXlibSurfaceCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-    createInfo.dpy = Tether::Application::GetDisplay();
+    createInfo.dpy = window->GetDisplay();
     createInfo.window = window->GetHandle();
     
     if (vkCreateXlibSurfaceKHR(pInstance->Get(), &createInfo, nullptr,

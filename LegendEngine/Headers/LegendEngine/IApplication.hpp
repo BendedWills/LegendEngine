@@ -1,30 +1,32 @@
 /*
- * The Application class is an interface to be implemented as the application.
+ * The IApplication class is an interface to be implemented by other types of
+ * applications.
  * Using this class as an interface is optional.
  */
 
-#ifndef _LEGENDENGINE_APPLICATION_HPP
-#define _LEGENDENGINE_APPLICATION_HPP
+#ifndef _LEGENDENGINE_IAPPLICATION_HPP
+#define _LEGENDENGINE_IAPPLICATION_HPP
 
 #include <string>
 
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Types.hpp>
+#include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 
 #include <Tether/Tether.hpp>
 
 namespace LegendEngine
 {
     class IRenderer;
-    class Application : public IDisposable
+    class IApplication : public IDisposable
     {
     public:
-        Application() {}
+        IApplication() {}
         
-        Application(const Application&) = delete;
-		Application(Application&&) = delete;
-		Application& operator=(const Application&) = delete;
-		Application& operator=(Application&&) = delete;
+        IApplication(const IApplication&) = delete;
+		IApplication(IApplication&&) = delete;
+		IApplication& operator=(const IApplication&) = delete;
+		IApplication& operator=(IApplication&&) = delete;
 
         /**
          * @brief Initializes the application
@@ -33,14 +35,18 @@ namespace LegendEngine
          * @param logging If the application should log.
          * @param debug If the application should log debug/verbose 
          *  information.
+         * @param api The rendering api to use.
          * 
          * @returns True if initialization was successful; otherwise, false.
          */
         bool Init(
             const std::string& applicationName,
             bool logging = false, 
-            bool debug = false
+            bool debug = false,
+            RenderingAPI api = RenderingAPI::AUTO_SELECT
         );
+
+        bool InitVulkan(bool enableValidationLayers = false);
 
         /**
          * @brief Sets the application renderer.
@@ -52,12 +58,21 @@ namespace LegendEngine
          *  be initialized to be used in the application.
          */
         bool SetRenderer(IRenderer* pRenderer);
+        IRenderer* GetRenderer();
 
-        Application* Get();
+        IApplication* Get();
         std::string GetName();
         Tether::IWindow* GetWindow();
         bool IsCloseRequested();
+        bool IsApiInitialized();
+
+        // Window Management
+        void SetFullscreen(bool fullscreen, int monitor = 0);
         
+        // Vulkan functions
+        bool IsVulkanInitialized();
+        Vulkan::Instance* GetVulkanInstance();
+
         /**
          * @brief Updates and renders the application.
          * 
@@ -94,9 +109,13 @@ namespace LegendEngine
          */
         virtual void OnUpdate() {}
         /**
-         * @brief Called when the application is disposed.
+         * @brief Called before the application is disposed.
          */
         virtual void OnStop() {}
+        /**
+         * @brief Called after the application is disposed.
+         */
+        virtual void OnDisposed() {}
     private:
         bool InitWindow(const std::string& title);
         
@@ -111,6 +130,26 @@ namespace LegendEngine
         std::string applicationName = "";
         bool logging = false;
         bool debug = false;
+
+        // GRAPHICS
+
+        bool initializedApi = false;
+
+        bool initializedVulkan = false;
+        Vulkan::Instance instance;
+
+        class DebugCallback : public Vulkan::DebugCallback
+        {
+        public:
+            IApplication* pApplication = nullptr;
+
+            void OnDebugLog(
+                VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                VkDebugUtilsMessageTypeFlagsEXT messageType,
+                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
+            );
+        };
+        DebugCallback callback;
     };
 }
 

@@ -16,6 +16,13 @@ namespace LegendEngine
         WARN,
         ERROR
     };
+
+    enum class RenderingAPI
+    {
+        NONE,
+        AUTO_SELECT,
+        VULKAN
+    };
 }
 
 #endif //_LEGENDENGINE_TYPES_HPP

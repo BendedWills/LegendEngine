@@ -1,44 +1,39 @@
 #include <iostream>
 
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/VulkanRenderer.hpp>
+#include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 
 using namespace LegendEngine;
 
-class Triangle : public Application
+class Triangle : public Application3D
 {
 public:
 	bool OnInit()
 	{
-		renderer.SetValidationLayersEnabled(true);
-		renderer.Init(Get());
-		SetRenderer(&renderer);
-
 		return false;
 	}
-
-	void OnStop()
-	{
-		renderer.Dispose();
-	}
-private:
-	VulkanRenderer renderer;
 };
 
 int main()
 {
+	Triangle triangle;
+	if (!triangle.Init("Triangle", true, true))
+		return EXIT_FAILURE;
+	triangle.SetFullscreen(true);
+	
+	Vulkan::VulkanRenderer renderer;
+	if (!renderer.Init(&triangle))
+		return EXIT_FAILURE;
+	
+	triangle.SetRenderer(&renderer);
+
+	while (!triangle.IsCloseRequested())
 	{
-		Triangle triangle;
-		if (!triangle.Init("Triangle", true, true))
-			return EXIT_FAILURE;
-		
-		while (!triangle.IsCloseRequested())
-		{
-			triangle.ProcessFrame();
-		}
-		
-		triangle.Dispose();
+		triangle.ProcessFrame();
 	}
+	
+	renderer.Dispose();
+	triangle.Dispose();
 
 	return EXIT_SUCCESS;
 }

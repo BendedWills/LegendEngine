@@ -3,7 +3,7 @@ project ("TriangleTest")
 
 file(GLOB_RECURSE SOURCES 
     "Source/*.cpp" "Source/*.c"
-    "Headers/*.hpp" "Source/*.h"
+    "Headers/*.hpp" "Headers/*.h"
 )
 
 add_definitions(-DVULKAN_API)

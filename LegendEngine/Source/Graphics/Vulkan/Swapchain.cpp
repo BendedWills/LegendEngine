@@ -127,17 +127,17 @@ VkExtent2D Swapchain::ChooseExtent(
 	if (capabilities.currentExtent.width != UINT32_MAX)
 		return capabilities.currentExtent;
 		
-	VkExtent2D extent = { (uint32_t)width, (uint32_t)height };
-
-	extent.width = std::clamp(extent.width, 
-		capabilities.minImageExtent.width, 
-		capabilities.maxImageExtent.width
-	);
-
-	extent.height = std::clamp(extent.height, 
-		capabilities.minImageExtent.height, 
-		capabilities.maxImageExtent.height
-	);
+	VkExtent2D extent = 
+	{ 
+		std::clamp((uint32_t)width, 
+			capabilities.minImageExtent.width, 
+			capabilities.maxImageExtent.width
+		),
+		std::clamp((uint32_t)height, 
+			capabilities.minImageExtent.height, 
+			capabilities.maxImageExtent.height
+		)
+	};
 
 	return extent;
 }

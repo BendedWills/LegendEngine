@@ -1,8 +1,8 @@
-#include <LegendEngine/IRenderer.hpp>
+#include <LegendEngine/Graphics/IRenderer.hpp>
 
 using namespace LegendEngine;
 
-bool IRenderer::Init(Application* pApplication)
+bool IRenderer::Init(IApplication* pApplication)
 {
     if (initialized || !pApplication)
         return false;
@@ -23,7 +23,7 @@ bool IRenderer::Init(Application* pApplication)
     return true;
 }
 
-Application* IRenderer::GetApplication()
+IApplication* IRenderer::GetApplication()
 {
     return pApplication;
 }

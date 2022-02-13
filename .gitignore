@@ -1,4 +1,5 @@
 vgcore.*
 Build
-build
 vulkan.supp
+*.o
+*.spv

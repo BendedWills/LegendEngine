@@ -9,6 +9,14 @@
 #ifndef _LEGENDENGINE_IDISPOSABLE_HPP
 #define _LEGENDENGINE_IDISPOSABLE_HPP
 
+#define LEGENDENGINE_ASSERT_INITIALIZED() \
+    if (!initialized) \
+        return;
+
+#define LEGENDENGINE_ASSERT_INITIALIZED_RET(returnValue) \
+    if (!initialized) \
+        return returnValue;
+
 namespace LegendEngine
 {
     class IDisposable

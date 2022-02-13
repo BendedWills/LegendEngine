@@ -48,3 +48,6 @@ add_definitions(-DFEATURE_HERE)
 
 *If compiled with -DSHADER_COMPILATION:*
 * glslang
+
+If you are compiling LegendEngine with -DVULKAN_API, you will also need:
+* glslc
