@@ -11,6 +11,8 @@
 
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Types.hpp>
+#include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 
 #include <Tether/Tether.hpp>
@@ -22,11 +24,7 @@ namespace LegendEngine
     {
     public:
         IApplication() {}
-        
-        IApplication(const IApplication&) = delete;
-		IApplication(IApplication&&) = delete;
-		IApplication& operator=(const IApplication&) = delete;
-		IApplication& operator=(IApplication&&) = delete;
+        LEGENDENGINE_NO_COPY(IApplication);
 
         /**
          * @brief Initializes the application
@@ -73,12 +71,9 @@ namespace LegendEngine
         bool IsVulkanInitialized();
         Vulkan::Instance* GetVulkanInstance();
 
-        /**
-         * @brief Updates and renders the application.
-         * 
-         * @returns True if processing was successful; otherwise, false.
-         */
-        bool ProcessFrame();
+        void UpdateWindow();
+        void Update(bool updateWindow = true);
+        void Render();
 
         /**
          * @param message The message to log
@@ -118,10 +113,9 @@ namespace LegendEngine
         virtual void OnDisposed() {}
     private:
         bool InitWindow(const std::string& title);
-        
-        void Update();
-        void Render();
 
+        void DisposeGraphics();
+        
         void OnDispose();
 
         Tether::SimpleWindow window;
@@ -131,7 +125,7 @@ namespace LegendEngine
         bool logging = false;
         bool debug = false;
 
-        // GRAPHICS
+    #pragma region Graphics
 
         bool initializedApi = false;
 
@@ -150,6 +144,8 @@ namespace LegendEngine
             );
         };
         DebugCallback callback;
+    
+    #pragma endregion Graphics
     };
 }
 

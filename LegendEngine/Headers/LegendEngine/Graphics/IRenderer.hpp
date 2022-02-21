@@ -28,6 +28,8 @@ namespace LegendEngine
          */
         bool Init(IApplication* pApplication);
 
+        void SetVSyncEnabled(bool vsync);
+
         IApplication* GetApplication();
     protected:
         bool RenderFrame() { return OnRenderFrame(); }
@@ -51,6 +53,8 @@ namespace LegendEngine
          * @brief Called when the renderer is desposed.
          */
         virtual void OnRendererDispose() = 0;
+
+        bool enableVsync = false;
     private:
         void OnDispose();
 

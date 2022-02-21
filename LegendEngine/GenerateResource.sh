@@ -10,6 +10,8 @@ arrayName="${filename//./_}"
 exportPath="Assets/Compiled/CompiledResources"
 exportFile="${exportPath}/${filenameh}"
 
+mkdir -p Assets/Compiled/CompiledResources
+
 rm -f $exportFile
 echo "Exporting $FILEPATH to $exportFile"
 

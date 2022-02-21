@@ -42,7 +42,8 @@ bool IApplication::Init(
     this->logging = logging;
     this->debug = debug;
 
-    OnPreInit();
+    if (!OnPreInit())
+        return false;
     
     Log("Initializing window", LogType::DEBUG);
     if (!InitWindow(applicationName))
@@ -77,7 +78,9 @@ bool IApplication::Init(
         break;
     }
 
-    OnInit();
+    if (!OnInit())
+        return false;
+    
     Log("Initialized application", LogType::INFO);
 
     window.SetVisible(true);
@@ -162,14 +165,29 @@ Vulkan::Instance* IApplication::GetVulkanInstance()
     return &instance;
 }
 
-bool IApplication::ProcessFrame()
+void IApplication::UpdateWindow()
 {
-    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+    LEGENDENGINE_ASSERT_INITIALIZED();
 
-    Update();
-    Render();
+    window.PollEvents();
+}
 
-    return true;
+void IApplication::Update(bool updateWindow)
+{
+    LEGENDENGINE_ASSERT_INITIALIZED();
+
+    if (updateWindow)
+        UpdateWindow();
+}
+
+void IApplication::Render()
+{
+    LEGENDENGINE_ASSERT_INITIALIZED();
+    
+    if (!pRenderer)
+        return;
+    
+    pRenderer->RenderFrame();
 }
 
 void IApplication::Log(const std::string& message, LogType type)
@@ -244,17 +262,10 @@ void IApplication::Log(const std::string& message, LogType type)
     << std::endl;
 }
 
-bool IApplication::InitWindow(const std::string& title)
-{
-    window.Hint(Tether::HintType::VISIBLE, false);
-    if (!window.Init(1280, 720, title.c_str()))
-        return false;
-    
-    return true;
-}
-
 bool IApplication::InitVulkan(bool enableValidationLayers)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
     if (initializedVulkan)
         return false;
     
@@ -269,17 +280,18 @@ bool IApplication::InitVulkan(bool enableValidationLayers)
     return true;
 }
 
-void IApplication::Update()
+bool IApplication::InitWindow(const std::string& title)
 {
-    window.PollEvents();
+    window.Hint(Tether::HintType::VISIBLE, false);
+    if (!window.Init(1280, 720, title.c_str()))
+        return false;
+    
+    return true;
 }
 
-void IApplication::Render()
+void IApplication::DisposeGraphics()
 {
-    if (!pRenderer)
-        return;
-    
-    pRenderer->RenderFrame();
+    instance.Dispose();
 }
 
 void IApplication::OnDispose()
@@ -289,7 +301,8 @@ void IApplication::OnDispose()
     OnStop();
 
     window.Dispose();
-    instance.Dispose();
+    
+    DisposeGraphics();
 
     OnDisposed();
 }

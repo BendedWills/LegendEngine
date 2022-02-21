@@ -16,8 +16,10 @@
 
 namespace LegendEngine::Vulkan
 {
+    class VertexBuffer;
     class VulkanRenderer : public IRenderer
     {
+        friend VertexBuffer;
     public:
         VulkanRenderer() 
             :
@@ -37,31 +39,7 @@ namespace LegendEngine::Vulkan
          * @returns True if the reload was successful; otherwise, false.
          */
         bool Reload();
-    private:
-        bool RecreateSwapchain(uint64_t width, uint64_t height);
-
-        bool OnRendererInit();
-        bool OnRenderFrame();
-        void OnRendererDispose();
-
-        bool PickDevice(VkPhysicalDevice* pDevice, Vulkan::Surface* pSurface);
-        bool IsDeviceSuitable(VkPhysicalDevice device, 
-            Vulkan::Surface* pSurface);
-        bool InitDevice();
-        VkSurfaceFormatKHR ChooseSurfaceFormat(Vulkan::SwapchainDetails details);
-        bool InitSwapchain(uint64_t width, uint64_t height);
-        bool InitShaders();
-        bool InitRenderPass();
-        bool InitPipeline();
-        bool InitFramebuffers();
-        bool InitCommandPool();
-        bool InitCommandBuffers();
-        bool InitSyncObjects();
-
-        bool DrawFrame();
-
-        void DisposeSwapchain();
-
+    protected:
         Vulkan::Surface surface;
         Vulkan::Device device;
         Vulkan::Swapchain swapchain;
@@ -93,8 +71,6 @@ namespace LegendEngine::Vulkan
         const int MAX_FRAMES_IN_FLIGHT = 2;
         uint64_t currentFrame = 0;
 
-        bool enableVsync = false;
-
         class EventHandler : public Tether::Events::EventHandler
         {
         public:
@@ -112,6 +88,32 @@ namespace LegendEngine::Vulkan
         
         IApplication* pApplication = nullptr;
         Vulkan::Instance* pInstance;
+
+        std::vector<VertexBuffer*> vertexBuffers;
+    private:
+        bool RecreateSwapchain(uint64_t width, uint64_t height);
+
+        bool OnRendererInit();
+        bool OnRenderFrame();
+        void OnRendererDispose();
+
+        bool PickDevice(VkPhysicalDevice* pDevice, Vulkan::Surface* pSurface);
+        bool IsDeviceSuitable(VkPhysicalDevice device, 
+            Vulkan::Surface* pSurface);
+        bool InitDevice();
+        VkSurfaceFormatKHR ChooseSurfaceFormat(Vulkan::SwapchainDetails details);
+        bool InitSwapchain(uint64_t width, uint64_t height);
+        bool InitShaders();
+        bool InitRenderPass();
+        bool InitPipeline();
+        bool InitFramebuffers();
+        bool InitCommandPool();
+        bool InitCommandBuffers();
+        bool InitSyncObjects();
+
+        bool DrawFrame();
+
+        void DisposeSwapchain();
     };
 }
 

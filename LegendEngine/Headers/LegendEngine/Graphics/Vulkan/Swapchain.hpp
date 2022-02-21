@@ -44,8 +44,8 @@ namespace LegendEngine::Vulkan
             VkSwapchainCreateInfoKHR* createInfo
         );
         
-        VkSurfaceFormatKHR ChooseSurfaceFormat(SwapchainDetails details);
-        VkPresentModeKHR ChoosePresentMode(std::vector<VkPresentModeKHR>& presentModes);
+        VkPresentModeKHR ChoosePresentMode(std::vector<VkPresentModeKHR>& presentModes,
+            bool vsync);
         VkExtent2D ChooseExtent(VkSurfaceCapabilitiesKHR& capabilities,
             uint64_t width, uint64_t height);
 

@@ -30,16 +30,6 @@ bool Swapchain::Init(
 	return true;
 }
 
-VkSurfaceFormatKHR Swapchain::ChooseSurfaceFormat(SwapchainDetails details) 
-{
-    for (const auto& availableFormat : details.formats)
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB 
-			&& availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-            return availableFormat;
-
-    return details.formats[0];
-}
-
 uint32_t Swapchain::GetImageCount()
 {
 	return imageCount;
@@ -111,11 +101,28 @@ void Swapchain::OnDispose()
 }
 
 VkPresentModeKHR Swapchain::ChoosePresentMode(
-	std::vector<VkPresentModeKHR>& availablePresentModes) 
+	std::vector<VkPresentModeKHR>& availablePresentModes, bool vsync) 
 {
-    // for (const auto& availablePresentMode : availablePresentModes)
-    //     if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-    //         return availablePresentMode;
+	// Fifo is used for vsync. Fifo relaxed might work too.
+	// An option to use fifo relaxed may be added later.
+	if (vsync)
+		return VK_PRESENT_MODE_FIFO_KHR;
+
+	// Mailbox is preferred for vsync disabled, but immediate works too.
+	// If neither are supported, fifo is used.
+
+	bool immediateSupported = false;
+	for (const auto& availablePresentMode : availablePresentModes)
+	{
+		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+			return availablePresentMode;
+		
+		if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+			immediateSupported = true;
+	}
+
+	if (immediateSupported)
+		return VK_PRESENT_MODE_IMMEDIATE_KHR;
 
     return VK_PRESENT_MODE_FIFO_KHR;
 }

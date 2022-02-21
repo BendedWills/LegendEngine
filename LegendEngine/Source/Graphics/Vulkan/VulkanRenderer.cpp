@@ -41,6 +41,13 @@ bool VulkanRenderer::OnRendererInit()
     pApplication = GetApplication();
     pInstance = pApplication->GetVulkanInstance();
 
+    if (!pApplication->IsVulkanInitialized())
+    {
+        pApplication->Log("Vulkan was not initialized for the application",
+            LogType::ERROR);
+        return false;
+    }
+
     pApplication->GetWindow()->AddEventHandler(&eventHandler, 
         Tether::Events::EventType::WINDOW_RESIZE);
 
@@ -234,8 +241,7 @@ bool VulkanRenderer::InitDevice()
 VkSurfaceFormatKHR VulkanRenderer::ChooseSurfaceFormat(Vulkan::SwapchainDetails details) 
 {
     for (const auto& availableFormat : details.formats)
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB 
-			&& availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        if (availableFormat.format == VK_FORMAT_R64G64B64_UINT)
             return availableFormat;
 
     return details.formats[0];
@@ -272,7 +278,8 @@ bool VulkanRenderer::InitSwapchain(uint64_t width, uint64_t height)
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	createInfo.preTransform = details.capabilities.currentTransform;
 	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	createInfo.presentMode = swapchain.ChoosePresentMode(details.presentModes,
+        enableVsync);
 	createInfo.clipped = true;
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
@@ -564,7 +571,7 @@ bool VulkanRenderer::InitCommandBuffers()
         if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
             return false;
         
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        VkClearValue clearColor = {{{0.0f, 0.5f, 1.0f, 1.0f}}};
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = renderPass;
@@ -623,25 +630,40 @@ bool VulkanRenderer::InitSyncObjects()
 
 bool VulkanRenderer::DrawFrame()
 {
+    // in flight frame = a frame that is being rendered while still rendering 
+    // more frames
+
+    // If this frame is still in flight, wait for it to finish rendering before
+    // rendering another frame.
     vkWaitForFences(device.Get(), 1, &inFlightFences[currentFrame], VK_TRUE, 
         UINT64_MAX);
     
+    // Get the next swapchain image. The swapchain has the minimum
+    // amount of images plus one.
     uint32_t imageIndex;
     VkResult result = vkAcquireNextImageKHR(device.Get(), 
         swapchain.Get(), UINT64_MAX, imageAvailableSemaphores[currentFrame], 
         VK_NULL_HANDLE, &imageIndex);
+    // vkAcquireNextImageKHR might throw an error.
+    // If it does throw an error, simply return true if it is suboptimal or
+    // out of date.
     if (result != VK_SUCCESS)
         return result == VK_SUBOPTIMAL_KHR 
             || result == VK_ERROR_OUT_OF_DATE_KHR;
     
+    // If images are acquired out of order, or MAX_FRAMES_IN_FLIGHT is higher
+    // than the number of swapchain images, we may start rendering to an
+    // image that is in flight.
+    // Check for that here.
     if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
         vkWaitForFences(device.Get(), 1, &imagesInFlight[imageIndex], VK_TRUE,
             UINT64_MAX);
     imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
+    // Wait for the image to be available before rendering the frame and
+    // signal the render finished semaphore once rendering is complete.
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
     VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
     VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
     VkPipelineStageFlags waitStages[] = {
@@ -654,11 +676,14 @@ bool VulkanRenderer::DrawFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
     
+    // The in flight fence for this frame must be reset before rendering.
     vkResetFences(device.Get(), 1, &inFlightFences[currentFrame]);
     if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, 
         inFlightFences[currentFrame]) != VK_SUCCESS)
         return false;
     
+    // Wait for the frame to be rendered until presenting
+    // (hence the wait semaphores being the signal semaphores)
     VkSwapchainKHR swapchains[] = { swapchain.Get() };
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -672,6 +697,7 @@ bool VulkanRenderer::DrawFrame()
         != VK_SUCCESS)
         return true;
     
+    // Increment the frame.
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     return true;
 }
@@ -681,6 +707,8 @@ bool VulkanRenderer::RecreateSwapchain(uint64_t width, uint64_t height)
     if (width == 0 || height == 0)
         return true;
     
+    // The device might still have work. Wait for it to finish before 
+    // recreating the swapchain.
     device.WaitIdle();
 
     DisposeSwapchain();

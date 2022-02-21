@@ -1,17 +1,36 @@
 #include <iostream>
+#include <chrono>
+#include <thread>
 
-#include <LegendEngine/Application3D.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
+#include <LegendEngine/LegendEngine.hpp>
 
 using namespace LegendEngine;
+using namespace LegendEngine::Object3d;
+using namespace std::literals::chrono_literals;
 
 class Triangle : public Application3D
 {
 public:
 	bool OnInit()
 	{
-		return false;
+		InitScene(testScene);
+		InitObject(testObject);
+
+		testObject.AddComponent<Components::MeshComponent>();
+		testScene.AddObject(testObject);
+
+		SetActiveScene(testScene);
+
+		return true;
 	}
+
+	void OnStop()
+	{
+		testScene.RemoveObject(testObject);
+	}
+private:
+	Scene3D testScene;
+	Object testObject;
 };
 
 int main()
@@ -19,17 +38,17 @@ int main()
 	Triangle triangle;
 	if (!triangle.Init("Triangle", true, true))
 		return EXIT_FAILURE;
-	triangle.SetFullscreen(true);
 	
 	Vulkan::VulkanRenderer renderer;
 	if (!renderer.Init(&triangle))
 		return EXIT_FAILURE;
 	
 	triangle.SetRenderer(&renderer);
-
+	
 	while (!triangle.IsCloseRequested())
 	{
-		triangle.ProcessFrame();
+		triangle.Update();
+		triangle.Render();
 	}
 	
 	renderer.Dispose();

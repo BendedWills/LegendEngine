@@ -24,7 +24,13 @@ bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
         &surface) != VK_SUCCESS)
         return false;
 #elif _WIN32
-    #error "Surface creation for Windows is not yet supported!"
+    VkWin32SurfaceCreateInfoKHR createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    createInfo.hwnd = window->GetHandle();
+    
+    if (vkCreateWin32SurfaceKHR(pInstance->Get(), &createInfo, nullptr,
+        &surface) != VK_SUCCESS)
+        return false;
 #endif
     
     initialized = true;
