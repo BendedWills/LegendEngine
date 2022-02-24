@@ -16,7 +16,8 @@ public:
 		if (!renderer.Init(this))
 			return false;
 		SetRenderer(&renderer);
-		
+
+		InitScene(testScene);
 		InitObject(testObject);
 
 		VertexTypes::Vertex2 testVertices[] =

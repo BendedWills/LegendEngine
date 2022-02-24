@@ -145,12 +145,12 @@ void VulkanRenderer::OnSceneObjectAdd(Scene3D* pScene,
 void VulkanRenderer::OnSceneObjectRemove(Scene3D* pScene, 
     Object3d::Object* pObject)
 {
-
+    
 }
 
 void VulkanRenderer::OnSceneRemove(Scene3D* pScene)
 {
-
+    
 }
 
 void VulkanRenderer::OnDefaultObjectAdd(Scene3D* pScene, 

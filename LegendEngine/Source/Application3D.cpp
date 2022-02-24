@@ -43,6 +43,11 @@ bool Application3D::InitObject(Object3d::Object* pObject)
     return true;
 }
 
+bool Application3D::InitScene(Scene3D& scene)
+{
+    return InitScene(&scene);
+}
+
 bool Application3D::InitScene(Scene3D* pScene)
 {
     if (!pScene)
@@ -134,4 +139,9 @@ bool Application3D::OnAppInit()
 {
     InitScene(defaultScene);
     return true;
+}
+
+void Application3D::OnAppStop()
+{
+    RemoveActiveScene();
 }

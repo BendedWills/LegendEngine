@@ -77,6 +77,7 @@ namespace LegendEngine
         void OnSceneObjectRemove(Scene3D* pScene, Object3d::Object* pObject);
     private:
         bool OnAppInit();
+        void OnAppStop();
 
         // Every application has a default scene. This scene contains objects
         // that are always rendered, no matter what the current set scene is.

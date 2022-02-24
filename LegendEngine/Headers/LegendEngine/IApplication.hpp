@@ -108,7 +108,8 @@ namespace LegendEngine
          */
         virtual void OnDisposed() {}
 
-        virtual bool OnAppInit();
+        virtual bool OnAppInit() { return true; }
+        virtual void OnAppStop() {}
     protected:
         bool InitWindow(const std::string& title);
 

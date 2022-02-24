@@ -1,4 +1,6 @@
 #include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
+#include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Common/Defs.hpp>
 
 #include <Tether/Common/VectorUtils.hpp>
 

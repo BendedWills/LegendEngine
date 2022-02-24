@@ -318,6 +318,7 @@ void IApplication::OnDispose()
     Log("Disposing application", LogType::INFO);
 
     OnStop();
+    OnAppStop();
 
     window.Dispose();
     
