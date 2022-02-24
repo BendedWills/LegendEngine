@@ -1,5 +1,7 @@
 #include <LegendEngine/Graphics/IRenderer.hpp>
 
+#include <LegendEngine/Application3D.hpp>
+
 using namespace LegendEngine;
 
 bool IRenderer::Init(IApplication* pApplication)

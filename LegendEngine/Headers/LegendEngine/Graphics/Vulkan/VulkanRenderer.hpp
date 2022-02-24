@@ -30,8 +30,8 @@ namespace LegendEngine::Vulkan
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(const VulkanRenderer&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
-
-        void SetVSyncEnabled(bool vsync);
+        
+        bool CreateVertexBuffer(Ref<LegendEngine::VertexBuffer>* buffer);
 
         /**
          * @brief Reloads the renderer. Required after a settings change.
@@ -88,13 +88,20 @@ namespace LegendEngine::Vulkan
         
         IApplication* pApplication = nullptr;
         Vulkan::Instance* pInstance;
-
-        std::vector<VertexBuffer*> vertexBuffers;
     private:
         bool RecreateSwapchain(uint64_t width, uint64_t height);
 
         bool OnRendererInit();
+
+        void OnSceneChange(Scene3D* pScene);
+        void OnSceneObjectAdd(Scene3D* pScene, Object3d::Object* pObject);
+        void OnSceneObjectRemove(Scene3D* pScene, Object3d::Object* pObject);
+        void OnSceneRemove(Scene3D* pScene);
+        void OnDefaultObjectAdd(Scene3D* pScene, Object3d::Object* pObject);
+        void OnDefaultObjectRemove(Scene3D* pScene, Object3d::Object* pObject);
+
         bool OnRenderFrame();
+
         void OnRendererDispose();
 
         bool PickDevice(VkPhysicalDevice* pDevice, Vulkan::Surface* pSurface);

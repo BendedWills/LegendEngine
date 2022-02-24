@@ -18,7 +18,10 @@ namespace LegendEngine
     class VertexBuffer : public IDisposable
     {
     public:
-        VertexBuffer() {}
+        VertexBuffer(IRenderer* pRenderer) 
+            :
+            pRenderer(pRenderer)
+        {}
         
         VertexBuffer(const VertexBuffer&) = delete;
 		VertexBuffer(VertexBuffer&&) = delete;
@@ -28,15 +31,13 @@ namespace LegendEngine
         /**
          * @brief Initializes the vertex buffer.
          * 
-         * @param pRenderer A pointer to the renderer
          * @param pVertices An array of vertices.
          * @param vertexCount The amount of vertices in pVertices.
          * 
          * @returns True if the vertex buffer was successfully initialized;
          *  otherwise, false.
          */
-        bool Init(IRenderer* pRenderer, VertexTypes::Vertex2* pVertices, 
-            uint64_t vertexCount);
+        bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
     protected:
         void OnDispose();
 

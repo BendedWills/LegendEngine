@@ -16,6 +16,13 @@ void Scene3D::AddObject(Object3d::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL();
 
+    if (!pObject)
+    {
+        pApplication->Log("Adding object: Object is nullptr. Returning.",
+            LogType::WARN);
+        return;
+    }
+
     if (pObject->GetApplication() != pApplication)
     {
         pApplication->Log("Tried to add object to scene: Object was created"
@@ -25,6 +32,8 @@ void Scene3D::AddObject(Object3d::Object* pObject)
 
     objects.push_back(pObject);
     //AddComponents(pObject);
+
+    pApplication->OnSceneObjectAdd(this, pObject);
 }
 
 bool Scene3D::HasObject(Object3d::Object& object)
@@ -52,6 +61,13 @@ bool Scene3D::RemoveObject(Object3d::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL(false);
 
+    if (!pObject)
+    {
+        pApplication->Log("Removing object: Object is nullptr. Returning.",
+            LogType::WARN);
+        return false;
+    }
+
     if (pObject->GetApplication() != pApplication)
         return false;
     
@@ -62,6 +78,8 @@ bool Scene3D::RemoveObject(Object3d::Object* pObject)
         {
             objects.erase(objects.begin() + i);
             //RemoveComponents(pObject);
+
+            pApplication->OnSceneObjectRemove(this, pObject);
         }
 
     return false;

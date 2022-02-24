@@ -22,7 +22,7 @@ void IApplication::DebugCallback::OnDebugLog(
         pApplication->Log(ss.str(), LogType::DEBUG);
 }
 
-bool IApplication::Init(
+bool IApplication::Start(
     const std::string& applicationName,
     bool logging,
     bool debug,
@@ -78,6 +78,8 @@ bool IApplication::Init(
         break;
     }
 
+    if (!OnAppInit())
+        return false;
     if (!OnInit())
         return false;
     
@@ -85,7 +87,7 @@ bool IApplication::Init(
 
     window.SetVisible(true);
 
-    return true;
+    return StartLoop();
 }
 
 bool IApplication::SetRenderer(IRenderer* pRenderer)
@@ -176,8 +178,12 @@ void IApplication::Update(bool updateWindow)
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
 
+    
+
     if (updateWindow)
         UpdateWindow();
+    
+    OnUpdate();
 }
 
 void IApplication::Render()
@@ -286,6 +292,19 @@ bool IApplication::InitWindow(const std::string& title)
     if (!window.Init(1280, 720, title.c_str()))
         return false;
     
+    return true;
+}
+
+bool IApplication::StartLoop()
+{
+    while (!IsCloseRequested())
+	{
+		Update();
+		Render();
+	}
+
+    Dispose();
+
     return true;
 }
 

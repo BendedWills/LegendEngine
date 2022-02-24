@@ -37,7 +37,7 @@ namespace LegendEngine
          * 
          * @returns True if initialization was successful; otherwise, false.
          */
-        bool Init(
+        bool Start(
             const std::string& applicationName,
             bool logging = false, 
             bool debug = false,
@@ -70,10 +70,6 @@ namespace LegendEngine
         // Vulkan functions
         bool IsVulkanInitialized();
         Vulkan::Instance* GetVulkanInstance();
-
-        void UpdateWindow();
-        void Update(bool updateWindow = true);
-        void Render();
 
         /**
          * @param message The message to log
@@ -111,8 +107,15 @@ namespace LegendEngine
          * @brief Called after the application is disposed.
          */
         virtual void OnDisposed() {}
-    private:
+
+        virtual bool OnAppInit();
+    protected:
         bool InitWindow(const std::string& title);
+
+        bool StartLoop();
+        void UpdateWindow();
+        void Update(bool updateWindow = true);
+        void Render();
 
         void DisposeGraphics();
         

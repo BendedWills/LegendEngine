@@ -1,15 +1,21 @@
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
+#include <Tether/Common/VectorUtils.hpp>
 
 using namespace LegendEngine;
 
-bool VertexBuffer::Init(IRenderer* pRenderer, VertexTypes::Vertex2* pVertices, 
+bool VertexBuffer::Init(VertexTypes::Vertex2* pVertices, 
     uint64_t vertexCount)
 {
-    this->pRenderer = pRenderer;
-    return OnBufferCreate(pVertices, vertexCount);
+    pRenderer->vertexBuffers.push_back(this);
+    if (!OnBufferCreate(pVertices, vertexCount))
+        return false;
+    
+    initialized = true;
+    return true;
 }
 
 void VertexBuffer::OnDispose()
 {
     OnBufferDispose();
+    Tether::VectorUtils::EraseAll(pRenderer->vertexBuffers, this);
 }

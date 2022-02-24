@@ -16,7 +16,8 @@ void IDisposable::Dispose()
 {
     if (!initialized)
         return;
-    initialized = false;
     
     OnDispose();
+
+    initialized = false;
 }

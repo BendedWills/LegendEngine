@@ -10,7 +10,7 @@ using namespace LegendEngine::Vulkan;
 bool VertexBuffer::OnBufferCreate(VertexTypes::Vertex2* pVertices, 
     uint64_t vertexCount)
 {
-    if (!VerifyRenderer())
+    if (!pVertices || vertexCount == 0)
         return false;
     
     uint64_t verticesSize = sizeof(pVertices[0]) * vertexCount;
@@ -33,10 +33,7 @@ bool VertexBuffer::OnBufferCreate(VertexTypes::Vertex2* pVertices,
     if (!FindMemoryType(memoryRequirements.memoryTypeBits,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         &memoryType))
-    {
-        std::cout << "Failed to find suitable memory type!" << std::endl;
         return false;
-    }
 
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -45,10 +42,7 @@ bool VertexBuffer::OnBufferCreate(VertexTypes::Vertex2* pVertices,
     
     if (vkAllocateMemory(pVulkanRenderer->device.Get(), &allocInfo, nullptr, 
         &vertexBufferMemory) != VK_SUCCESS)
-    {
-        std::cout << "Failed to allocate vertex buffer memory!" << std::endl;
         return false;
-    }
 
     vkBindBufferMemory(pVulkanRenderer->device.Get(), vertexBuffer, 
         vertexBufferMemory, 0);
@@ -59,19 +53,20 @@ bool VertexBuffer::OnBufferCreate(VertexTypes::Vertex2* pVertices,
         memcpy(data, pVertices, verticesSize);
     vkUnmapMemory(pVulkanRenderer->device.Get(), vertexBufferMemory);
 
-    pVulkanRenderer->vertexBuffers.push_back(this);
+    LEGENDENGINE_OBJECT_LOG(
+        pVulkanRenderer->GetApplication(),"Vulkan::VertexBuffer", 
+        "Initialized vertex buffer", 
+        LogType::DEBUG
+    );
 
     return true;
 }
 
 void VertexBuffer::OnBufferDispose()
 {
-    Tether::VectorUtils::EraseAll(pVulkanRenderer->vertexBuffers, this);
-}
-
-bool VertexBuffer::VerifyRenderer()
-{
-    return pVulkanRenderer = dynamic_cast<VulkanRenderer*>(pRenderer);
+    vkDestroyBuffer(pVulkanRenderer->device.Get(), vertexBuffer, nullptr);
+    vkFreeMemory(pVulkanRenderer->device.Get(), vertexBufferMemory, 
+        nullptr);
 }
 
 bool VertexBuffer::FindMemoryType(uint32_t typeFilter, 

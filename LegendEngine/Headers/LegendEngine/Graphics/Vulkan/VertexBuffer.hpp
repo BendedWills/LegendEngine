@@ -12,7 +12,11 @@ namespace LegendEngine::Vulkan
     class VertexBuffer : public LegendEngine::VertexBuffer
     {
     public:
-        VertexBuffer() {}
+        VertexBuffer(VulkanRenderer* pRenderer)
+            :
+            pVulkanRenderer(pRenderer),
+            LegendEngine::VertexBuffer(pRenderer) 
+        {}
         
         VertexBuffer(const VertexBuffer&) = delete;
 		VertexBuffer(VertexBuffer&&) = delete;
@@ -23,7 +27,6 @@ namespace LegendEngine::Vulkan
             uint64_t vertexCount);
         void OnBufferDispose();
 
-        bool VerifyRenderer();
         bool FindMemoryType(uint32_t typeFilter, 
             VkMemoryPropertyFlags properties, uint32_t* pMemoryType);
 

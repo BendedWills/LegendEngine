@@ -25,7 +25,10 @@ namespace LegendEngine::Object3d::Components
     {
     public:
         ComponentHolder() {}
-        ComponentHolder(Object* pObject) {}
+        ComponentHolder(Object* pObject) 
+            :
+            pObject(pObject)
+        {}
         
         ComponentHolder(const ComponentHolder&) = delete;
 		ComponentHolder(ComponentHolder&&) = delete;
@@ -97,6 +100,7 @@ namespace LegendEngine::Object3d::Components
             if (components.count(id) == 0)
             {
                 components[id] = RefTools::Create<T>(args...);
+                components[id]->SetObject(pObject);
                 return true;
             }
             
@@ -104,6 +108,8 @@ namespace LegendEngine::Object3d::Components
         }
 
         std::unordered_map<std::string, Ref<Component>> components;
+    private:
+        Object3d::Object* pObject = nullptr;
     };
 }
 

@@ -3,6 +3,7 @@ project ("LegendEngine")
 
 add_definitions(-DVULKAN_API -DWINDOW_MANAGEMENT -DTHREE_DIM -DTWO_DIM)
 add_subdirectory(Tests/Triangle)
+add_subdirectory(Tests/APIMisuse)
 add_subdirectory(Vendor/Tether)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")

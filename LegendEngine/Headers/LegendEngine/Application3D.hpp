@@ -8,8 +8,10 @@
 
 namespace LegendEngine
 {
+    class Scene3D;
     class Application3D : public IApplication
     {
+        friend class Scene3D;
     public:
         Application3D() {}
         LEGENDENGINE_NO_COPY(Application3D);
@@ -70,7 +72,12 @@ namespace LegendEngine
          * @returns The active scene (wow really?)
          */
         Scene3D* GetActiveScene();
+    protected:
+        void OnSceneObjectAdd(Scene3D* pScene, Object3d::Object* pObject);
+        void OnSceneObjectRemove(Scene3D* pScene, Object3d::Object* pObject);
     private:
+        bool OnAppInit();
+
         // Every application has a default scene. This scene contains objects
         // that are always rendered, no matter what the current set scene is.
         Scene3D defaultScene;

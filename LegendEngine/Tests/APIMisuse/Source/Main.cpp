@@ -13,31 +13,30 @@ class Triangle : public Application3D
 public:
 	bool OnInit()
 	{
-		if (!renderer.Init(this))
-			return false;
-		SetRenderer(&renderer);
-		
-		InitObject(testObject);
+		renderer.Dispose();
+		renderer.Dispose();
+		renderer.Dispose();
+		renderer.Init(nullptr);
+		SetRenderer(nullptr);
 
-		VertexTypes::Vertex2 testVertices[] =
-		{
-			{  0.5f, -0.5f },
-			{ -0.5f, -0.5f },
-			{  0.0f,  0.5f }
-		};
+		InitScene(nullptr);
+		InitObject(nullptr);
 
-		testScene.AddObject(testObject);
+		testScene.AddObject(nullptr);
 		testObject.AddComponent<Components::MeshComponent>()
-			->Init(testVertices, 3);
+			->Init(nullptr, 0);
 		
-		SetActiveScene(testScene);
-		
+		SetActiveScene(nullptr);
+
+		Ref<VertexBuffer> buffer;
+		//GetRenderer()->CreateVertexBuffer(nullptr);
+
 		return true;
 	}
 	
 	void OnStop()
 	{
-		testScene.RemoveObject(testObject);
+		testScene.RemoveObject(nullptr);
 		renderer.Dispose();
 	}
 private:
@@ -52,6 +51,6 @@ int main()
 	Triangle triangle;
 	if (!triangle.Start("Triangle", true, true))
 		return EXIT_FAILURE;
-
+	
 	return EXIT_SUCCESS;
 }

@@ -1,4 +1,5 @@
 #include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Graphics/IRenderer.hpp>
 
 #include <sstream>
 
@@ -11,6 +12,13 @@ bool Application3D::InitObject(Object3d::Object& object)
 
 bool Application3D::InitObject(Object3d::Object* pObject)
 {
+    if (!pObject)
+    {
+        Log("Initializing object: Object is nullptr. Returning.", 
+            LogType::WARN);
+        return false;
+    }
+
     if (pObject->pApplication != nullptr)
     {
         std::stringstream str;
@@ -35,13 +43,15 @@ bool Application3D::InitObject(Object3d::Object* pObject)
     return true;
 }
 
-bool Application3D::InitScene(Scene3D& scene)
-{
-    return InitScene(&scene);
-}
-
 bool Application3D::InitScene(Scene3D* pScene)
 {
+    if (!pScene)
+    {
+        Log("Initializing scene: Scene is nullptr. Returning.", 
+            LogType::WARN);
+        return false;
+    }
+
     if (pScene->pApplication != nullptr)
     {
         std::stringstream str;
@@ -78,15 +88,50 @@ void Application3D::SetActiveScene(Scene3D& scene)
 
 void Application3D::SetActiveScene(Scene3D* pScene)
 {
+    if (!pScene)
+        pRenderer->OnSceneRemove(pScene);
+    
     this->activeScene = pScene;
+
+    pRenderer->OnSceneChange(pScene);
 }
 
 void Application3D::RemoveActiveScene()
 {
-    activeScene = nullptr;
+    SetActiveScene(nullptr);
 }
 
 Scene3D* Application3D::GetActiveScene()
 {
     return activeScene;
+}
+
+void Application3D::OnSceneObjectAdd(Scene3D* pScene, 
+    Object3d::Object* pObject)
+{
+    if (activeScene != pScene)
+        return;
+    
+    if (pScene == &defaultScene)
+        pRenderer->OnDefaultObjectAdd(pScene, pObject);
+    else
+        pRenderer->OnSceneObjectAdd(pScene, pObject);
+}
+
+void Application3D::OnSceneObjectRemove(Scene3D* pScene, 
+    Object3d::Object* pObject)
+{
+    if (activeScene != pScene)
+        return;
+    
+    if (pScene == &defaultScene)
+        pRenderer->OnDefaultObjectRemove(pScene, pObject);
+    else
+        pRenderer->OnSceneObjectRemove(pScene, pObject);
+}
+
+bool Application3D::OnAppInit()
+{
+    InitScene(defaultScene);
+    return true;
 }

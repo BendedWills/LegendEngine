@@ -1,6 +1,8 @@
 #ifdef VULKAN_API
 
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
+#include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
+#include <LegendEngine/Application3D.hpp>
 
 #include <CompiledResources/solid.vert.spv.h>
 #include <CompiledResources/solid.frag.spv.h>
@@ -21,13 +23,23 @@ void VulkanRenderer::EventHandler::OnWindowResize(
     if (!pRenderer->RecreateSwapchain(event.GetNewWidth(), event.GetNewHeight()))
     {
         std::cout << "Failed to recreate swapchain!" << std::endl;
-        exit(EXIT_FAILURE);
     }
 }
 
-void VulkanRenderer::SetVSyncEnabled(bool vsync)
+bool VulkanRenderer::CreateVertexBuffer(
+    Ref<LegendEngine::VertexBuffer>* buffer)
 {
-    this->enableVsync = vsync;
+    if (!buffer)
+    {
+        pApplication->Log(
+            "Creating vertex buffer: Buffer is nullptr. Returning.",
+            LogType::WARN);
+        return false;
+    }
+
+    *buffer = RefTools::Create<VertexBuffer>(this);
+    
+    return true;
 }
 
 bool VulkanRenderer::Reload()
@@ -119,6 +131,40 @@ bool VulkanRenderer::OnRendererInit()
     return true;
 }
 
+void VulkanRenderer::OnSceneChange(Scene3D* pScene)
+{
+    
+}
+
+void VulkanRenderer::OnSceneObjectAdd(Scene3D* pScene, 
+    Object3d::Object* pObject)
+{
+
+}
+
+void VulkanRenderer::OnSceneObjectRemove(Scene3D* pScene, 
+    Object3d::Object* pObject)
+{
+
+}
+
+void VulkanRenderer::OnSceneRemove(Scene3D* pScene)
+{
+
+}
+
+void VulkanRenderer::OnDefaultObjectAdd(Scene3D* pScene, 
+    Object3d::Object* pObject)
+{
+
+}
+
+void VulkanRenderer::OnDefaultObjectRemove(Scene3D* pScene, 
+    Object3d::Object* pObject)
+{
+
+}
+
 bool VulkanRenderer::OnRenderFrame()
 {
     return DrawFrame();
@@ -138,6 +184,17 @@ void VulkanRenderer::OnRendererDispose()
     }
 
     vkDestroyCommandPool(device.Get(), commandPool, nullptr);
+
+    for (LegendEngine::VertexBuffer* buffer : vertexBuffers)
+    {
+        std::stringstream ss;
+        ss << "Disposed VertexBuffer (" << (uint64_t)buffer << ")";
+
+        LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer", ss.str(), 
+            LogType::DEBUG);
+        
+        buffer->Dispose();
+    }
 
     device.Dispose();
     surface.Dispose();
@@ -571,7 +628,7 @@ bool VulkanRenderer::InitCommandBuffers()
         if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
             return false;
         
-        VkClearValue clearColor = {{{0.0f, 0.5f, 1.0f, 1.0f}}};
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = renderPass;
@@ -706,6 +763,13 @@ bool VulkanRenderer::RecreateSwapchain(uint64_t width, uint64_t height)
 {
     if (width == 0 || height == 0)
         return true;
+    
+    std::stringstream ss;
+    ss << "Recreating swapchain (Window resize) ";
+    ss << "(newWidth = " << width << ", newHeight = " << height << ")";
+
+    LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer", ss.str(), 
+        LogType::DEBUG);
     
     // The device might still have work. Wait for it to finish before 
     // recreating the swapchain.

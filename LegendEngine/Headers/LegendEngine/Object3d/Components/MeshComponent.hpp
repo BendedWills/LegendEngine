@@ -14,7 +14,7 @@ namespace LegendEngine::Object3d::Components
     private:
         void OnDispose();
 
-        VertexBuffer vertexBuffer;
+        Ref<VertexBuffer> vertexBuffer;
     };
 }
 

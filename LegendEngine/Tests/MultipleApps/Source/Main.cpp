@@ -16,7 +16,8 @@ public:
 		if (!renderer.Init(this))
 			return false;
 		SetRenderer(&renderer);
-		
+
+		InitScene(testScene);
 		InitObject(testObject);
 
 		VertexTypes::Vertex2 testVertices[] =
@@ -50,8 +51,19 @@ private:
 int main()
 {
 	Triangle triangle;
+	Triangle triangle2;
+
+	std::thread triangle2thread(
+	[&]() 
+	{
+		if (!triangle2.Start("Triangle 2", true, true))
+			return;
+	});
+
 	if (!triangle.Start("Triangle", true, true))
 		return EXIT_FAILURE;
-
+	
+	triangle2thread.join();
+	
 	return EXIT_SUCCESS;
 }
