@@ -1,5 +1,6 @@
 #include <LegendEngine/Scene3D.hpp>
 #include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Common/WinGDISucks.hpp>
 
 using namespace LegendEngine;
 

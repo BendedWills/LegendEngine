@@ -1,6 +1,8 @@
 #ifndef _LEGENDENGINE_TYPES_HPP
 #define _LEGENDENGINE_TYPES_HPP
 
+#include <LegendEngine/Common/WinGDISucks.hpp>
+
 namespace LegendEngine
 {
     enum class RenderMode

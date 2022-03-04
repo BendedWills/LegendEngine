@@ -9,6 +9,8 @@ using namespace LegendEngine::Object3d::Components;
 
 bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
 {
+#include <LegendEngine/Common/WinGDISucks.hpp>
+
     if (GetObject() == nullptr)
         return false;
     if (GetObject()->GetApplication() == nullptr)

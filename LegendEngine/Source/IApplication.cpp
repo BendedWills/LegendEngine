@@ -1,6 +1,8 @@
 #include <LegendEngine/IApplication.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 
+#include <LegendEngine/Common/WinGDISucks.hpp>
+
 #include <iostream>
 #include <chrono>
 #include <sstream>
@@ -153,7 +155,7 @@ bool IApplication::IsApiInitialized()
 void IApplication::SetFullscreen(bool fullscreen, int monitor)
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
-    window.SetFullscreen(fullscreen, monitor);
+    //window.SetFullscreen(fullscreen, monitor);
 }
 
 bool IApplication::IsVulkanInitialized()

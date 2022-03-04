@@ -4,8 +4,8 @@
 #include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
 #include <LegendEngine/Application3D.hpp>
 
-#include <CompiledResources/solid.vert.spv.h>
-#include <CompiledResources/solid.frag.spv.h>
+#include <CompiledAssets/solid.vert.spv.h>
+#include <CompiledAssets/solid.frag.spv.h>
 
 #include <set>
 

@@ -4,3 +4,4 @@ vulkan.supp
 *.o
 *.spv
 LegendEngine/Assets/Compiled
+.vs

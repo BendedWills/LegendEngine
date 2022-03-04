@@ -78,7 +78,7 @@ namespace LegendEngine::Object3d::Components
         template<typename Type>
         std::string GetTypeName()
         {
-            std::string_view prettyFunc{__PRETTY_FUNCTION__};
+            std::string_view prettyFunc{LEGENDENGINE_PRETTY_FUNCTION};
 
             auto first = prettyFunc.find_first_not_of(' ',
                 prettyFunc.find_first_of(LEGENDENGINE_PRETTY_FUNCTION_PREFIX)

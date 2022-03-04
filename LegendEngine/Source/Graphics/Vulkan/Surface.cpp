@@ -3,7 +3,11 @@
 #include <LegendEngine/Graphics/Vulkan/Surface.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 
+#ifdef __linux__
 #include <vulkan/vulkan_xlib.h>
+#elif _WIN32
+#include <vulkan/vulkan_win32.h>
+#endif
 
 using namespace LegendEngine::Vulkan;
 
@@ -27,6 +31,7 @@ bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
     VkWin32SurfaceCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     createInfo.hwnd = window->GetHandle();
+    createInfo.hinstance = window->GetHIstance();
     
     if (vkCreateWin32SurfaceKHR(pInstance->Get(), &createInfo, nullptr,
         &surface) != VK_SUCCESS)
