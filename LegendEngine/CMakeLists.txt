@@ -95,7 +95,7 @@ elseif(UNIX)
     )
 endif()
 
-add_custom_target(compileassets ALL DEPENDS ${COMPILED_ASSETS} assetscompileddir)
+add_custom_target(compileassets ALL DEPENDS assetscompileddir)
 # Add vulkan shaders dependency
 if (COMPDEFS MATCHES "^VULKAN_API")
     add_dependencies(compileassets vkshaders)
@@ -107,8 +107,6 @@ foreach(source IN LISTS ASSETS)
     string(REPLACE "." "_" ARRAY_NAME "${FILENAME}")
     set(OUTPUT_FILE 
         ${CMAKE_SOURCE_DIR}/LegendEngine/${COMPILED_ASSETS_DIR}/${FILENAME}.h)
-
-    message("${ARRAY_NAME}")
 
     find_program(bin2c_executable NAMES bin2c)
 
@@ -134,21 +132,21 @@ foreach(source IN LISTS ASSETS)
             echo } >> ${OUTPUT_FILE})
     elseif (UNIX)
         add_custom_command(TARGET compileassets COMMAND
-            echo "#pragma once" > ${OUTPUT_FILE})
+            echo \"\#pragma once\" > ${OUTPUT_FILE})
         add_custom_command(TARGET compileassets COMMAND
-            echo "namespace LegendEngine::Resources {" >> ${OUTPUT_FILE})
+            echo \"namespace LegendEngine::Resources {\" >> ${OUTPUT_FILE})
 
         add_custom_command(
             TARGET compileassets
             COMMAND
-                ${bin2c_executable}
+                bin2c
                 --name ${ARRAY_NAME}
                 ${source} 
                 >> ${OUTPUT_FILE}
         )
 
         add_custom_command(TARGET compileassets COMMAND
-            echo "}" >> ${OUTPUT_FILE})
+            echo \"}\" >> ${OUTPUT_FILE})
     endif()
 endforeach()
 
