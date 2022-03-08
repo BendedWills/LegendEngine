@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace LegendEngine::Object3d
+namespace LegendEngine::Objects
 {
     class Object;
 }
@@ -14,14 +14,12 @@ namespace LegendEngine::Object3d
 namespace LegendEngine
 {
     class VertexBuffer;
-    class IApplication;
-    class Application3D;
-    class Scene3D;
+    class Application;
+    class Scene;
 
     class IRenderer : public IDisposable
     {
-        friend IApplication;
-        friend Application3D;
+        friend Application;
         friend LegendEngine::VertexBuffer;
      public:
         IRenderer() {}
@@ -40,14 +38,14 @@ namespace LegendEngine
          * @returns True if the renderer was successfully initialized;
          *  otherwise, false.
          */
-        bool Init(IApplication* pApplication);
+        bool Init(Application* pApplication);
 
         void SetVSyncEnabled(bool vsync);
         
         virtual bool CreateVertexBuffer(Ref<VertexBuffer>* buffer) 
         { return false; }
 
-        IApplication* GetApplication();
+        Application* GetApplication();
     protected:
         bool RenderFrame() { return OnRenderFrame(); }
 
@@ -70,32 +68,32 @@ namespace LegendEngine
         /**
          * @brief Called when the application's active scene is changed.
          */
-        virtual void OnSceneChange(Scene3D* pScene) {}
+        virtual void OnSceneChange(Scene* pScene) {}
         /**
          * @brief Called when the application's active scene gains and object.
          */
-        virtual void OnSceneObjectAdd(Scene3D* pScene, 
-            Object3d::Object* pObject) {}
+        virtual void OnSceneObjectAdd(Scene* pScene, 
+            Objects::Object* pObject) {}
         /**
          * @brief Called when the application's active scene loses and object.
          */
-        virtual void OnSceneObjectRemove(Scene3D* pScene, 
-            Object3d::Object* pObject) {}
+        virtual void OnSceneObjectRemove(Scene* pScene, 
+            Objects::Object* pObject) {}
         /**
          * @brief Called when the application's active scene is removed.
          */
-        virtual void OnSceneRemove(Scene3D* pScene) {}
+        virtual void OnSceneRemove(Scene* pScene) {}
 
         /**
          * @brief Called when the application's default scene gains and object.
          */
-        virtual void OnDefaultObjectAdd(Scene3D* pScene, 
-            Object3d::Object* pObject) {}
+        virtual void OnDefaultObjectAdd(Scene* pScene, 
+            Objects::Object* pObject) {}
         /**
          * @brief Called when the application's default scene loses and object.
          */
-        virtual void OnDefaultObjectRemove(Scene3D* pScene, 
-            Object3d::Object* pObject) {}
+        virtual void OnDefaultObjectRemove(Scene* pScene, 
+            Objects::Object* pObject) {}
 
         /**
          * @brief Called when the renderer is desposed.
@@ -108,7 +106,7 @@ namespace LegendEngine
     private:
         void OnDispose();
 
-        IApplication* pApplication = nullptr;
+        Application* pApplication = nullptr;
     };
 }
 

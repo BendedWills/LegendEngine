@@ -1,9 +1,8 @@
 #version 450
 
-layout(location = 0) out vec3 outColor;
+layout(location = 0) in vec2 pos;
 
 void main() 
 {
-    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
-    outColor = vec3(0);
+    gl_Position = vec4(pos.xy, 0.0, 1.0);
 }

@@ -1,8 +1,8 @@
-#ifndef _LEGENDENGINE_COMPONENTHOLDER3D_HPP
-#define _LEGENDENGINE_COMPONENTHOLDER3D_HPP
+#ifndef _LEGENDENGINE_COMPONENTHOLDER_HPP
+#define _LEGENDENGINE_COMPONENTHOLDER_HPP
 
 #include <LegendEngine/Common/Ref.hpp>
-#include <LegendEngine/Object3d/Components/Component.hpp>
+#include <LegendEngine/Objects/Components/Component.hpp>
 
 #include <unordered_map>
 #include <string>
@@ -19,7 +19,7 @@
 #error "Pretty function unsupported"
 #endif
 
-namespace LegendEngine::Object3d::Components
+namespace LegendEngine::Objects::Components
 {
     class ComponentHolder
     {
@@ -43,10 +43,16 @@ namespace LegendEngine::Object3d::Components
         }
 
         template<typename T>
+        bool HasComponent()
+        {
+            return components.count(GetTypeName<T>()) != 0;
+        }
+
+        template<typename T>
         T* GetComponent()
         {
             std::string id = GetTypeName<T>();
-            if (components.count(id) == 0)
+            if (components.count(id) != 0)
                 return (T*)components[id].get();
 
             return nullptr;
@@ -109,7 +115,7 @@ namespace LegendEngine::Object3d::Components
 
         std::unordered_map<std::string, Ref<Component>> components;
     private:
-        Object3d::Object* pObject = nullptr;
+        Objects::Object* pObject = nullptr;
     };
 }
 

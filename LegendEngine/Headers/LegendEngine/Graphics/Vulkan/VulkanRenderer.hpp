@@ -86,19 +86,22 @@ namespace LegendEngine::Vulkan
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
         
-        IApplication* pApplication = nullptr;
+        Application* pApplication = nullptr;
         Vulkan::Instance* pInstance;
     private:
         bool RecreateSwapchain(uint64_t width, uint64_t height);
 
+        bool RecreateCommandBuffers();
+        bool PopulateCommandBuffer(VkCommandBuffer buffer, VkFramebuffer framebuffer);
+
         bool OnRendererInit();
 
-        void OnSceneChange(Scene3D* pScene);
-        void OnSceneObjectAdd(Scene3D* pScene, Object3d::Object* pObject);
-        void OnSceneObjectRemove(Scene3D* pScene, Object3d::Object* pObject);
-        void OnSceneRemove(Scene3D* pScene);
-        void OnDefaultObjectAdd(Scene3D* pScene, Object3d::Object* pObject);
-        void OnDefaultObjectRemove(Scene3D* pScene, Object3d::Object* pObject);
+        void OnSceneChange(Scene* pScene);
+        void OnSceneObjectAdd(Scene* pScene, Objects::Object* pObject);
+        void OnSceneObjectRemove(Scene* pScene, Objects::Object* pObject);
+        void OnSceneRemove(Scene* pScene);
+        void OnDefaultObjectAdd(Scene* pScene, Objects::Object* pObject);
+        void OnDefaultObjectRemove(Scene* pScene, Objects::Object* pObject);
 
         bool OnRenderFrame();
 

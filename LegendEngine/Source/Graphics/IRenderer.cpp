@@ -1,10 +1,10 @@
 #include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Application.hpp>
 #include <LegendEngine/Common/WinGDISucks.hpp>
 
 using namespace LegendEngine;
 
-bool IRenderer::Init(IApplication* pApplication)
+bool IRenderer::Init(Application* pApplication)
 {
     if (initialized || !pApplication)
         return false;
@@ -25,7 +25,7 @@ bool IRenderer::Init(IApplication* pApplication)
     return true;
 }
 
-IApplication* IRenderer::GetApplication()
+Application* IRenderer::GetApplication()
 {
     return pApplication;
 }

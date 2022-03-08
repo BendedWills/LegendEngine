@@ -1,11 +1,11 @@
 /*
- * The IApplication class is an interface to be implemented by other types of
+ * The Application class is an interface to be implemented by other types of
  * applications.
  * Using this class as an interface is optional.
  */
 
-#ifndef _LEGENDENGINE_IAPPLICATION_HPP
-#define _LEGENDENGINE_IAPPLICATION_HPP
+#ifndef _LEGENDENGINE_APPLICATION_HPP
+#define _LEGENDENGINE_APPLICATION_HPP
 
 #include <string>
 
@@ -14,17 +14,25 @@
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
+#include <LegendEngine/Scene.hpp>
 
 #include <Tether/Tether.hpp>
+
+namespace LegendEngine::Objects
+{
+    class Object;
+}
 
 namespace LegendEngine
 {
     class IRenderer;
-    class IApplication : public IDisposable
+    class Application : public IDisposable
     {
+        friend Scene;
     public:
-        IApplication() {}
-        LEGENDENGINE_NO_COPY(IApplication);
+        Application() 
+        {}
+        LEGENDENGINE_NO_COPY(Application);
 
         /**
          * @brief Initializes the application
@@ -58,7 +66,7 @@ namespace LegendEngine
         bool SetRenderer(IRenderer* pRenderer);
         IRenderer* GetRenderer();
 
-        IApplication* Get();
+        Application* Get();
         std::string GetName();
         Tether::IWindow* GetWindow();
         bool IsCloseRequested();
@@ -76,6 +84,63 @@ namespace LegendEngine
          * @param type The type of log.
          */
         void Log(const std::string& message, LogType type);
+
+        /**
+         * @brief Initializes an object to this application.
+         *
+         * @param object The object to initialize.
+         *
+         * @returns True if the object was successfully initialized,
+         *  false if the object is already initialized.
+         */
+        bool InitObject(Objects::Object& object);
+        /**
+         * @brief Initializes an object to this application.
+         *
+         * @param pObject A pointer to the object to initialize.
+         *
+         * @returns True if the object was successfully initialized,
+         *  false if the object is already initialized.
+         */
+        bool InitObject(Objects::Object* pObject);
+        /**
+         * @brief Initializes a scene to this application.
+         *
+         * @param scene The scene to initialize.
+         *
+         * @returns True if the scene was successfully initialized,
+         *  false if the scene is already initialized.
+         */
+        bool InitScene(Scene& scene);
+        /**
+         * @brief Initializes a scene to this application.
+         *
+         * @param pScene A pointer to the scene to initialize.
+         *
+         * @returns True if the object was successfully initialized,
+         *  false if the object is already initialized.
+         */
+        bool InitScene(Scene* pScene);
+
+        Scene* GetDefaultScene();
+
+        /**
+         * @brief Sets the active scene.
+         *
+         * @param scene The scene.
+         */
+        void SetActiveScene(Scene& scene);
+        /**
+         * @brief Sets the active scene.
+         *
+         * @param pScene A pointer to the scene.
+         */
+        void SetActiveScene(Scene* pScene);
+        void RemoveActiveScene();
+        /**
+         * @returns The active scene (wow really?)
+         */
+        Scene* GetActiveScene();
     protected:
         /**
          * @brief Called before the Init function is executed.
@@ -107,9 +172,6 @@ namespace LegendEngine
          * @brief Called after the application is disposed.
          */
         virtual void OnDisposed() {}
-
-        virtual bool OnAppInit() { return true; }
-        virtual void OnAppStop() {}
     protected:
         bool InitWindow(const std::string& title);
 
@@ -139,7 +201,7 @@ namespace LegendEngine
         class DebugCallback : public Vulkan::DebugCallback
         {
         public:
-            IApplication* pApplication = nullptr;
+            Application* pApplication = nullptr;
 
             void OnDebugLog(
                 VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -150,7 +212,15 @@ namespace LegendEngine
         DebugCallback callback;
     
     #pragma endregion Graphics
+
+        void OnSceneObjectAdd(Scene* pScene, Objects::Object* pObject);
+        void OnSceneObjectRemove(Scene* pScene, Objects::Object* pObject);
+    private:
+        // Every application has a default scene. This scene contains objects
+        // that are always rendered, no matter what the current set scene is.
+        Scene defaultScene;
+        Scene* activeScene;
     };
 }
 
-#endif //_LEGENDENGINE_IAPPLICATION_HPP
+#endif //_LEGENDENGINE_Application_HPP

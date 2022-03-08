@@ -1,12 +1,12 @@
-#ifndef _LEGENDENGINE_COMPONENT3D_HPP
-#define _LEGENDENGINE_COMPONENT3D_HPP
+#ifndef _LEGENDENGINE_COMPONENT_HPP
+#define _LEGENDENGINE_COMPONENT_HPP
 
-namespace LegendEngine::Object3d
+namespace LegendEngine::Objects
 {
     class Object;
 }
 
-namespace LegendEngine::Object3d::Components
+namespace LegendEngine::Objects::Components
 {
     class ComponentHolder;
     class Component
@@ -28,4 +28,4 @@ namespace LegendEngine::Object3d::Components
     };
 }
 
-#endif //_LEGENDENGINE_COMPONENT3D_HPP
+#endif //_LEGENDENGINE_COMPONENTS_HPP

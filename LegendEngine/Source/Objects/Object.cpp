@@ -1,7 +1,7 @@
-#include <LegendEngine/Object3d/Object.hpp>
+#include <LegendEngine/Objects/Object.hpp>
 
 using namespace LegendEngine;
-using namespace LegendEngine::Object3d;
+using namespace LegendEngine::Objects;
 
 void Object::AddPosition(Vector3f position)
 {
@@ -54,7 +54,7 @@ Vector3f Object::GetScale()
     return scale;    
 }
 
-Application3D* Object::GetApplication()
+Application* Object::GetApplication()
 {
     return pApplication;
 }

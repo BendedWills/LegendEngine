@@ -11,18 +11,19 @@ namespace LegendEngine::Vulkan
 {
     class VertexBuffer : public LegendEngine::VertexBuffer
     {
+        friend VulkanRenderer;
     public:
         VertexBuffer(VulkanRenderer* pRenderer)
             :
             pVulkanRenderer(pRenderer),
-            LegendEngine::VertexBuffer(pRenderer) 
+            LegendEngine::VertexBuffer(pRenderer, VertexBufferType::VULKAN) 
         {}
         
         VertexBuffer(const VertexBuffer&) = delete;
 		VertexBuffer(VertexBuffer&&) = delete;
 		VertexBuffer& operator=(const VertexBuffer&) = delete;
 		VertexBuffer& operator=(VertexBuffer&&) = delete;
-    private:
+    protected:
         bool OnBufferCreate(VertexTypes::Vertex2* pVertices, 
             uint64_t vertexCount);
         void OnBufferDispose();

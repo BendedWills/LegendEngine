@@ -5,10 +5,10 @@
 #include <LegendEngine/LegendEngine.hpp>
 
 using namespace LegendEngine;
-using namespace LegendEngine::Object3d;
+using namespace LegendEngine::Objects;
 using namespace std::literals::chrono_literals;
 
-class Triangle : public Application3D
+class Triangle : public Application
 {
 public:
 	bool OnInit()

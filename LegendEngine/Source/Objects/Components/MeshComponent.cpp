@@ -1,11 +1,11 @@
-#include <LegendEngine/Object3d/Components/MeshComponent.hpp>
-#include <LegendEngine/Object3d/Object.hpp>
+#include <LegendEngine/Objects/Components/MeshComponent.hpp>
+#include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Application.hpp>
 
 #include <sstream>
 
-using namespace LegendEngine::Object3d::Components;
+using namespace LegendEngine::Objects::Components;
 
 bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
 {
@@ -16,7 +16,7 @@ bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
     if (GetObject()->GetApplication() == nullptr)
         return false;
 
-    Application3D* pApplication = GetObject()->GetApplication();
+    Application* pApplication = GetObject()->GetApplication();
     IRenderer* pRenderer = pApplication->GetRenderer();
     
     LEGENDENGINE_OBJECT_LOG(
@@ -76,7 +76,19 @@ bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
         LogType::DEBUG
     );
 
+    this->vertexCount = vertexCount;
+
     return true;
+}
+
+LegendEngine::VertexBuffer* MeshComponent::GetVertexBuffer()
+{
+    return vertexBuffer.get();
+}
+
+uint64_t MeshComponent::GetVertexCount()
+{
+    return vertexCount;
 }
 
 void MeshComponent::OnDispose()

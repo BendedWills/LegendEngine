@@ -14,6 +14,11 @@ bool VertexBuffer::Init(VertexTypes::Vertex2* pVertices,
     return true;
 }
 
+VertexBufferType VertexBuffer::GetType()
+{
+    return type;
+}
+
 void VertexBuffer::OnDispose()
 {
     OnBufferDispose();

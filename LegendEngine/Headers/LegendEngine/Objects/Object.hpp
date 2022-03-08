@@ -1,10 +1,10 @@
 // A base object class to then be inherited by other types of objects.
 
-#ifndef _LEGENDENGINE_OBJECT3D_HPP
-#define _LEGENDENGINE_OBJECT3D_HPP
+#ifndef _LEGENDENGINE_OBJECT_HPP
+#define _LEGENDENGINE_OBJECT_HPP
 
 #include <LegendEngine/Common/Math.hpp>
-#include <LegendEngine/Object3d/Components/ComponentHolder.hpp>
+#include <LegendEngine/Objects/Components/ComponentHolder.hpp>
 
 #include <type_traits>
 #include <string>
@@ -12,14 +12,14 @@
 
 namespace LegendEngine
 {
-    class Application3D;
+    class Application;
 }
 
-namespace LegendEngine::Object3d
+namespace LegendEngine::Objects
 {
     class Object : public Components::ComponentHolder
     {
-        friend Application3D;
+        friend Application;
     public:
         Object() 
             :
@@ -42,9 +42,9 @@ namespace LegendEngine::Object3d
         Vector3f GetRotation();
         Vector3f GetScale();
 
-        Application3D* GetApplication();
+        Application* GetApplication();
     protected:
-        Application3D* pApplication = nullptr;
+        Application* pApplication = nullptr;
     private:
         void CalculateTransformMatrix();
 

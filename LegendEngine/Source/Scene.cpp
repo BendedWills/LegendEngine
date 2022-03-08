@@ -1,5 +1,5 @@
-#include <LegendEngine/Scene3D.hpp>
-#include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Scene.hpp>
+#include <LegendEngine/Application.hpp>
 #include <LegendEngine/Common/WinGDISucks.hpp>
 
 using namespace LegendEngine;
@@ -8,12 +8,12 @@ using namespace LegendEngine;
     if (pApplication == nullptr) \
         return returnValue;
 
-void Scene3D::AddObject(Object3d::Object& object)
+void Scene::AddObject(Objects::Object& object)
 {
     AddObject(&object);
 }
 
-void Scene3D::AddObject(Object3d::Object* pObject)
+void Scene::AddObject(Objects::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL();
 
@@ -37,28 +37,28 @@ void Scene3D::AddObject(Object3d::Object* pObject)
     pApplication->OnSceneObjectAdd(this, pObject);
 }
 
-bool Scene3D::HasObject(Object3d::Object& object)
+bool Scene::HasObject(Objects::Object& object)
 {
     LEGENDENGINE_ASSERT_APP_NULL(false);
     return HasObject(&object);
 }
 
-bool Scene3D::HasObject(Object3d::Object* pObject)
+bool Scene::HasObject(Objects::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL(false);
     return std::count(objects.begin(), objects.end(), pObject);
 }
 
-bool Scene3D::RemoveObject(Object3d::Object& object)
+bool Scene::RemoveObject(Objects::Object& object)
 {
     return RemoveObject(&object);
 }
 
 #define LEGENDENGINE_COMPONENT_NAMES() \
-    using namespace Object3d::Components; \
+    using namespace Objects::Components; \
     std::string meshComponentName = pObject->GetTypeName<MeshComponent>();
 
-bool Scene3D::RemoveObject(Object3d::Object* pObject)
+bool Scene::RemoveObject(Objects::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL(false);
 
@@ -86,7 +86,12 @@ bool Scene3D::RemoveObject(Object3d::Object* pObject)
     return false;
 }
 
-// void Scene3D::AddComponents(Object3d::Object* pObject)
+std::vector<Objects::Object*>* Scene::GetObjects()
+{
+    return &objects;
+}
+
+// void Scene::AddComponents(Objects::Object* pObject)
 // {
 //     LEGENDENGINE_COMPONENT_NAMES();
 
@@ -98,7 +103,7 @@ bool Scene3D::RemoveObject(Object3d::Object* pObject)
 //     }
 // }
 
-// void Scene3D::RemoveComponents(Object3d::Object* pObject)
+// void Scene::RemoveComponents(Objects::Object* pObject)
 // {
 //     LEGENDENGINE_COMPONENT_NAMES();
 

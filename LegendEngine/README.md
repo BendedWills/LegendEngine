@@ -26,25 +26,18 @@ add_definitions(-DFEATURE_HERE)
 * **-DVULKAN_API** : Defined if the engine should be compiled with Vulkan support.
 * **-DOPENGL_API** : Defined if the engine should be compiled with OpenGL support.
 * **-DWINDOW_MANAGEMENT** : Defined if the engine should come with window management; e.g. if the engine has the ability to create and manage its own windows.
-* **-DTHREE_DIM** : Defined if the engine should be compiled with 3d support.
-* **-DTWO_DIM** : Defined if the engine should be compiled with 2d support.
 
 # Dependencies
 
 *If compiled with -DVULKAN_API:*
 * vulkan
+* VulkanMemoryAllocator (submodule)
 
 *If compiled with -DWINDOW_MANAGEMENT:*
-* tether
+* tether (submodule)
 
 *If compiled with -DOPENGL_API:*
 * GL (aka opengl)
-
-*If compiled with -DTHREE_DIM:*
-* physx
-
-*If compiled with -DTWO_DIM:*
-* box2d
 
 *If compiled with -DSHADER_COMPILATION:*
 * glslang

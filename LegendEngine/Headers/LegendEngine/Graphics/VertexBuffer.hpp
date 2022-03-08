@@ -1,6 +1,7 @@
 #ifndef _LEGENDENGINE_VERTEXBUFFER_HPP
 #define _LEGENDENGINE_VERTEXBUFFER_HPP
 
+#include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <stdint.h>
@@ -18,9 +19,10 @@ namespace LegendEngine
     class VertexBuffer : public IDisposable
     {
     public:
-        VertexBuffer(IRenderer* pRenderer) 
+        VertexBuffer(IRenderer* pRenderer, VertexBufferType type)
             :
-            pRenderer(pRenderer)
+            pRenderer(pRenderer),
+            type(type)
         {}
         
         VertexBuffer(const VertexBuffer&) = delete;
@@ -38,6 +40,8 @@ namespace LegendEngine
          *  otherwise, false.
          */
         bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
+
+        VertexBufferType GetType();
     protected:
         void OnDispose();
 
@@ -46,6 +50,7 @@ namespace LegendEngine
         virtual void OnBufferDispose() {}
 
         IRenderer* pRenderer = nullptr;
+        VertexBufferType type;
     };
 }
 

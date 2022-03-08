@@ -1,4 +1,4 @@
-#include <LegendEngine/IApplication.hpp>
+#include <LegendEngine/Application.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 
 #include <LegendEngine/Common/WinGDISucks.hpp>
@@ -9,7 +9,7 @@
 
 using namespace LegendEngine;
 
-void IApplication::DebugCallback::OnDebugLog(
+void Application::DebugCallback::OnDebugLog(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
@@ -17,14 +17,14 @@ void IApplication::DebugCallback::OnDebugLog(
 {
     std::stringstream ss;
     ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
-    
+
     if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
         pApplication->Log(ss.str(), LogType::ERROR);
-    else
-        pApplication->Log(ss.str(), LogType::DEBUG);
+    else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+        pApplication->Log(ss.str(), LogType::WARN);
 }
 
-bool IApplication::Start(
+bool Application::Start(
     const std::string& applicationName,
     bool logging,
     bool debug,
@@ -80,19 +80,20 @@ bool IApplication::Start(
         break;
     }
 
-    if (!OnAppInit())
-        return false;
+    InitScene(defaultScene);
+
     if (!OnInit())
         return false;
     
     Log("Initialized application", LogType::INFO);
 
+    // Show the window AFTER initialization
     window.SetVisible(true);
 
     return StartLoop();
 }
 
-bool IApplication::SetRenderer(IRenderer* pRenderer)
+bool Application::SetRenderer(IRenderer* pRenderer)
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
     
@@ -117,66 +118,66 @@ bool IApplication::SetRenderer(IRenderer* pRenderer)
     return true;
 }
 
-IRenderer* IApplication::GetRenderer()
+IRenderer* Application::GetRenderer()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
     return pRenderer;
 }
 
-IApplication* IApplication::Get()
+Application* Application::Get()
 {
     return this;
 }
 
-std::string IApplication::GetName()
+std::string Application::GetName()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET("");
     return applicationName;
 }
 
-Tether::IWindow* IApplication::GetWindow()
+Tether::IWindow* Application::GetWindow()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
     return &window;
 }
 
-bool IApplication::IsCloseRequested()
+bool Application::IsCloseRequested()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
     return window.IsCloseRequested();
 }
 
-bool IApplication::IsApiInitialized()
+bool Application::IsApiInitialized()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
     return initializedApi;
 }
 
-void IApplication::SetFullscreen(bool fullscreen, int monitor)
+void Application::SetFullscreen(bool fullscreen, int monitor)
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
     //window.SetFullscreen(fullscreen, monitor);
 }
 
-bool IApplication::IsVulkanInitialized()
+bool Application::IsVulkanInitialized()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
     return initializedVulkan;
 }
 
-Vulkan::Instance* IApplication::GetVulkanInstance()
+Vulkan::Instance* Application::GetVulkanInstance()
 {
     return &instance;
 }
 
-void IApplication::UpdateWindow()
+void Application::UpdateWindow()
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
 
     window.PollEvents();
 }
 
-void IApplication::Update(bool updateWindow)
+void Application::Update(bool updateWindow)
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
 
@@ -188,7 +189,7 @@ void IApplication::Update(bool updateWindow)
     OnUpdate();
 }
 
-void IApplication::Render()
+void Application::Render()
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
     
@@ -198,13 +199,13 @@ void IApplication::Render()
     pRenderer->RenderFrame();
 }
 
-void IApplication::Log(const std::string& message, LogType type)
+void Application::Log(const std::string& message, LogType type)
 {
     // If debug isn't enabled, disable debug logs.
     if ((type == LogType::DEBUG && !debug) || !logging)
 		return;
 	
-	const std::string reset = "\e[0m";
+	const std::string reset = "\x1b[0m";
 
 	std::string severity = "";
 	std::string color = "";
@@ -213,28 +214,28 @@ void IApplication::Log(const std::string& message, LogType type)
 		case LogType::INFO:
 		{
 			severity = "INFO";
-			color = "\e[38;2;0;120;220m"; // Blue
+			color = "\x1b[38;2;0;120;220m"; // Blue
 		}
 		break;
 
 		case LogType::WARN:
 		{
 			severity = "WARN";
-			color = "\e[38;2;255;213;0m"; // Gold
+			color = "\x1b[38;2;255;213;0m"; // Gold
 		}
 		break;
 
 		case LogType::DEBUG:
 		{
 			severity = "DEBUG";
-			color = "\e[38;2;0;150;60m"; // Green
+			color = "\x1b[38;2;0;150;60m"; // Green
 		}
 		break;
 
 		case LogType::ERROR:
 		{
 			severity = "ERROR";
-			color = "\e[38;2;255;0;0m"; // Red
+			color = "\x1b[38;2;255;0;0m"; // Red
 		}
 		break;
 	}
@@ -255,13 +256,13 @@ void IApplication::Log(const std::string& message, LogType type)
 
 	std::cout 
         // Time
-        << "\e[38;2;118;118;118m[\e[38;2;148;148;148m" 
+        << "\x1b[38;2;118;118;118m[\x1b[38;2;148;148;148m" 
         << time 
-		<< "\e[38;2;118;118;118m] " 
-        // IApplication name
-        << "\e[38;2;118;118;118m[\e[38;2;148;148;148m"
+		<< "\x1b[38;2;118;118;118m] " 
+        // Application name
+        << "\x1b[38;2;118;118;118m[\x1b[38;2;148;148;148m"
         << applicationName
-        << "\e[38;2;118;118;118m] " 
+        << "\x1b[38;2;118;118;118m] " 
         << reset 
         << ": " << color 
         // Severity
@@ -270,7 +271,114 @@ void IApplication::Log(const std::string& message, LogType type)
     << std::endl;
 }
 
-bool IApplication::InitVulkan(bool enableValidationLayers)
+bool Application::InitObject(Objects::Object& object)
+{
+    return InitObject(&object);
+}
+
+bool Application::InitObject(Objects::Object* pObject)
+{
+    if (!pObject)
+    {
+        Log("Initializing object: Object is nullptr. Returning.",
+            LogType::WARN);
+        return false;
+    }
+
+    if (pObject->pApplication != nullptr)
+    {
+        std::stringstream str;
+        str << "Object (" << (uint64_t)pObject << ") has already been initialized";
+        str << " (initialized with pApplication = "
+            << (uint64_t)pObject->pApplication;
+        str << ")";
+
+        Log(str.str(), LogType::WARN);
+
+        return false;
+    }
+
+    pObject->pApplication = this;
+
+    std::stringstream str;
+    str << "Object (" << (uint64_t)pObject << ") initialized to Application3D";
+    str << " (" << (uint64_t)this << ")";
+
+    Log(str.str(), LogType::DEBUG);
+
+    return true;
+}
+
+bool Application::InitScene(Scene& scene)
+{
+    return InitScene(&scene);
+}
+
+bool Application::InitScene(Scene* pScene)
+{
+    if (!pScene)
+    {
+        Log("Initializing scene: Scene is nullptr. Returning.",
+            LogType::WARN);
+        return false;
+    }
+
+    if (pScene->pApplication != nullptr)
+    {
+        std::stringstream str;
+        str << "Scene (" << (uint64_t)pScene << ") has already been initialized";
+        str << " (initialized with pApplication = "
+            << (uint64_t)pScene->pApplication;
+        str << ")";
+
+        Log(str.str(), LogType::WARN);
+
+        return false;
+    }
+
+    pScene->pApplication = this;
+
+    std::stringstream str;
+    str << "Scene (" << (uint64_t)pScene << ") initialized to Application3D";
+    str << " (" << (uint64_t)this << ")";
+
+    Log(str.str(), LogType::DEBUG);
+
+    return true;
+}
+
+Scene* Application::GetDefaultScene()
+{
+    return &defaultScene;
+}
+
+void Application::SetActiveScene(Scene& scene)
+{
+    SetActiveScene(&scene);
+}
+
+void Application::SetActiveScene(Scene* pScene)
+{
+    if (!pScene && pRenderer)
+        pRenderer->OnSceneRemove(pScene);
+
+    this->activeScene = pScene;
+
+    if (pRenderer)
+        pRenderer->OnSceneChange(pScene);
+}
+
+void Application::RemoveActiveScene()
+{
+    SetActiveScene(nullptr);
+}
+
+Scene* Application::GetActiveScene()
+{
+    return activeScene;
+}
+
+bool Application::InitVulkan(bool enableValidationLayers)
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
@@ -288,7 +396,7 @@ bool IApplication::InitVulkan(bool enableValidationLayers)
     return true;
 }
 
-bool IApplication::InitWindow(const std::string& title)
+bool Application::InitWindow(const std::string& title)
 {
     window.Hint(Tether::HintType::VISIBLE, false);
     if (!window.Init(1280, 720, title.c_str()))
@@ -297,7 +405,7 @@ bool IApplication::InitWindow(const std::string& title)
     return true;
 }
 
-bool IApplication::StartLoop()
+bool Application::StartLoop()
 {
     while (!IsCloseRequested())
 	{
@@ -310,21 +418,45 @@ bool IApplication::StartLoop()
     return true;
 }
 
-void IApplication::DisposeGraphics()
+void Application::DisposeGraphics()
 {
     instance.Dispose();
 }
 
-void IApplication::OnDispose()
+void Application::OnDispose()
 {
     Log("Disposing application", LogType::INFO);
 
     OnStop();
-    OnAppStop();
+    RemoveActiveScene();
 
     window.Dispose();
     
     DisposeGraphics();
 
     OnDisposed();
+}
+
+void Application::OnSceneObjectAdd(Scene* pScene,
+    Objects::Object* pObject)
+{
+    if (activeScene != pScene)
+        return;
+
+    if (pScene == &defaultScene)
+        pRenderer->OnDefaultObjectAdd(pScene, pObject);
+    else
+        pRenderer->OnSceneObjectAdd(pScene, pObject);
+}
+
+void Application::OnSceneObjectRemove(Scene* pScene,
+    Objects::Object* pObject)
+{
+    if (activeScene != pScene)
+        return;
+
+    if (pScene == &defaultScene)
+        pRenderer->OnDefaultObjectRemove(pScene, pObject);
+    else
+        pRenderer->OnSceneObjectRemove(pScene, pObject);
 }

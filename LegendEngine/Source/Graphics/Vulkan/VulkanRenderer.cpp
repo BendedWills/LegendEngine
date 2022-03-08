@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
-#include <LegendEngine/Application3D.hpp>
+#include <LegendEngine/Application.hpp>
 
 #include <CompiledAssets/solid.vert.spv.h>
 #include <CompiledAssets/solid.frag.spv.h>
@@ -22,7 +22,7 @@ void VulkanRenderer::EventHandler::OnWindowResize(
 {
     if (!pRenderer->RecreateSwapchain(event.GetNewWidth(), event.GetNewHeight()))
     {
-        std::cout << "Failed to recreate swapchain!" << std::endl;
+        pRenderer->GetApplication()->Log("Failed to recreate swapchain!", LogType::ERROR);
     }
 }
 
@@ -131,38 +131,38 @@ bool VulkanRenderer::OnRendererInit()
     return true;
 }
 
-void VulkanRenderer::OnSceneChange(Scene3D* pScene)
+void VulkanRenderer::OnSceneChange(Scene* pScene)
 {
-    
+    RecreateCommandBuffers();
 }
 
-void VulkanRenderer::OnSceneObjectAdd(Scene3D* pScene, 
-    Object3d::Object* pObject)
+void VulkanRenderer::OnSceneObjectAdd(Scene* pScene, 
+    Objects::Object* pObject)
 {
-
+    RecreateCommandBuffers();
 }
 
-void VulkanRenderer::OnSceneObjectRemove(Scene3D* pScene, 
-    Object3d::Object* pObject)
+void VulkanRenderer::OnSceneObjectRemove(Scene* pScene, 
+    Objects::Object* pObject)
 {
-    
+    RecreateCommandBuffers();
 }
 
-void VulkanRenderer::OnSceneRemove(Scene3D* pScene)
+void VulkanRenderer::OnSceneRemove(Scene* pScene)
 {
-    
+    RecreateCommandBuffers();
 }
 
-void VulkanRenderer::OnDefaultObjectAdd(Scene3D* pScene, 
-    Object3d::Object* pObject)
+void VulkanRenderer::OnDefaultObjectAdd(Scene* pScene, 
+    Objects::Object* pObject)
 {
-
+    RecreateCommandBuffers();
 }
 
-void VulkanRenderer::OnDefaultObjectRemove(Scene3D* pScene, 
-    Object3d::Object* pObject)
+void VulkanRenderer::OnDefaultObjectRemove(Scene* pScene, 
+    Objects::Object* pObject)
 {
-
+    RecreateCommandBuffers();
 }
 
 bool VulkanRenderer::OnRenderFrame()
@@ -451,13 +451,34 @@ bool VulkanRenderer::InitPipeline()
     if (vkCreatePipelineLayout(device.Get(), &pipelineLayoutDesc, 
         nullptr, &pipelineLayout) != VK_SUCCESS)
         return false;
-    
+
+    std::vector<VkVertexInputBindingDescription> bindingDescs;
+    std::vector<VkVertexInputAttributeDescription> attribDescs;
+
+    // Vertex2
+    {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(VertexTypes::Vertex2);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescs{};
+        // Position
+        attributeDescs[0].location = 0;
+        attributeDescs[0].binding = 0;
+        attributeDescs[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescs[0].offset = offsetof(VertexTypes::Vertex2, position);
+        
+        bindingDescs.push_back(bindingDescription);
+        attribDescs.push_back(attributeDescs[0]);
+    }
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.pVertexBindingDescriptions = nullptr;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+    vertexInputInfo.vertexBindingDescriptionCount = bindingDescs.size();
+    vertexInputInfo.pVertexBindingDescriptions = bindingDescs.data();
+    vertexInputInfo.vertexAttributeDescriptionCount = attribDescs.size();
+    vertexInputInfo.pVertexAttributeDescriptions = attribDescs.data();
     
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -598,6 +619,7 @@ bool VulkanRenderer::InitCommandPool()
 {
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = indices.graphicsFamilyIndex;
     
     return vkCreateCommandPool(device.Get(), &poolInfo, nullptr, &commandPool)
@@ -606,8 +628,6 @@ bool VulkanRenderer::InitCommandPool()
 
 bool VulkanRenderer::InitCommandBuffers()
 {
-    VkExtent2D swapchainExtent = swapchain.GetExtent();
-
     commandBuffers.resize(framebuffers.size());
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -621,36 +641,7 @@ bool VulkanRenderer::InitCommandBuffers()
         return false;
     
     for (uint64_t i = 0; i < commandBuffers.size(); i++)
-    {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
-            return false;
-        
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = framebuffers[i];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = swapchainExtent;
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-
-        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, 
-            VK_SUBPASS_CONTENTS_INLINE);
-        {
-            vkCmdBindPipeline(commandBuffers[i], 
-                VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-            vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
-        }
-        vkCmdEndRenderPass(commandBuffers[i]);
-        
-        if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-            return false;
-    }
+        PopulateCommandBuffer(commandBuffers[i], framebuffers[i]);
     
     return true;
 }
@@ -785,6 +776,121 @@ bool VulkanRenderer::RecreateSwapchain(uint64_t width, uint64_t height)
         return false;
 
     imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
+    return true;
+}
+
+bool VulkanRenderer::RecreateCommandBuffers()
+{
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
+
+    for (uint64_t i = 0; i < commandBuffers.size(); i++)
+    {
+        // Wait for all frames to finish rendering.
+        // Command buffers cannot be reset during frame rendering.
+        for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
+            vkWaitForFences(device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
+
+        vkResetCommandBuffer(commandBuffers[i], 0);
+        if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i]))
+            return false;
+    }
+
+    return true;
+}
+
+bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
+    VkFramebuffer framebuffer)
+{
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
+        return false;
+    
+    VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.framebuffer = framebuffer;
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = swapchain.GetExtent();
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(buffer, &renderPassInfo,
+        VK_SUBPASS_CONTENTS_INLINE);
+    {
+        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+        using namespace Objects;
+        using namespace Objects::Components;
+
+        // This will probably be changed later on
+        // Eventually, objects will have to be rendered in order of distance
+        // from the camera.
+
+        // Default scene
+        Scene* pDefault = pApplication->GetDefaultScene();
+        std::vector<Object*>* objects = pDefault->GetObjects();
+        for (uint64_t i = 0; i < objects->size(); i++)
+        {
+            Object* object = objects->at(i);
+
+            // The object must have a mesh component
+            MeshComponent* component = object->GetComponent<MeshComponent>();
+            if (!component)
+                continue;
+
+            LegendEngine::VertexBuffer* pVertexBuffer =
+                component->GetVertexBuffer();
+            if (pVertexBuffer->GetType() != VertexBufferType::VULKAN)
+                continue;
+
+            VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
+
+            VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
+            VkDeviceSize offsets[] = { 0 };
+            vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
+
+            vkCmdDraw(buffer, component->GetVertexCount(), 1, 0, 0);
+        }
+
+        // ActiveScene
+        Scene* pActive = pApplication->GetActiveScene();
+        if (pActive)
+        {
+            std::vector<Object*>* activeObjects = pActive->GetObjects();
+            for (uint64_t i = 0; i < activeObjects->size(); i++)
+            {
+                Object* object = activeObjects->at(i);
+
+                // The object must have a mesh component
+                MeshComponent* component = object->GetComponent<MeshComponent>();
+                if (!component)
+                    continue;
+
+                LegendEngine::VertexBuffer* pVertexBuffer =
+                    component->GetVertexBuffer();
+                if (pVertexBuffer->GetType() != VertexBufferType::VULKAN)
+                    continue;
+
+                VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
+
+                VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
+                VkDeviceSize offsets[] = { 0 };
+                vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
+
+                vkCmdDraw(buffer, component->GetVertexCount(), 1, 0, 0);
+            }
+        }
+    }
+    vkCmdEndRenderPass(buffer);
+    
+    if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
+        return false;
+
     return true;
 }
 

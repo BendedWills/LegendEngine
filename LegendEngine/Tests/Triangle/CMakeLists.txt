@@ -20,6 +20,7 @@ if (UNIX)
         PUBLIC "Headers"
         PUBLIC "../../Headers"
         PRIVATE "../../Vendor/Tether/Headers"
+        PRIVATE "../../Vendor/VMA/include"
     )
 
     target_link_directories(${PROJECT_NAME}
@@ -37,6 +38,7 @@ elseif(WIN32)
         PUBLIC "Headers"
         PUBLIC "../../Headers"
         PRIVATE "../../Vendor/Tether/Headers"
+        PRIVATE "../../Vendor/VMA/include"
         PRIVATE "${VULKAN_SDK_PATH}\\Include"
     )
 

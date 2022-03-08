@@ -1,3 +1,6 @@
 [submodule "LegendEngine/Vendor/Tether"]
 	path = LegendEngine/Vendor/Tether
 	url = https://github.com/Squashbit/Tether
+[submodule "LegendEngine/Vendor/VMA"]
+	path = LegendEngine/Vendor/VMA
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
