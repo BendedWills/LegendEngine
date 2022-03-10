@@ -1,8 +1,6 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 
-#include <LegendEngine/Common/WinGDISucks.hpp>
-
 #include <iostream>
 #include <chrono>
 #include <sstream>
@@ -399,6 +397,8 @@ bool Application::InitVulkan(bool enableValidationLayers)
 bool Application::InitWindow(const std::string& title)
 {
     window.Hint(Tether::HintType::VISIBLE, false);
+    window.Hint(Tether::HintType::X, 120);
+    window.Hint(Tether::HintType::Y, 120);
     if (!window.Init(1280, 720, title.c_str()))
         return false;
     

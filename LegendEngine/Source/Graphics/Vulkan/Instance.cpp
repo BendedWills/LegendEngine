@@ -9,6 +9,7 @@
 #ifdef __linux__
 #include <vulkan/vulkan_xlib.h>
 #elif _WIN32
+#include <Windows.h>
 #include <vulkan/vulkan_win32.h>
 #endif
 
@@ -72,7 +73,7 @@ bool Instance::Init(
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.apiVersion = VK_API_VERSION_1_0;
+	appInfo.apiVersion = VK_API_VERSION_1_3;
 
 	if (applicationName)
 		appInfo.pApplicationName = applicationName;

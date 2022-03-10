@@ -25,15 +25,15 @@ namespace LegendEngine::Objects::Components
     {
     public:
         ComponentHolder() {}
-        ComponentHolder(Object* pObject) 
+        ComponentHolder(Object* pObject)
             :
             pObject(pObject)
         {}
-        
+
         ComponentHolder(const ComponentHolder&) = delete;
-		ComponentHolder(ComponentHolder&&) = delete;
-		ComponentHolder& operator=(const ComponentHolder&) = delete;
-		ComponentHolder& operator=(ComponentHolder&&) = delete;
+        ComponentHolder(ComponentHolder&&) = delete;
+        ComponentHolder& operator=(const ComponentHolder&) = delete;
+        ComponentHolder& operator=(ComponentHolder&&) = delete;
 
         template<typename T, typename... Args>
         T* AddComponent(Args... args)
@@ -64,7 +64,11 @@ namespace LegendEngine::Objects::Components
             std::string id = GetTypeName<T>();
             if (components.count(id))
             {
+                auto component = components.at(components.find(id));
                 components.erase(components.find(id));
+
+                OnComponentRemove(id, component->second.get());
+
                 return true;
             }
 
@@ -84,7 +88,7 @@ namespace LegendEngine::Objects::Components
         template<typename Type>
         std::string GetTypeName()
         {
-            std::string_view prettyFunc{LEGENDENGINE_PRETTY_FUNCTION};
+            std::string_view prettyFunc{ LEGENDENGINE_PRETTY_FUNCTION };
 
             auto first = prettyFunc.find_first_not_of(' ',
                 prettyFunc.find_first_of(LEGENDENGINE_PRETTY_FUNCTION_PREFIX)
@@ -94,7 +98,7 @@ namespace LegendEngine::Objects::Components
                 LEGENDENGINE_PRETTY_FUNCTION_SUFFIX) - first;
 
             std::string prettyFuncStr(prettyFunc.begin(), prettyFunc.end());
-            
+
             return prettyFuncStr.substr(first, last);
         }
     protected:
@@ -107,11 +111,19 @@ namespace LegendEngine::Objects::Components
             {
                 components[id] = RefTools::Create<T>(args...);
                 components[id]->SetObject(pObject);
+
+                OnComponentAdd(id, components[id].get());
+
                 return true;
             }
-            
+
             return false;
         }
+
+        virtual void OnComponentAdd(std::string typeName, Component* pComponent) 
+        {}
+        virtual void OnComponentRemove(std::string typeName, Component* pComponent)
+        {}
 
         std::unordered_map<std::string, Ref<Component>> components;
     private:

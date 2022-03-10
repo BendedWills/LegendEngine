@@ -17,9 +17,11 @@ namespace LegendEngine
 
 namespace LegendEngine::Objects
 {
+    class Scene;
     class Object : public Components::ComponentHolder
     {
         friend Application;
+        friend Scene;
     public:
         Object() 
             :
@@ -44,13 +46,22 @@ namespace LegendEngine::Objects
 
         Application* GetApplication();
     protected:
+        void AddToScene(Scene* pScene);
+        void RemoveFromScene(Scene* pScene);
+
         Application* pApplication = nullptr;
     private:
+        void OnComponentAdd(std::string typeName, Components::Component* pComponent);
+        void OnComponentRemove(std::string typeName, 
+            Components::Component* pComponent);
+        
         void CalculateTransformMatrix();
 
         Vector3f position;
         Vector3f rotation;
         Vector3f scale;
+
+        std::vector<Scene*> scenes;
     };
 }
 

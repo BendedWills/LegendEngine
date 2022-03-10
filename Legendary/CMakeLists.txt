@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 if (UNIX)
     target_link_libraries(${PROJECT_NAME} 
-        ${CMAKE_DL_LIBS} pthread LegendEngine X11 vulkan tether
+        ${CMAKE_DL_LIBS} pthread LegendEngine X11
     )
 
     target_include_directories(${PROJECT_NAME} 
@@ -31,8 +31,8 @@ elseif(WIN32)
     set(VULKAN_SDK_PATH "C:\\VulkanSDK\\1.3.204.1")
     set(ENV{VULKAN_SDK} ${VULKAN_SDK_PATH})
     find_package(Vulkan REQUIRED)
-
-    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} tether LegendEngine)
+    
+    target_link_libraries(${PROJECT_NAME} LegendEngine)
 
     target_include_directories(${PROJECT_NAME} 
         PUBLIC "Headers"

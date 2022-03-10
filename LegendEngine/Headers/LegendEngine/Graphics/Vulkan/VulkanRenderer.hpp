@@ -9,6 +9,8 @@
 #include <LegendEngine/Graphics/Vulkan/Swapchain.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 
+#include <vk_mem_alloc.h>
+
 #include <Tether/Tether.hpp>
 
 #include <iostream>
@@ -58,6 +60,8 @@ namespace LegendEngine::Vulkan
 
         Vulkan::QueueFamilyIndices indices;
         VkPhysicalDevice physicalDevice;
+
+        VmaAllocator allocator;
 
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -111,6 +115,7 @@ namespace LegendEngine::Vulkan
         bool IsDeviceSuitable(VkPhysicalDevice device, 
             Vulkan::Surface* pSurface);
         bool InitDevice();
+        bool InitAllocator();
         VkSurfaceFormatKHR ChooseSurfaceFormat(Vulkan::SwapchainDetails details);
         bool InitSwapchain(uint64_t width, uint64_t height);
         bool InitShaders();

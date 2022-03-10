@@ -77,6 +77,12 @@ bool VulkanRenderer::OnRendererInit()
         return false;
     }
 
+    if (!InitAllocator())
+    {
+        pApplication->Log("Failed to initialize allocator!", LogType::ERROR);
+        return false;
+    }
+
     if (!InitSwapchain(
         pApplication->GetWindow()->GetWidth(), 
         pApplication->GetWindow()->GetHeight()
@@ -185,8 +191,13 @@ void VulkanRenderer::OnRendererDispose()
 
     vkDestroyCommandPool(device.Get(), commandPool, nullptr);
 
-    for (LegendEngine::VertexBuffer* buffer : vertexBuffers)
+    // Vertex Buffers are removed as they are disposed, so an original copy is
+    // required.
+    std::vector<LegendEngine::VertexBuffer*> vertexBuffersOriginal(vertexBuffers);
+    for (uint64_t i2 = 0; i2 < vertexBuffersOriginal.size(); i2++)
     {
+        LegendEngine::VertexBuffer* buffer = vertexBuffersOriginal[i2];
+
         std::stringstream ss;
         ss << "Disposed VertexBuffer (" << (uint64_t)buffer << ")";
 
@@ -195,6 +206,8 @@ void VulkanRenderer::OnRendererDispose()
         
         buffer->Dispose();
     }
+
+    vmaDestroyAllocator(allocator);
 
     device.Dispose();
     surface.Dispose();
@@ -293,6 +306,17 @@ bool VulkanRenderer::InitDevice()
     presentQueue = device.GetDeviceQueue(indices.presentFamilyIndex, 0);
 
     return true;
+}
+
+bool VulkanRenderer::InitAllocator()
+{
+    VmaAllocatorCreateInfo createInfo{};
+    createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    createInfo.physicalDevice = physicalDevice;
+    createInfo.device = device.Get();
+    createInfo.instance = pApplication->GetVulkanInstance()->Get();
+    
+    return vmaCreateAllocator(&createInfo, &allocator) == VK_SUCCESS;
 }
 
 VkSurfaceFormatKHR VulkanRenderer::ChooseSurfaceFormat(Vulkan::SwapchainDetails details) 

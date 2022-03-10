@@ -18,33 +18,52 @@ public:
 		SetRenderer(&renderer);
 
 		InitScene(testScene);
-		InitObject(testObject);
-
-		VertexTypes::Vertex2 testVertices[] =
-		{
-			{   0.0f, -0.5f },
-			{   0.5f,  0.5f },
-			{  -0.5f,  0.5f }
-		};
-
-		testObject.AddComponent<Components::MeshComponent>()
-			->Init(testVertices, 3);
-		testScene.AddObject(testObject);
-
 		SetActiveScene(testScene);
+		
+		srand(time(NULL));
+		for (uint64_t i = 0; i < 100; i++)
+		{
+			float offsetX = (rand() % 65536) / 65536.0f * 4 - 1;
+			float offsetY = (rand() % 65536) / 65536.0f * 4 - 1;
+
+			VertexTypes::Vertex2 testVertices[] =
+			{
+				{   0.0f + offsetX, -0.1f + offsetY },
+				{   0.1f + offsetX,  0.1f + offsetY },
+				{  -0.1f + offsetX,  0.1f + offsetY }
+			};
+
+			Ref<Object> object = RefTools::Create<Object>();
+			InitObject(object.get());
+
+			object->AddComponent<Components::MeshComponent>()->Init(
+				testVertices, 3
+			);
+
+			objects.push_back(object);
+
+			testScene.AddObject(object.get());
+		}
+
+		for (uint64_t i = 0; i < 50; i++)
+		{
+			Ref<Object> object = objects[i];
+			object->RemoveComponent<Components::MeshComponent>();
+		}
 
 		return true;
 	}
 
 	void OnStop()
 	{
-		testScene.RemoveObject(testObject);
+		for (uint64_t i = 0; i < 100; i++)
+			testScene.RemoveObject(objects[i].get());
 		renderer.Dispose();
 	}
 private:
 	Scene testScene;
-	Object testObject;
-
+	
+	std::vector<Ref<Object>> objects;
 	Vulkan::VulkanRenderer renderer;
 };
 

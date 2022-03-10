@@ -1,4 +1,5 @@
 #include <LegendEngine/Objects/Object.hpp>
+#include <LegendEngine/Scene.hpp>
 
 using namespace LegendEngine;
 using namespace LegendEngine::Objects;
@@ -62,4 +63,16 @@ Application* Object::GetApplication()
 void Object::CalculateTransformMatrix()
 {
     // TODO
+}
+
+void Object::OnComponentAdd(std::string typeName, Components::Component* pComponent)
+{
+    for (Scene* pScene : scenes)
+        pScene->OnObjectComponentAdd(this, typeName, pComponent);
+}
+
+void Object::OnComponentRemove(std::string typeName, Components::Component* pComponent)
+{
+    for (Scene* pScene : scenes)
+        pScene->OnObjectComponentRemove(this, typeName, pComponent);
 }

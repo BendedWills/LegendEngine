@@ -11,6 +11,7 @@ namespace LegendEngine
     class Scene
     {
         friend Application;
+        friend Objects::Object;
     public:
         Scene() {}
         LEGENDENGINE_NO_COPY(Scene);
@@ -56,6 +57,11 @@ namespace LegendEngine
 
         std::vector<Objects::Object*>* GetObjects();
     protected:
+        void OnObjectComponentAdd(Objects::Object*, std::string typeName, 
+            Objects::Components::Component* pComponent);
+        void OnObjectComponentRemove(Objects::Object*, std::string typeName,
+            Objects::Components::Component* pComponent);
+
         Application* pApplication = nullptr;
     private:
         // Commented because it might be unnessesary and extra work is required.

@@ -7,6 +7,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include <vk_mem_alloc.h>
+
 namespace LegendEngine::Vulkan
 {
     class VertexBuffer : public LegendEngine::VertexBuffer
@@ -28,12 +30,13 @@ namespace LegendEngine::Vulkan
             uint64_t vertexCount);
         void OnBufferDispose();
 
-        bool FindMemoryType(uint32_t typeFilter, 
-            VkMemoryPropertyFlags properties, uint32_t* pMemoryType);
+        bool UploadVertexData(void* pVertices);
 
         VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
+        VmaAllocation allocation;
 
+        uint64_t verticesSize = 0;
+        
         VulkanRenderer* pVulkanRenderer = nullptr;
     };
 }

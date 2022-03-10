@@ -1,6 +1,5 @@
 #include <LegendEngine/Scene.hpp>
 #include <LegendEngine/Application.hpp>
-#include <LegendEngine/Common/WinGDISucks.hpp>
 
 using namespace LegendEngine;
 
@@ -89,6 +88,18 @@ bool Scene::RemoveObject(Objects::Object* pObject)
 std::vector<Objects::Object*>* Scene::GetObjects()
 {
     return &objects;
+}
+
+void Scene::OnObjectComponentAdd(Objects::Object*, std::string typeName,
+    Objects::Components::Component* pComponent)
+{
+
+}
+
+void Scene::OnObjectComponentRemove(Objects::Object*, std::string typeName,
+    Objects::Components::Component* pComponent)
+{
+
 }
 
 // void Scene::AddComponents(Objects::Object* pObject)

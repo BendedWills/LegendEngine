@@ -186,7 +186,8 @@ endif()
 if (UNIX)
     # UNIX specific stuff here
 
-    target_link_libraries(${PROJECT_NAME} VulkanMemoryAllocator)
+    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} tether 
+        VulkanMemoryAllocator)
 
     target_include_directories(${PROJECT_NAME} 
         PUBLIC "Headers"
@@ -196,6 +197,9 @@ if (UNIX)
     )
 elseif(WIN32)
     # Windows specific stuff here
+
+    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} tether 
+        VulkanMemoryAllocator)
     
     target_include_directories(${PROJECT_NAME} 
         PUBLIC "Headers"

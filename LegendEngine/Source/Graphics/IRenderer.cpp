@@ -1,6 +1,5 @@
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Application.hpp>
-#include <LegendEngine/Common/WinGDISucks.hpp>
 
 using namespace LegendEngine;
 
