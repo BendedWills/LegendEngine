@@ -7,6 +7,10 @@
 
 using namespace LegendEngine;
 
+#define LEGENDENGINE_ASSERT_RENDERER_NULL(returnValue) \
+    if (!pRenderer) \
+        return returnValue;
+
 void Application::DebugCallback::OnDebugLog(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -440,7 +444,9 @@ void Application::OnDispose()
 void Application::OnSceneObjectAdd(Scene* pScene,
     Objects::Object* pObject)
 {
-    if (activeScene != pScene)
+    LEGENDENGINE_ASSERT_RENDERER_NULL();
+    
+    if (activeScene != pScene || !pRenderer)
         return;
 
     if (pScene == &defaultScene)
@@ -452,6 +458,8 @@ void Application::OnSceneObjectAdd(Scene* pScene,
 void Application::OnSceneObjectRemove(Scene* pScene,
     Objects::Object* pObject)
 {
+    LEGENDENGINE_ASSERT_RENDERER_NULL();
+
     if (activeScene != pScene)
         return;
 
@@ -459,4 +467,23 @@ void Application::OnSceneObjectRemove(Scene* pScene,
         pRenderer->OnDefaultObjectRemove(pScene, pObject);
     else
         pRenderer->OnSceneObjectRemove(pScene, pObject);
+}
+
+void Application::OnSceneObjectComponentAdd(Scene* pScene, 
+    Objects::Object* pObject, const std::string& typeName, 
+    Objects::Components::Component* pComponent)
+{
+    LEGENDENGINE_ASSERT_RENDERER_NULL();
+}
+
+void Application::OnSceneObjectComponentRemove(Scene* pScene, 
+    Objects::Object* pObject, const std::string& typeName, 
+    Objects::Components::Component* pComponent)
+{
+    LEGENDENGINE_ASSERT_RENDERER_NULL();
+
+    if (pScene != activeScene && pScene != &defaultScene)
+        return;
+
+    pRenderer->OnSceneObjectComponentAdd(pScene, pObject, typeName, pComponent);
 }

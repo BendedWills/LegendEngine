@@ -106,6 +106,16 @@ namespace LegendEngine::Vulkan
         void OnSceneRemove(Scene* pScene);
         void OnDefaultObjectAdd(Scene* pScene, Objects::Object* pObject);
         void OnDefaultObjectRemove(Scene* pScene, Objects::Object* pObject);
+        void OnObjectComponentAdd(
+            Objects::Object* pObject,
+            const std::string& typeName, 
+            Objects::Components::Component* pComponent
+        );
+        void OnObjectComponentRemove(
+            Objects::Object* pObject,
+            const std::string& typeName, 
+            Objects::Components::Component* pComponent
+        );
 
         bool OnRenderFrame();
 

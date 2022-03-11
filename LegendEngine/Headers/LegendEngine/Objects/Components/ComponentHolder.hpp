@@ -64,10 +64,10 @@ namespace LegendEngine::Objects::Components
             std::string id = GetTypeName<T>();
             if (components.count(id))
             {
-                auto component = components.at(components.find(id));
-                components.erase(components.find(id));
+                auto componentIter = components.find(id);
+                components.erase(componentIter);
 
-                OnComponentRemove(id, component->second.get());
+                OnComponentRemove(id, componentIter->second.get());
 
                 return true;
             }
@@ -120,9 +120,11 @@ namespace LegendEngine::Objects::Components
             return false;
         }
 
-        virtual void OnComponentAdd(std::string typeName, Component* pComponent) 
+        virtual void OnComponentAdd(const std::string& typeName, 
+            Component* pComponent) 
         {}
-        virtual void OnComponentRemove(std::string typeName, Component* pComponent)
+        virtual void OnComponentRemove(const std::string& typeName, 
+            Component* pComponent)
         {}
 
         std::unordered_map<std::string, Ref<Component>> components;

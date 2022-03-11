@@ -9,15 +9,16 @@
 #include <type_traits>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace LegendEngine
 {
     class Application;
+    class Scene;
 }
 
 namespace LegendEngine::Objects
 {
-    class Scene;
     class Object : public Components::ComponentHolder
     {
         friend Application;
@@ -51,8 +52,9 @@ namespace LegendEngine::Objects
 
         Application* pApplication = nullptr;
     private:
-        void OnComponentAdd(std::string typeName, Components::Component* pComponent);
-        void OnComponentRemove(std::string typeName, 
+        void OnComponentAdd(const std::string& typeName, 
+            Components::Component* pComponent);
+        void OnComponentRemove(const std::string& typeName, 
             Components::Component* pComponent);
         
         void CalculateTransformMatrix();

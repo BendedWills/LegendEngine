@@ -21,6 +21,11 @@
 namespace LegendEngine::Objects
 {
     class Object;
+
+    namespace Components
+    {
+        class Component;
+    }
 }
 
 namespace LegendEngine
@@ -215,6 +220,16 @@ namespace LegendEngine
 
         void OnSceneObjectAdd(Scene* pScene, Objects::Object* pObject);
         void OnSceneObjectRemove(Scene* pScene, Objects::Object* pObject);
+        void OnSceneObjectComponentAdd(
+            Scene* pScene, Objects::Object* pObject,
+            const std::string& typeName,
+            Objects::Components::Component* pComponent
+        );
+        void OnSceneObjectComponentRemove(
+            Scene* pScene, Objects::Object* pObject,
+            const std::string& typeName, 
+            Objects::Components::Component* pComponent
+        );
     private:
         // Every application has a default scene. This scene contains objects
         // that are always rendered, no matter what the current set scene is.

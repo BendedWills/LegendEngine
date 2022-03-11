@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.8)
 project ("Legendary")
 
+find_package(Vulkan REQUIRED)
+
 set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE SOURCES 
@@ -10,10 +12,12 @@ file(GLOB_RECURSE SOURCES
 
 add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 add_executable(${PROJECT_NAME} ${SOURCES})
+add_dependencies(${PROJECT_NAME} VulkanMemoryAllocator)
 
 if (UNIX)
     target_link_libraries(${PROJECT_NAME} 
-        ${CMAKE_DL_LIBS} pthread LegendEngine X11
+        ${Vulkan_LIBRARIES} ${CMAKE_DL_LIBS} pthread LegendEngine X11 
+        VulkanMemoryAllocator
     )
 
     target_include_directories(${PROJECT_NAME} 

@@ -1,5 +1,5 @@
-#pragma once  
-namespace LegendEngine::Resources {  
+#pragma once
+namespace LegendEngine::Resources {
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,4 +37,4 @@ unsigned char solid_frag_spv[] = {
 }
 #endif
 
-}  
+}

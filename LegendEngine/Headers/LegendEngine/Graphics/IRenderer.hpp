@@ -9,6 +9,11 @@
 namespace LegendEngine::Objects
 {
     class Object;
+
+    namespace Components
+    {
+        class Component;
+    }
 }
 
 namespace LegendEngine
@@ -94,6 +99,35 @@ namespace LegendEngine
          */
         virtual void OnDefaultObjectRemove(Scene* pScene, 
             Objects::Object* pObject) {}
+        /**
+         * @brief Called when an object that is in either the Application's 
+         *  active scene or default scene has a component added to it.
+         * 
+         * @param pScene The scene of the object
+         * @param pObject The object.
+         * @param typeName The component type name.
+         * @param pComponent The component.
+         */
+        virtual void OnSceneObjectComponentAdd(
+            Scene* pScene,
+            Objects::Object* pObject, 
+            const std::string& typeName, 
+            Objects::Components::Component* pComponent) 
+        {}
+        /**
+         * @brief Called when an object that is in either the Application's 
+         *  active scene or default scene has a component removed from it.
+         * 
+         * @param pScene The scene of the object
+         * @param pObject The object.
+         * @param typeName The component type name.
+         * @param pComponent The component.
+         */
+        virtual void OnSceneObjectComponentRemove(
+            Objects::Object* pObject,
+            const std::string& typeName, 
+            Objects::Components::Component* pComponent) 
+        {}
 
         /**
          * @brief Called when the renderer is desposed.

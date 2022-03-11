@@ -17,8 +17,6 @@ set(VK_SHADER_SOURCE_DIR ${ASSETS_DIR}/Shaders)
 # TWO_DIM
 add_definitions(-DVULKAN_API -DTHREE_DIM -DTWO_DIM)
 
-
-
 file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/LegendEngine/${COMPILED_ASSETS_DIR})
 file(GLOB_RECURSE ASSETS
     ${ASSETS_DIR}/*.*
@@ -30,12 +28,18 @@ get_directory_property(COMPDEFS COMPILE_DEFINITIONS)
 if (COMPDEFS MATCHES "^VULKAN_API")
     # VULKAN_API defined
 
+    if (UNIX)
+        set(VMA_DYNAMIC_VULKAN_FUNCTIONS ON)
+        set(VMA_STATIC_VULKAN_FUNCTIONS OFF)
+    endif()
+
     add_subdirectory("Vendor/VMA")
 
     # Compile shaders
 
     # GLSLC is required for Vulkan shader compilation
     find_program(glslc_executable NAMES glslc)
+    find_package(Vulkan REQUIRED)
 
     file(GLOB_RECURSE SHADERS
         ${VK_SHADER_SOURCE_DIR}/*.vert
@@ -164,7 +168,7 @@ add_subdirectory(Tests/APIMisuse)
 # Add tether
 add_subdirectory(Vendor/Tether)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_STANDARD 17)
 
 # Collect all sources
@@ -183,11 +187,14 @@ if (COMPDEFS MATCHES "^VULKAN_API")
     add_dependencies(${PROJECT_NAME} vkshaders VulkanMemoryAllocator)
 endif()
 
+target_link_libraries(${PROJECT_NAME} tether)
+if (COMPDEFS MATCHES "^VULKAN_API")
+    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES}
+        VulkanMemoryAllocator)
+endif()
+
 if (UNIX)
     # UNIX specific stuff here
-
-    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} tether 
-        VulkanMemoryAllocator)
 
     target_include_directories(${PROJECT_NAME} 
         PUBLIC "Headers"
@@ -197,9 +204,6 @@ if (UNIX)
     )
 elseif(WIN32)
     # Windows specific stuff here
-
-    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} tether 
-        VulkanMemoryAllocator)
     
     target_include_directories(${PROJECT_NAME} 
         PUBLIC "Headers"

@@ -90,16 +90,22 @@ std::vector<Objects::Object*>* Scene::GetObjects()
     return &objects;
 }
 
-void Scene::OnObjectComponentAdd(Objects::Object*, std::string typeName,
+void Scene::OnObjectComponentAdd(Objects::Object* pObject, std::string typeName,
     Objects::Components::Component* pComponent)
 {
+    LEGENDENGINE_ASSERT_APP_NULL();
 
+    pApplication->OnSceneObjectComponentAdd(this, pObject, typeName, 
+        pComponent);
 }
 
-void Scene::OnObjectComponentRemove(Objects::Object*, std::string typeName,
+void Scene::OnObjectComponentRemove(Objects::Object* pObject, std::string typeName,
     Objects::Components::Component* pComponent)
 {
+    LEGENDENGINE_ASSERT_APP_NULL();
 
+    pApplication->OnSceneObjectComponentRemove(this, pObject, typeName, 
+        pComponent);
 }
 
 // void Scene::AddComponents(Objects::Object* pObject)

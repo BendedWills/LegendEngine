@@ -197,13 +197,6 @@ void VulkanRenderer::OnRendererDispose()
     for (uint64_t i2 = 0; i2 < vertexBuffersOriginal.size(); i2++)
     {
         LegendEngine::VertexBuffer* buffer = vertexBuffersOriginal[i2];
-
-        std::stringstream ss;
-        ss << "Disposed VertexBuffer (" << (uint64_t)buffer << ")";
-
-        LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer", ss.str(), 
-            LogType::DEBUG);
-        
         buffer->Dispose();
     }
 
@@ -310,11 +303,16 @@ bool VulkanRenderer::InitDevice()
 
 bool VulkanRenderer::InitAllocator()
 {
+    VmaVulkanFunctions funcs{};
+    funcs.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+    funcs.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
     VmaAllocatorCreateInfo createInfo{};
     createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     createInfo.physicalDevice = physicalDevice;
     createInfo.device = device.Get();
     createInfo.instance = pApplication->GetVulkanInstance()->Get();
+    createInfo.pVulkanFunctions = &funcs;
     
     return vmaCreateAllocator(&createInfo, &allocator) == VK_SUCCESS;
 }

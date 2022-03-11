@@ -65,13 +65,15 @@ void Object::CalculateTransformMatrix()
     // TODO
 }
 
-void Object::OnComponentAdd(std::string typeName, Components::Component* pComponent)
+void Object::OnComponentAdd(const std::string& typeName, 
+    Components::Component* pComponent)
 {
     for (Scene* pScene : scenes)
         pScene->OnObjectComponentAdd(this, typeName, pComponent);
 }
 
-void Object::OnComponentRemove(std::string typeName, Components::Component* pComponent)
+void Object::OnComponentRemove(const std::string& typeName, 
+    Components::Component* pComponent)
 {
     for (Scene* pScene : scenes)
         pScene->OnObjectComponentRemove(this, typeName, pComponent);

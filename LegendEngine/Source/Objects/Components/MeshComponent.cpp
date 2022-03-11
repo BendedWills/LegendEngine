@@ -9,6 +9,9 @@ using namespace LegendEngine::Objects::Components;
 
 bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
 {
+    if (initialized)
+        return false;
+    
     if (GetObject() == nullptr)
         return false;
     if (GetObject()->GetApplication() == nullptr)
@@ -76,6 +79,7 @@ bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
 
     this->vertexCount = vertexCount;
 
+    initialized = true;
     return true;
 }
 

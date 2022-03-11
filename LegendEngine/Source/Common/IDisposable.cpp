@@ -1,4 +1,5 @@
 #include <LegendEngine/Common/IDisposable.hpp>
+#include <iostream>
 
 using namespace LegendEngine;
 
@@ -15,7 +16,12 @@ bool IDisposable::IsInitialized() const
 void IDisposable::Dispose()
 {
     if (!initialized)
+    {
+        std::cout << "Double disposal" << std::endl;
         return;
+    }
+
+    std::cout << "Disposal" << std::endl;
     
     OnDispose();
 

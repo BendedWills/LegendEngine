@@ -138,4 +138,6 @@ bool VertexBuffer::UploadVertexData(void* pVertices)
 
     // Destroy the staging buffer
     vmaDestroyBuffer(pVulkanRenderer->allocator, stagingBuffer, stagingAlloc);
+
+    return true;
 }
