@@ -5,6 +5,7 @@
 #include <LegendEngine/Common/Ref.hpp>
 
 #include <vector>
+#include <string>
 
 namespace LegendEngine::Objects
 {
@@ -19,6 +20,7 @@ namespace LegendEngine::Objects
 namespace LegendEngine
 {
     class VertexBuffer;
+    class Shader;
     class Application;
     class Scene;
 
@@ -26,7 +28,10 @@ namespace LegendEngine
     {
         friend Application;
         friend LegendEngine::VertexBuffer;
-     public:
+        friend LegendEngine::Shader;
+    public:
+        LEGENDENGINE_DISPOSE_ON_DESTRUCT(IRenderer);
+
         IRenderer() {}
         
         IRenderer(const IRenderer&) = delete;
@@ -45,9 +50,10 @@ namespace LegendEngine
          */
         bool Init(Application* pApplication);
 
-        void SetVSyncEnabled(bool vsync);
-        
+        virtual void SetVSyncEnabled(bool vsync) {}
         virtual bool CreateVertexBuffer(Ref<VertexBuffer>* buffer) 
+        { return false; }
+        virtual bool CreateShader(Ref<Shader>* shader)
         { return false; }
 
         Application* GetApplication();
@@ -124,6 +130,7 @@ namespace LegendEngine
          * @param pComponent The component.
          */
         virtual void OnSceneObjectComponentRemove(
+            Scene* pScene,
             Objects::Object* pObject,
             const std::string& typeName, 
             Objects::Components::Component* pComponent) 
@@ -134,9 +141,8 @@ namespace LegendEngine
          */
         virtual void OnRendererDispose() {}
 
-        bool enableVsync = false;
-
         std::vector<VertexBuffer*> vertexBuffers;
+        std::vector<Shader*> shaders;
     private:
         void OnDispose();
 

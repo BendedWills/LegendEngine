@@ -13,13 +13,19 @@ namespace LegendEngine
         struct Vertex2
         {
             float position[2];
+            float color[3];
         };
     }
 
     class VertexBuffer : public IDisposable
     {
     public:
-        VertexBuffer(IRenderer* pRenderer, VertexBufferType type)
+        ~VertexBuffer()
+        {
+            Dispose();
+        }
+
+        VertexBuffer(IRenderer* pRenderer, RealRenderingAPI type)
             :
             pRenderer(pRenderer),
             type(type)
@@ -41,7 +47,7 @@ namespace LegendEngine
          */
         bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
 
-        VertexBufferType GetType();
+        RealRenderingAPI GetType();
     protected:
         void OnDispose();
 
@@ -50,7 +56,7 @@ namespace LegendEngine
         virtual void OnBufferDispose() {}
 
         IRenderer* pRenderer = nullptr;
-        VertexBufferType type;
+        RealRenderingAPI type;
     };
 }
 

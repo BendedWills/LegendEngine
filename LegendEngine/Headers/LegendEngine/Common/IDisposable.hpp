@@ -17,6 +17,12 @@
     if (!initialized) \
         return returnValue;
 
+#define LEGENDENGINE_DISPOSE_ON_DESTRUCT(className) \
+    ~className() \
+    { \
+        Dispose(); \
+    }
+
 namespace LegendEngine
 {
     class IDisposable

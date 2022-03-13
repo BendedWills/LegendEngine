@@ -65,6 +65,18 @@ void Object::CalculateTransformMatrix()
     // TODO
 }
 
+void Object::AddToScene(Scene* pScene)
+{
+    scenes.push_back(pScene);
+}
+
+void Object::RemoveFromScene(Scene* pScene)
+{
+    for (uint64_t i = 0; i < scenes.size(); i++)
+        if (scenes[i] == pScene)
+            scenes.erase(scenes.begin() + i);
+}
+
 void Object::OnComponentAdd(const std::string& typeName, 
     Components::Component* pComponent)
 {

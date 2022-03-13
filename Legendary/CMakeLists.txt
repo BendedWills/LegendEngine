@@ -12,7 +12,7 @@ file(GLOB_RECURSE SOURCES
 
 add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} VulkanMemoryAllocator)
+add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator)
 
 if (UNIX)
     target_link_libraries(${PROJECT_NAME} 

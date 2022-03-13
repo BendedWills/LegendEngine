@@ -26,7 +26,7 @@ void Application::DebugCallback::OnDebugLog(
         pApplication->Log(ss.str(), LogType::WARN);
 }
 
-bool Application::Start(
+bool Application::Init(
     const std::string& applicationName,
     bool logging,
     bool debug,
@@ -91,6 +91,19 @@ bool Application::Start(
 
     // Show the window AFTER initialization
     window.SetVisible(true);
+
+    return true;
+}
+
+bool Application::Start(
+    const std::string& applicationName,
+    bool logging,
+    bool debug,
+    RenderingAPI api
+)
+{
+    if (!Init(applicationName, logging, debug, api))
+        return false;
 
     return StartLoop();
 }
@@ -169,6 +182,7 @@ bool Application::IsVulkanInitialized()
 
 Vulkan::Instance* Application::GetVulkanInstance()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
     return &instance;
 }
 
@@ -182,8 +196,6 @@ void Application::UpdateWindow()
 void Application::Update(bool updateWindow)
 {
     LEGENDENGINE_ASSERT_INITIALIZED();
-
-    
 
     if (updateWindow)
         UpdateWindow();
@@ -280,6 +292,8 @@ bool Application::InitObject(Objects::Object& object)
 
 bool Application::InitObject(Objects::Object* pObject)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
     if (!pObject)
     {
         Log("Initializing object: Object is nullptr. Returning.",
@@ -318,6 +332,8 @@ bool Application::InitScene(Scene& scene)
 
 bool Application::InitScene(Scene* pScene)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
     if (!pScene)
     {
         Log("Initializing scene: Scene is nullptr. Returning.",
@@ -347,6 +363,12 @@ bool Application::InitScene(Scene* pScene)
     Log(str.str(), LogType::DEBUG);
 
     return true;
+}
+
+void Application::RenderFrame()
+{
+    Update();
+    Render();
 }
 
 Scene* Application::GetDefaultScene()
@@ -439,6 +461,8 @@ void Application::OnDispose()
     DisposeGraphics();
 
     OnDisposed();
+
+    defaultScene.ClearObjects();
 }
 
 void Application::OnSceneObjectAdd(Scene* pScene,
@@ -474,6 +498,11 @@ void Application::OnSceneObjectComponentAdd(Scene* pScene,
     Objects::Components::Component* pComponent)
 {
     LEGENDENGINE_ASSERT_RENDERER_NULL();
+
+    if (pScene != activeScene && pScene != &defaultScene)
+        return;
+
+    pRenderer->OnSceneObjectComponentAdd(pScene, pObject, typeName, pComponent);
 }
 
 void Application::OnSceneObjectComponentRemove(Scene* pScene, 
@@ -485,5 +514,5 @@ void Application::OnSceneObjectComponentRemove(Scene* pScene,
     if (pScene != activeScene && pScene != &defaultScene)
         return;
 
-    pRenderer->OnSceneObjectComponentAdd(pScene, pObject, typeName, pComponent);
+    pRenderer->OnSceneObjectComponentRemove(pScene, pObject, typeName, pComponent);
 }

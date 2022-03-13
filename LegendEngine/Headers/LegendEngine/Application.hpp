@@ -35,6 +35,8 @@ namespace LegendEngine
     {
         friend Scene;
     public:
+        LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
+
         Application() 
         {}
         LEGENDENGINE_NO_COPY(Application);
@@ -50,7 +52,7 @@ namespace LegendEngine
          * 
          * @returns True if initialization was successful; otherwise, false.
          */
-        bool Start(
+        bool Init(
             const std::string& applicationName,
             bool logging = false, 
             bool debug = false,
@@ -58,6 +60,13 @@ namespace LegendEngine
         );
 
         bool InitVulkan(bool enableValidationLayers = false);
+
+        bool Start(
+            const std::string& applicationName,
+            bool logging = false,
+            bool debug = false,
+            RenderingAPI api = RenderingAPI::AUTO_SELECT
+        );
 
         /**
          * @brief Sets the application renderer.
@@ -126,6 +135,8 @@ namespace LegendEngine
          *  false if the object is already initialized.
          */
         bool InitScene(Scene* pScene);
+
+        void RenderFrame();
 
         Scene* GetDefaultScene();
 
@@ -234,7 +245,7 @@ namespace LegendEngine
         // Every application has a default scene. This scene contains objects
         // that are always rendered, no matter what the current set scene is.
         Scene defaultScene;
-        Scene* activeScene;
+        Scene* activeScene = nullptr;
     };
 }
 

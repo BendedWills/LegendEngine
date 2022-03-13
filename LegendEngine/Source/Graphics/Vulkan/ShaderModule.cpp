@@ -4,8 +4,11 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool ShaderModule::Init(Device* pDevice)
+bool ShaderModule::Init(Device* pDevice, ShaderType type)
 {
+	if (initialized)
+		return false;
+	this->type = type;
     this->pDevice = pDevice;
 
     initialized = true;
@@ -13,7 +16,7 @@ bool ShaderModule::Init(Device* pDevice)
 }
 
 #ifdef SHADER_COMPILATION
-bool ShaderModule::FromGLSL(const char* glsl, ShaderType type,
+bool ShaderModule::FromGLSL(const char* glsl,
     std::string* infoLog, std::string* debugLog)
 {
     std::vector<uint32_t> spirv;
@@ -61,7 +64,6 @@ bool ShaderModule::FromSpirV(uint32_t* spv, uint64_t spvSize)
 #ifdef SHADER_COMPILATION
 bool ShaderModule::CompileGLSL(
     const char* glsl, 
-    ShaderType type,
     std::vector<uint32_t>& spv, 
     std::string& infoLog,
     std::string& debugLog
@@ -112,6 +114,11 @@ bool ShaderModule::CompileGLSL(
     return true;
 }
 #endif
+
+LegendEngine::ShaderType ShaderModule::GetType()
+{
+	return type;
+}
 
 VkShaderModule ShaderModule::Get()
 {

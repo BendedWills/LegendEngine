@@ -2,6 +2,7 @@
 
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/Shader.hpp>
 #include <LegendEngine/Application.hpp>
 
 #include <CompiledAssets/solid.vert.spv.h>
@@ -20,10 +21,14 @@ void VulkanRenderer::EventHandler::OnWindowResize(
     Tether::Events::WindowResizeEvent event
 )
 {
-    if (!pRenderer->RecreateSwapchain(event.GetNewWidth(), event.GetNewHeight()))
-    {
-        pRenderer->GetApplication()->Log("Failed to recreate swapchain!", LogType::ERROR);
-    }
+    this->pRenderer->shouldRecreateSwapchain = true;
+}
+
+void VulkanRenderer::SetVSyncEnabled(bool vsync)
+{
+    this->enableVsync = vsync;
+
+    Reload();
 }
 
 bool VulkanRenderer::CreateVertexBuffer(
@@ -42,14 +47,31 @@ bool VulkanRenderer::CreateVertexBuffer(
     return true;
 }
 
+bool VulkanRenderer::CreateShader(
+    Ref<LegendEngine::Shader>* shader)
+{
+    if (!shader)
+    {
+        pApplication->Log(
+            "Creating shader: Shader is nullptr. Returning.",
+            LogType::WARN);
+        return false;
+    }
+
+    *shader = RefTools::Create<Shader>(this);
+
+    return true;
+}
+
 bool VulkanRenderer::Reload()
 {
-    Tether::IWindow* pWindow = pApplication->GetWindow();
-    return RecreateSwapchain(pWindow->GetWidth(), pWindow->GetHeight());
+    return RecreateSwapchain();
 }
 
 bool VulkanRenderer::OnRendererInit()
 {
+    timer.Start();
+
     pApplication = GetApplication();
     pInstance = pApplication->GetVulkanInstance();
 
@@ -171,6 +193,26 @@ void VulkanRenderer::OnDefaultObjectRemove(Scene* pScene,
     RecreateCommandBuffers();
 }
 
+void VulkanRenderer::OnSceneObjectComponentAdd(
+    Scene* pScene,
+    Objects::Object* pObject,
+    const std::string& typeName,
+    Objects::Components::Component* pComponent
+)
+{
+    RecreateCommandBuffers();
+}
+
+void VulkanRenderer::OnSceneObjectComponentRemove(
+    Scene* pScene,
+    Objects::Object* pObject,
+    const std::string& typeName,
+    Objects::Components::Component* pComponent
+)
+{
+    RecreateCommandBuffers();
+}
+
 bool VulkanRenderer::OnRenderFrame()
 {
     return DrawFrame();
@@ -180,8 +222,21 @@ void VulkanRenderer::OnRendererDispose()
 {
     device.WaitIdle();
 
+    // Shaders are removed as they are disposed, so an original copy is
+    // required.
+    std::vector<LegendEngine::Shader*> shadersOriginal(shaders);
+    for (uint64_t i2 = 0; i2 < shadersOriginal.size(); i2++)
+    {
+        LegendEngine::Shader* shader = shadersOriginal[i2];
+        shader->Dispose();
+    }
+    
     DisposeSwapchain();
 
+    testUniform.Dispose();
+    shaderProgram.Dispose();
+    vkDestroyRenderPass(device.Get(), renderPass, nullptr);
+    
     for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         vkDestroySemaphore(device.Get(), renderFinishedSemaphores[i], nullptr);
@@ -304,9 +359,9 @@ bool VulkanRenderer::InitDevice()
 bool VulkanRenderer::InitAllocator()
 {
     VmaVulkanFunctions funcs{};
-    funcs.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
-    funcs.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
-
+    funcs.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+    funcs.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+    
     VmaAllocatorCreateInfo createInfo{};
     createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     createInfo.physicalDevice = physicalDevice;
@@ -320,7 +375,7 @@ bool VulkanRenderer::InitAllocator()
 VkSurfaceFormatKHR VulkanRenderer::ChooseSurfaceFormat(Vulkan::SwapchainDetails details) 
 {
     for (const auto& availableFormat : details.formats)
-        if (availableFormat.format == VK_FORMAT_R64G64B64_UINT)
+        if (availableFormat.format == VK_FORMAT_R32G32B32_UINT)
             return availableFormat;
 
     return details.formats[0];
@@ -394,8 +449,8 @@ bool VulkanRenderer::InitSwapchain(uint64_t width, uint64_t height)
 
 bool VulkanRenderer::InitShaders()
 {
-    vertexModule.Init(&device);
-    fragmentModule.Init(&device);
+    vertexModule.Init(&device, ShaderType::VERTEX);
+    fragmentModule.Init(&device, ShaderType::FRAG);
 
     if (!vertexModule.FromSpirV(
         (uint32_t*)LegendEngine::Resources::solid_vert_spv,
@@ -463,112 +518,17 @@ bool VulkanRenderer::InitRenderPass()
     return true;
 }
 
+
 bool VulkanRenderer::InitPipeline()
 {
-    VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
-    pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutDesc.setLayoutCount = 0; 
-    pipelineLayoutDesc.pushConstantRangeCount = 0; 
-    
-    if (vkCreatePipelineLayout(device.Get(), &pipelineLayoutDesc, 
-        nullptr, &pipelineLayout) != VK_SUCCESS)
+    if (!testUniform.Init(this, sizeof(float), 0, VK_SHADER_STAGE_FRAGMENT_BIT,
+        swapchain.GetImageCount()))
         return false;
 
-    std::vector<VkVertexInputBindingDescription> bindingDescs;
-    std::vector<VkVertexInputAttributeDescription> attribDescs;
+	if (!greenUniform.Init(this, sizeof(float), 1, VK_SHADER_STAGE_FRAGMENT_BIT,
+		swapchain.GetImageCount()))
+		return false;
 
-    // Vertex2
-    {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(VertexTypes::Vertex2);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        std::array<VkVertexInputAttributeDescription, 1> attributeDescs{};
-        // Position
-        attributeDescs[0].location = 0;
-        attributeDescs[0].binding = 0;
-        attributeDescs[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescs[0].offset = offsetof(VertexTypes::Vertex2, position);
-        
-        bindingDescs.push_back(bindingDescription);
-        attribDescs.push_back(attributeDescs[0]);
-    }
-
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = bindingDescs.size();
-    vertexInputInfo.pVertexBindingDescriptions = bindingDescs.data();
-    vertexInputInfo.vertexAttributeDescriptionCount = attribDescs.size();
-    vertexInputInfo.pVertexAttributeDescriptions = attribDescs.data();
-    
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-    VkExtent2D swapchainExtent = swapchain.GetExtent();
-
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float)swapchainExtent.width;
-    viewport.height = (float)swapchainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor{};
-    scissor.offset.x = 0;
-    scissor.offset.y = 0;
-    scissor.extent.width = swapchainExtent.width;
-    scissor.extent.height = swapchainExtent.height;
-
-    VkPipelineViewportStateCreateInfo viewportState{};
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
-    viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
-
-    VkPipelineRasterizationStateCreateInfo rasterizer{};
-    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_FALSE;
-    rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
-    
-    VkPipelineMultisampleStateCreateInfo multisampleState{};
-    multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampleState.sampleShadingEnable = VK_FALSE;
-    multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    multisampleState.minSampleShading = 0.0f; 
-    multisampleState.pSampleMask = nullptr; 
-    multisampleState.alphaToCoverageEnable = VK_FALSE; 
-    multisampleState.alphaToOneEnable = VK_FALSE; 
-
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO; 
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; 
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; 
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; 
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; 
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; 
-
-    VkPipelineColorBlendStateCreateInfo colorBlending{};
-    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.logicOp = VK_LOGIC_OP_COPY; 
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
-
-    // Oh, yes, cool thing about Vulkan, you can actually have multiple shader
-    // stages for one shader module. That means that you can have a VSMain and
-    // a PSMain in one shader module (aka a glsl file in this case).
     VkPipelineShaderStageCreateInfo vertexStage{};
     vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertexStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -581,30 +541,36 @@ bool VulkanRenderer::InitPipeline()
     fragmentStage.module = fragmentModule.Get();
     fragmentStage.pName = "main";
 
+	UniformBuffer* uniforms[]
+	{
+		&testUniform,
+        &greenUniform
+	};
+
     VkPipelineShaderStageCreateInfo stages[] =
     {
         vertexStage, fragmentStage
     };
 
-    VkGraphicsPipelineCreateInfo pipelineDesc{};
-    pipelineDesc.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineDesc.stageCount = 2;
-    pipelineDesc.pStages = stages;
-    pipelineDesc.pVertexInputState = &vertexInputInfo;
-    pipelineDesc.pInputAssemblyState = &inputAssembly;
-    pipelineDesc.pViewportState = &viewportState;
-    pipelineDesc.pRasterizationState = &rasterizer;
-    pipelineDesc.pMultisampleState = &multisampleState;
-    pipelineDesc.pColorBlendState = &colorBlending;
-    pipelineDesc.layout = pipelineLayout;
-    pipelineDesc.renderPass = renderPass;
-    pipelineDesc.subpass = 0;
-    pipelineDesc.basePipelineHandle = VK_NULL_HANDLE;
+    VkDynamicState dynamicStates[] =
+    {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR
+    };
 
-    if (vkCreateGraphicsPipelines(device.Get(), VK_NULL_HANDLE,
-        1, &pipelineDesc, nullptr, &pipeline) != VK_SUCCESS)
+    PipelineInfo pipelineInfo{};
+	pipelineInfo.stageCount = sizeof(stages) / sizeof(stages[0]);
+	pipelineInfo.pStages = stages;
+	pipelineInfo.pDynamicStates = dynamicStates;
+    pipelineInfo.dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]);
+    pipelineInfo.pDynamicStates = dynamicStates;
+    pipelineInfo.uniformCount = sizeof(uniforms) / sizeof(uniforms[0]);
+    pipelineInfo.ppUniforms = uniforms;
+    pipelineInfo.images = swapchain.GetImageCount();
+
+    if (!shaderProgram.Init(this, &pipelineInfo))
         return false;
-    
+
     vertexModule.Dispose();
     fragmentModule.Dispose();
 
@@ -663,7 +629,7 @@ bool VulkanRenderer::InitCommandBuffers()
         return false;
     
     for (uint64_t i = 0; i < commandBuffers.size(); i++)
-        PopulateCommandBuffer(commandBuffers[i], framebuffers[i]);
+        PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i);
     
     return true;
 }
@@ -698,8 +664,21 @@ bool VulkanRenderer::InitSyncObjects()
     return true;
 }
 
+void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
+{
+    float test = (sin(timer.GetElapsedMillis() / 500.0f) + 1.0f) / 2;
+    testUniform.UpdateBuffer(&test, imageIndex);
+
+	float green = (sin(timer.GetElapsedMillis() / 1000.0f) + 1.0f) / 2;
+	greenUniform.UpdateBuffer(&green, imageIndex);
+}
+
 bool VulkanRenderer::DrawFrame()
 {
+    if (shouldRecreateSwapchain)
+        if (!RecreateSwapchain())
+            pApplication->Log("Failed to recreate swapchain!", LogType::ERROR);
+
     // in flight frame = a frame that is being rendered while still rendering 
     // more frames
 
@@ -720,6 +699,8 @@ bool VulkanRenderer::DrawFrame()
     if (result != VK_SUCCESS)
         return result == VK_SUBOPTIMAL_KHR 
             || result == VK_ERROR_OUT_OF_DATE_KHR;
+
+    UpdateUniforms(imageIndex);
     
     // If images are acquired out of order, or MAX_FRAMES_IN_FLIGHT is higher
     // than the number of swapchain images, we may start rendering to an
@@ -772,32 +753,30 @@ bool VulkanRenderer::DrawFrame()
     return true;
 }
 
-bool VulkanRenderer::RecreateSwapchain(uint64_t width, uint64_t height)
+bool VulkanRenderer::RecreateSwapchain()
 {
-    if (width == 0 || height == 0)
-        return true;
-    
-    std::stringstream ss;
-    ss << "Recreating swapchain (Window resize) ";
-    ss << "(newWidth = " << width << ", newHeight = " << height << ")";
-
-    LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer", ss.str(), 
+    LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer", 
+        "Recreating swapchain (Window resize)", 
         LogType::DEBUG);
     
     // The device might still have work. Wait for it to finish before 
     // recreating the swapchain.
     device.WaitIdle();
 
+    Tether::IWindow* pWindow = pApplication->GetWindow();
+
     DisposeSwapchain();
-    if (!InitSwapchain(width, height)
-        || !InitRenderPass()
-        || !InitShaders()
-        || !InitPipeline()
+    if (!InitSwapchain(
+            pWindow->GetWidth(),
+            pWindow->GetHeight()
+        )
         || !InitFramebuffers()
         || !InitCommandBuffers())
         return false;
-
+    
     imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
+
+    shouldRecreateSwapchain = false;
     return true;
 }
 
@@ -813,7 +792,7 @@ bool VulkanRenderer::RecreateCommandBuffers()
             vkWaitForFences(device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
 
         vkResetCommandBuffer(commandBuffers[i], 0);
-        if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i]))
+        if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i))
             return false;
     }
 
@@ -821,7 +800,7 @@ bool VulkanRenderer::RecreateCommandBuffers()
 }
 
 bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
-    VkFramebuffer framebuffer)
+    VkFramebuffer framebuffer, uint64_t commandBufferIndex)
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
 
@@ -830,6 +809,8 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
     if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
         return false;
+
+    VkExtent2D swapchainExtent = swapchain.GetExtent();
     
     VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
     VkRenderPassBeginInfo renderPassInfo{};
@@ -837,14 +818,32 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
     renderPassInfo.renderPass = renderPass;
     renderPassInfo.framebuffer = framebuffer;
     renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = swapchain.GetExtent();
+    renderPassInfo.renderArea.extent = swapchainExtent;
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)swapchainExtent.width;
+    viewport.height = (float)swapchainExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset.x = 0;
+    scissor.offset.y = 0;
+    scissor.extent.width = swapchainExtent.width;
+    scissor.extent.height = swapchainExtent.height;
 
     vkCmdBeginRenderPass(buffer, &renderPassInfo,
         VK_SUBPASS_CONTENTS_INLINE);
     {
-        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+            shaderProgram.GetPipeline());
+
+        vkCmdSetViewport(buffer, 0, 1, &viewport);
+        vkCmdSetScissor(buffer, 0, 1, &scissor);
 
         using namespace Objects;
         using namespace Objects::Components;
@@ -852,6 +851,15 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
         // This will probably be changed later on
         // Eventually, objects will have to be rendered in order of distance
         // from the camera.
+
+        VkDescriptorSet descSets[] =
+        {
+			testUniform.GetDescriptorSets()[commandBufferIndex],
+			greenUniform.GetDescriptorSets()[commandBufferIndex]
+        };
+
+        vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            shaderProgram.GetPipelineLayout(), 0, 2, descSets, 0, nullptr);
 
         // Default scene
         Scene* pDefault = pApplication->GetDefaultScene();
@@ -867,7 +875,7 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
             LegendEngine::VertexBuffer* pVertexBuffer =
                 component->GetVertexBuffer();
-            if (pVertexBuffer->GetType() != VertexBufferType::VULKAN)
+            if (pVertexBuffer->GetType() != RealRenderingAPI::VULKAN)
                 continue;
 
             VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
@@ -895,7 +903,7 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
                 LegendEngine::VertexBuffer* pVertexBuffer =
                     component->GetVertexBuffer();
-                if (pVertexBuffer->GetType() != VertexBufferType::VULKAN)
+                if (pVertexBuffer->GetType() != RealRenderingAPI::VULKAN)
                     continue;
 
                 VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
@@ -918,16 +926,12 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
 void VulkanRenderer::DisposeSwapchain()
 {
+    vkFreeCommandBuffers(device.Get(), commandPool, commandBuffers.size(), 
+        commandBuffers.data());
+
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device.Get(), framebuffer, nullptr);
     
-    vkFreeCommandBuffers(device.Get(), commandPool, commandBuffers.size(), 
-        commandBuffers.data());
-    
-    vkDestroyPipeline(device.Get(), pipeline, nullptr);
-    vkDestroyPipelineLayout(device.Get(), pipelineLayout, nullptr);
-    vkDestroyRenderPass(device.Get(), renderPass, nullptr);
-
     for (VkImageView imageView : swapchainImageViews)
         vkDestroyImageView(device.Get(), imageView, nullptr);
 

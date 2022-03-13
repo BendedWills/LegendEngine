@@ -15,10 +15,12 @@ namespace LegendEngine::Vulkan
     {
         friend VulkanRenderer;
     public:
+        LEGENDENGINE_DISPOSE_ON_DESTRUCT(VertexBuffer);
+
         VertexBuffer(VulkanRenderer* pRenderer)
             :
             pVulkanRenderer(pRenderer),
-            LegendEngine::VertexBuffer(pRenderer, VertexBufferType::VULKAN) 
+            LegendEngine::VertexBuffer(pRenderer, RealRenderingAPI::VULKAN) 
         {}
         
         VertexBuffer(const VertexBuffer&) = delete;

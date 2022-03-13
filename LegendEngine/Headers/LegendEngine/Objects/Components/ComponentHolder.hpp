@@ -65,9 +65,9 @@ namespace LegendEngine::Objects::Components
             if (components.count(id))
             {
                 auto componentIter = components.find(id);
-                components.erase(componentIter);
 
                 OnComponentRemove(id, componentIter->second.get());
+                components.erase(componentIter);
 
                 return true;
             }

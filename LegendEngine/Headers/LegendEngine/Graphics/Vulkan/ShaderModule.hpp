@@ -7,7 +7,7 @@
 #ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
-#include <LegendEngine/Graphics/Vulkan/Common/ShaderType.hpp>
+#include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>
 
 #include <vulkan/vulkan.h>
@@ -30,7 +30,7 @@ namespace LegendEngine::Vulkan
 		ShaderModule& operator=(const ShaderModule&) = delete;
 		ShaderModule& operator=(ShaderModule&&) = delete;
 
-        bool Init(Device* pDevice);
+        bool Init(Device* pDevice, ShaderType type);
     
     #ifdef SHADER_COMPILATION
         /**
@@ -44,7 +44,7 @@ namespace LegendEngine::Vulkan
          * 
          * @returns True if the shader compiled successfully. Otherwise, false.
          */
-        bool FromGLSL(const char* glsl, ShaderType type,
+        bool FromGLSL(const char* glsl,
             std::string* infoLog = nullptr, std::string* debugLog = nullptr);
     #endif
         /**
@@ -68,13 +68,13 @@ namespace LegendEngine::Vulkan
          */
         bool CompileGLSL(
             const char* glsl, 
-            ShaderType type,
             std::vector<uint32_t>& spv, 
             std::string& infoLog,
             std::string& debugLog
         );
     #endif
 
+        ShaderType GetType();
         VkShaderModule Get();
     protected:
         void OnDispose();
@@ -85,6 +85,7 @@ namespace LegendEngine::Vulkan
 
         Device* pDevice = nullptr;
 
+        ShaderType type;
         VkShaderModule shaderModule;
         bool shaderCreated = false;
     };

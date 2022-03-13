@@ -15,22 +15,26 @@ public:
 	{
 		if (!renderer.Init(this))
 			return false;
+		//renderer.SetVSyncEnabled(true);
 		SetRenderer(&renderer);
 
 		InitScene(testScene);
-		SetActiveScene(testScene);
 		
 		srand(time(NULL));
 		for (uint64_t i = 0; i < 100; i++)
 		{
-			float offsetX = (rand() % 65536) / 65536.0f * 4 - 1;
-			float offsetY = (rand() % 65536) / 65536.0f * 4 - 1;
+			float offsetX = (float)rand() / RAND_MAX * 2 - 1;
+			float offsetY = (float)rand() / RAND_MAX * 2 - 1;
+
+			float r = (float)rand() / RAND_MAX;
+			float g = (float)rand() / RAND_MAX;
+			float b = (float)rand() / RAND_MAX;
 
 			VertexTypes::Vertex2 testVertices[] =
 			{
-				{   0.0f + offsetX, -0.1f + offsetY },
-				{   0.1f + offsetX,  0.1f + offsetY },
-				{  -0.1f + offsetX,  0.1f + offsetY }
+				{   0.0f  + offsetX, -0.05f + offsetY, r, g, b, },
+				{   0.05f + offsetX,  0.05f + offsetY, r, g, b, },
+				{  -0.05f + offsetX,  0.05f + offsetY, r, g, b, }
 			};
 
 			Ref<Object> object = RefTools::Create<Object>();
@@ -45,20 +49,15 @@ public:
 			testScene.AddObject(object.get());
 		}
 
-		for (uint64_t i = 0; i < 50; i++)
-		{
-			Ref<Object> object = objects[i];
-			object->RemoveComponent<Components::MeshComponent>();
-		}
+		SetActiveScene(testScene);
 
 		return true;
 	}
 
 	void OnStop()
 	{
-		for (uint64_t i = 0; i < 100; i++)
-			testScene.RemoveObject(objects[i].get());
 		renderer.Dispose();
+		testScene.ClearObjects();
 	}
 private:
 	Scene testScene;
@@ -69,9 +68,11 @@ private:
 
 int main()
 {
-	Triangle triangle;
-	if (!triangle.Start("Legendary", true, true))
-		return EXIT_FAILURE;
-
+	{
+		Triangle triangle;
+		if (!triangle.Start("Legendary", true, true))
+			return EXIT_FAILURE;
+	}
+	
 	return EXIT_SUCCESS;
 }

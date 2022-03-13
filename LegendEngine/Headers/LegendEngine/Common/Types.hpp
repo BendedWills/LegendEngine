@@ -24,9 +24,17 @@ namespace LegendEngine
         VULKAN
     };
 
-    enum class VertexBufferType
+    enum class RealRenderingAPI
     {
         VULKAN,
+    };
+
+    enum class ShaderType
+    {
+        VERTEX,
+        GEOM, // ! CURRENTLY UNSUPPORTED
+        COMPUTE, // ! CURRENTLY UNSUPPORTED
+        FRAG
     };
 
     enum class ApplicationType

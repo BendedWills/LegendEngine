@@ -31,6 +31,8 @@ void Scene::AddObject(Objects::Object* pObject)
     }
 
     objects.push_back(pObject);
+    pObject->AddToScene(this);
+
     //AddComponents(pObject);
 
     pApplication->OnSceneObjectAdd(this, pObject);
@@ -76,6 +78,7 @@ bool Scene::RemoveObject(Objects::Object* pObject)
     for (uint64_t i = 0; i < objects.size(); i++)
         if (objects[i] == pObject)
         {
+            objects[i]->RemoveFromScene(this);
             objects.erase(objects.begin() + i);
             //RemoveComponents(pObject);
 
@@ -83,6 +86,11 @@ bool Scene::RemoveObject(Objects::Object* pObject)
         }
 
     return false;
+}
+
+void Scene::ClearObjects()
+{
+    objects.clear();
 }
 
 std::vector<Objects::Object*>* Scene::GetObjects()

@@ -1,13 +1,20 @@
+#if !defined(VULKAN_API) && defined(__INTELLISENSE__)
+#define VULKAN_API
+#endif
+
 #ifndef _LEGENDENGINE_VULKANRENDERER_HPP
 #define _LEGENDENGINE_VULKANRENDERER_HPP
 #ifdef VULKAN_API
 
+#include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 #include <LegendEngine/Graphics/Vulkan/Surface.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>
 #include <LegendEngine/Graphics/Vulkan/Swapchain.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
+#include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
+#include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
 
 #include <vk_mem_alloc.h>
 
@@ -22,6 +29,8 @@ namespace LegendEngine::Vulkan
     class VulkanRenderer : public IRenderer
     {
         friend VertexBuffer;
+        friend Pipeline;
+        friend UniformBuffer;
     public:
         VulkanRenderer() 
             :
@@ -33,7 +42,9 @@ namespace LegendEngine::Vulkan
 		VulkanRenderer& operator=(const VulkanRenderer&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
         
+        void SetVSyncEnabled(bool vsync);
         bool CreateVertexBuffer(Ref<LegendEngine::VertexBuffer>* buffer);
+        bool CreateShader(Ref<LegendEngine::Shader>* shader);
 
         /**
          * @brief Reloads the renderer. Required after a settings change.
@@ -49,14 +60,15 @@ namespace LegendEngine::Vulkan
         VkQueue graphicsQueue;
         VkQueue presentQueue;
 
-        // Vulkan::Buffer vertexBuffer; // Unimplemented
-        VkPipelineLayout pipelineLayout;
         VkRenderPass renderPass;
-        VkPipeline pipeline;
         VkCommandPool commandPool;
+
         // Shader stuff
+        Vulkan::UniformBuffer testUniform;
+        Vulkan::UniformBuffer greenUniform;
         Vulkan::ShaderModule vertexModule;
         Vulkan::ShaderModule fragmentModule;
+        Vulkan::Pipeline shaderProgram;
 
         Vulkan::QueueFamilyIndices indices;
         VkPhysicalDevice physicalDevice;
@@ -92,11 +104,17 @@ namespace LegendEngine::Vulkan
         
         Application* pApplication = nullptr;
         Vulkan::Instance* pInstance;
+
+        Stopwatch timer;
+
+        bool shouldRecreateSwapchain = false;
+        bool enableVsync = false;
     private:
-        bool RecreateSwapchain(uint64_t width, uint64_t height);
+        bool RecreateSwapchain();
 
         bool RecreateCommandBuffers();
-        bool PopulateCommandBuffer(VkCommandBuffer buffer, VkFramebuffer framebuffer);
+        bool PopulateCommandBuffer(VkCommandBuffer buffer, VkFramebuffer framebuffer,
+            uint64_t commandBufferIndex);
 
         bool OnRendererInit();
 
@@ -106,14 +124,16 @@ namespace LegendEngine::Vulkan
         void OnSceneRemove(Scene* pScene);
         void OnDefaultObjectAdd(Scene* pScene, Objects::Object* pObject);
         void OnDefaultObjectRemove(Scene* pScene, Objects::Object* pObject);
-        void OnObjectComponentAdd(
+        void OnSceneObjectComponentAdd(
+            Scene* pScene,
             Objects::Object* pObject,
-            const std::string& typeName, 
+            const std::string& typeName,
             Objects::Components::Component* pComponent
         );
-        void OnObjectComponentRemove(
+        void OnSceneObjectComponentRemove(
+            Scene* pScene,
             Objects::Object* pObject,
-            const std::string& typeName, 
+            const std::string& typeName,
             Objects::Components::Component* pComponent
         );
 
@@ -135,6 +155,8 @@ namespace LegendEngine::Vulkan
         bool InitCommandPool();
         bool InitCommandBuffers();
         bool InitSyncObjects();
+
+        void UpdateUniforms(uint64_t imageIndex);
 
         bool DrawFrame();
 

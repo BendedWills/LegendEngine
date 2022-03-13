@@ -28,12 +28,11 @@ get_directory_property(COMPDEFS COMPILE_DEFINITIONS)
 if (COMPDEFS MATCHES "^VULKAN_API")
     # VULKAN_API defined
 
+    add_subdirectory("Vendor/VMA")
     if (UNIX)
         set(VMA_DYNAMIC_VULKAN_FUNCTIONS ON)
         set(VMA_STATIC_VULKAN_FUNCTIONS OFF)
     endif()
-
-    add_subdirectory("Vendor/VMA")
 
     # Compile shaders
 

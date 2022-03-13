@@ -55,6 +55,8 @@ namespace LegendEngine
          */
         bool RemoveObject(Objects::Object* pObject);
 
+        void ClearObjects();
+
         std::vector<Objects::Object*>* GetObjects();
     protected:
         void OnObjectComponentAdd(Objects::Object*, std::string typeName, 

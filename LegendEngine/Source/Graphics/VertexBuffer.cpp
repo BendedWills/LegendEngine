@@ -20,7 +20,7 @@ bool VertexBuffer::Init(VertexTypes::Vertex2* pVertices,
     return true;
 }
 
-VertexBufferType VertexBuffer::GetType()
+RealRenderingAPI VertexBuffer::GetType()
 {
     return type;
 }
@@ -31,7 +31,7 @@ void VertexBuffer::OnDispose()
     Tether::VectorUtils::EraseAll(pRenderer->vertexBuffers, this);
 
     LEGENDENGINE_OBJECT_LOG(
-        pRenderer->GetApplication(),"VertexBuffer", 
+        pRenderer->GetApplication(), "VertexBuffer", 
         "Disposed vertex buffer", 
         LogType::DEBUG
     );

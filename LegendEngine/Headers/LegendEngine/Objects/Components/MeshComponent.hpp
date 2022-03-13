@@ -10,6 +10,8 @@ namespace LegendEngine::Objects::Components
     class MeshComponent : public Component, IDisposable
     {
     public:
+        LEGENDENGINE_DISPOSE_ON_DESTRUCT(MeshComponent);
+
         bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
 
         VertexBuffer* GetVertexBuffer();
