@@ -1,7 +1,5 @@
-vgcore.*
-Build
-vulkan.supp
-*.o
-*.spv
-LegendEngine/Assets/Compiled
 .vs
+Build
+vgcore.*
+vulkan.supp
+LegendEngine/Assets/Bin

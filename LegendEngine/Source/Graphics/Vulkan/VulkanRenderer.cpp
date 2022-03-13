@@ -9,6 +9,11 @@
 #include <CompiledAssets/solid.frag.spv.h>
 
 #include <set>
+#include <cmath>
+
+#define VMA_VULKAN_VERSION 1000000
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
 
 using namespace LegendEngine::Vulkan;
 
@@ -363,7 +368,7 @@ bool VulkanRenderer::InitAllocator()
     funcs.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
     
     VmaAllocatorCreateInfo createInfo{};
-    createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+	createInfo.vulkanApiVersion = VK_API_VERSION_1_0;
     createInfo.physicalDevice = physicalDevice;
     createInfo.device = device.Get();
     createInfo.instance = pApplication->GetVulkanInstance()->Get();

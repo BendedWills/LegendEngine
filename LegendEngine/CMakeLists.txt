@@ -182,33 +182,26 @@ file(GLOB_RECURSE SOURCES
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 add_dependencies(${PROJECT_NAME} tether compileassets)
 
+set(VK_LIBS)
+set(VK_INCLUDES)
+
 if (COMPDEFS MATCHES "^VULKAN_API")
     add_dependencies(${PROJECT_NAME} vkshaders VulkanMemoryAllocator)
+
+    set(VK_LIBS ${VK_LIBS} ${Vulkan_LIBRARIES})
+    set(VK_INCLUDES ${VK_INCLUDES} ${Vulkan_INCLUDE_DIR})
 endif()
 
-target_link_libraries(${PROJECT_NAME} tether)
-if (COMPDEFS MATCHES "^VULKAN_API")
-    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES}
-        VulkanMemoryAllocator)
-endif()
-
-if (UNIX)
-    # UNIX specific stuff here
-
-    target_include_directories(${PROJECT_NAME} 
-        PUBLIC "Headers"
-        PUBLIC "${ASSETS_BIN_DIR}"
-        PUBLIC "Vendor/Tether/Headers"
-        PUBLIC "Vendor/VMA/include"
-    )
-elseif(WIN32)
-    # Windows specific stuff here
-    
-    target_include_directories(${PROJECT_NAME} 
-        PUBLIC "Headers"
-        PUBLIC "${ASSETS_BIN_DIR}"
-        PUBLIC "Vendor/Tether/Headers"
-        PUBLIC "Vendor/VMA/include"
-        PRIVATE "${VULKAN_SDK_PATH}\\Include"
-    )
-endif()
+target_include_directories(${PROJECT_NAME} 
+PUBLIC
+    "Headers"
+    "${ASSETS_BIN_DIR}"
+    "Vendor/Tether/Headers"
+    "Vendor/VMA/include"
+PRIVATE
+    ${VK_INCLUDES}
+)
+target_link_libraries(${PROJECT_NAME} 
+    tether
+    ${VK_LIBS}
+)
