@@ -1,5 +1,9 @@
 .vs
+.vscode
+
 Build
+
 vgcore.*
 vulkan.supp
+
 LegendEngine/Assets/Bin
