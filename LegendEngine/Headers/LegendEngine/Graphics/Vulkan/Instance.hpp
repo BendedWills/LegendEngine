@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Graphics/Vulkan/DebugCallback.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>
@@ -22,11 +23,7 @@ namespace LegendEngine::Vulkan
 	{
 	public:
 		Instance() {}
-
-		Instance(const Instance&) = delete;
-		Instance(Instance&&) = delete;
-		Instance& operator=(const Instance&) = delete;
-		Instance& operator=(Instance&&) = delete;
+		LEGENDENGINE_NO_COPY(Instance);
 
 		/**
 		 * @brief Initializes Vulkan.

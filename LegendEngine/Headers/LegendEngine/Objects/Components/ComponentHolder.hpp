@@ -1,6 +1,7 @@
 #ifndef _LEGENDENGINE_COMPONENTHOLDER_HPP
 #define _LEGENDENGINE_COMPONENTHOLDER_HPP
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Ref.hpp>
 #include <LegendEngine/Objects/Components/Component.hpp>
 
@@ -29,11 +30,7 @@ namespace LegendEngine::Objects::Components
             :
             pObject(pObject)
         {}
-
-        ComponentHolder(const ComponentHolder&) = delete;
-        ComponentHolder(ComponentHolder&&) = delete;
-        ComponentHolder& operator=(const ComponentHolder&) = delete;
-        ComponentHolder& operator=(ComponentHolder&&) = delete;
+        LEGENDENGINE_NO_COPY(ComponentHolder);
 
         template<typename T, typename... Args>
         T* AddComponent(Args... args)

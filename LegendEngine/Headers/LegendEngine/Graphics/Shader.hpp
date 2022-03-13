@@ -29,7 +29,7 @@ namespace LegendEngine
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(Shader);
         LEGENDENGINE_NO_COPY(Shader);
 
-        Shader(IRenderer* pRenderer, RealRenderingAPI type)
+        Shader(IRenderer* pRenderer, RenderingAPI type)
             :
             pRenderer(pRenderer),
             type(type)
@@ -49,14 +49,14 @@ namespace LegendEngine
         bool Init(ShaderStage* pStages, uint64_t stageCount, UniformDesc* pDescs,
             uint64_t uniformCount);
 
-        RealRenderingAPI GetType();
+        RenderingAPI GetType();
     protected:
         virtual bool OnShaderCreate(ShaderStage* pStages, uint64_t stageCount, 
             UniformDesc* pDescs, uint64_t uniformCount) { return false; }
         virtual void OnShaderDispose() {}
 
         IRenderer* pRenderer = nullptr;
-        RealRenderingAPI type;
+        RenderingAPI type;
     private:
         void OnDispose();
     };

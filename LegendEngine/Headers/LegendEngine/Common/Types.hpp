@@ -3,12 +3,6 @@
 
 namespace LegendEngine
 {
-    enum class RenderMode
-    {
-        UNLIT,
-        LIT
-    };
-    
     enum class LogType
     {
         DEBUG,
@@ -24,23 +18,12 @@ namespace LegendEngine
         VULKAN
     };
 
-    enum class RealRenderingAPI
-    {
-        VULKAN,
-    };
-
     enum class ShaderType
     {
         VERTEX,
         GEOM, // ! CURRENTLY UNSUPPORTED
         COMPUTE, // ! CURRENTLY UNSUPPORTED
         FRAG
-    };
-
-    enum class ApplicationType
-    {
-        THREEDIM,
-        TWODIM,
     };
 }
 

@@ -6,6 +6,7 @@
 #define _LEGENDENGINE_VULKAN_SHADERMODULE_HPP
 #ifdef VULKAN_API
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>
@@ -24,11 +25,7 @@ namespace LegendEngine::Vulkan
     {
     public:
         ShaderModule() {}
-
-		ShaderModule(const ShaderModule&) = delete;
-		ShaderModule(ShaderModule&&) = delete;
-		ShaderModule& operator=(const ShaderModule&) = delete;
-		ShaderModule& operator=(ShaderModule&&) = delete;
+        LEGENDENGINE_NO_COPY(ShaderModule);
 
         bool Init(Device* pDevice, ShaderType type);
     

@@ -21,7 +21,7 @@ namespace LegendEngine::Vulkan
         Shader(VulkanRenderer* pRenderer)
             :
             pVulkanRenderer(pRenderer),
-            LegendEngine::Shader(pRenderer, RealRenderingAPI::VULKAN)
+            LegendEngine::Shader(pRenderer, RenderingAPI::VULKAN)
         {}
     protected:
         bool OnShaderCreate(ShaderStage* pStages, uint64_t stageCount,

@@ -1,6 +1,8 @@
 #ifndef _LEGENDENGINE_COMPONENT_HPP
 #define _LEGENDENGINE_COMPONENT_HPP
 
+#include <LegendEngine/Common/Defs.hpp>
+
 namespace LegendEngine::Objects
 {
     class Object;
@@ -14,12 +16,8 @@ namespace LegendEngine::Objects::Components
         friend ComponentHolder;
     public:
         Component();
+        LEGENDENGINE_NO_COPY(Component);
         
-        Component(const Component&) = delete;
-		Component(Component&&) = delete;
-		Component& operator=(const Component&) = delete;
-		Component& operator=(Component&&) = delete;
-
         Object* GetObject();
     protected:
         void SetObject(Object* pObject);

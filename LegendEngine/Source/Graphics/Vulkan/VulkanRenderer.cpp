@@ -31,6 +31,8 @@ void VulkanRenderer::EventHandler::OnWindowResize(
 
 void VulkanRenderer::SetVSyncEnabled(bool vsync)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED();
+
     this->enableVsync = vsync;
 
     Reload();
@@ -39,6 +41,8 @@ void VulkanRenderer::SetVSyncEnabled(bool vsync)
 bool VulkanRenderer::CreateVertexBuffer(
     Ref<LegendEngine::VertexBuffer>* buffer)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
     if (!buffer)
     {
         pApplication->Log(
@@ -55,6 +59,8 @@ bool VulkanRenderer::CreateVertexBuffer(
 bool VulkanRenderer::CreateShader(
     Ref<LegendEngine::Shader>* shader)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
     if (!shader)
     {
         pApplication->Log(
@@ -70,6 +76,7 @@ bool VulkanRenderer::CreateShader(
 
 bool VulkanRenderer::Reload()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
     return RecreateSwapchain();
 }
 
@@ -880,7 +887,7 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
             LegendEngine::VertexBuffer* pVertexBuffer =
                 component->GetVertexBuffer();
-            if (pVertexBuffer->GetType() != RealRenderingAPI::VULKAN)
+            if (pVertexBuffer->GetType() != RenderingAPI::VULKAN)
                 continue;
 
             VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
@@ -908,7 +915,7 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
                 LegendEngine::VertexBuffer* pVertexBuffer =
                     component->GetVertexBuffer();
-                if (pVertexBuffer->GetType() != RealRenderingAPI::VULKAN)
+                if (pVertexBuffer->GetType() != RenderingAPI::VULKAN)
                     continue;
 
                 VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;

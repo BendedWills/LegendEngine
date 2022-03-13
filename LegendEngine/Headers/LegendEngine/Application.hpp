@@ -35,11 +35,11 @@ namespace LegendEngine
     {
         friend Scene;
     public:
+        LEGENDENGINE_NO_COPY(Application);
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
 
         Application() 
         {}
-        LEGENDENGINE_NO_COPY(Application);
 
         /**
          * @brief Initializes the application
@@ -85,9 +85,6 @@ namespace LegendEngine
         Tether::IWindow* GetWindow();
         bool IsCloseRequested();
         bool IsApiInitialized();
-
-        // Window Management
-        void SetFullscreen(bool fullscreen, int monitor = 0);
         
         // Vulkan functions
         bool IsVulkanInitialized();

@@ -7,6 +7,7 @@
 #define _LEGENDENGINE_VULKAN_SURFACE_HPP
 #ifdef VULKAN_API
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <Tether/Tether.hpp>
 
@@ -19,11 +20,7 @@ namespace LegendEngine::Vulkan
     {
     public:
         Surface() {}
-
-		Surface(const Surface&) = delete;
-		Surface(Surface&&) = delete;
-		Surface& operator=(const Surface&) = delete;
-		Surface& operator=(Surface&&) = delete;
+        LEGENDENGINE_NO_COPY(Surface);
 
         /**
          * @brief Initializes the surface object.

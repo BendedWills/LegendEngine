@@ -12,10 +12,16 @@ using namespace LegendEngine::Vulkan;
 bool Shader::OnShaderCreate(ShaderStage* pStages, uint64_t stageCount,
     UniformDesc* pDescs, uint64_t uniformCount)
 {
-    
+    // TODO
     LEGENDENGINE_OBJECT_LOG(
         pVulkanRenderer->GetApplication(),"Vulkan::Shader", 
-        "Initialized shader", 
+        "Vulkan shaders are currently unsupported.", 
+        LogType::WARN
+    );
+
+    LEGENDENGINE_OBJECT_LOG(
+        pVulkanRenderer->GetApplication(),"Vulkan::Shader", 
+        "Initialized shader.", 
         LogType::DEBUG
     );
 

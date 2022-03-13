@@ -20,7 +20,7 @@ bool VertexBuffer::Init(VertexTypes::Vertex2* pVertices,
     return true;
 }
 
-RealRenderingAPI VertexBuffer::GetType()
+RenderingAPI VertexBuffer::GetType()
 {
     return type;
 }

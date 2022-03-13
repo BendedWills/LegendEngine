@@ -13,8 +13,9 @@ namespace LegendEngine
         friend Application;
         friend Objects::Object;
     public:
-        Scene() {}
         LEGENDENGINE_NO_COPY(Scene);
+        
+        Scene() {}
 
         /**
          * @brief Adds an object to the scene.

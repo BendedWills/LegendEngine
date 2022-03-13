@@ -93,7 +93,6 @@ bool Instance::Init(
 	else
 		appInfo.pEngineName = "yo mama so fat";
 
-	// Info about the instance
 	VkInstanceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
@@ -133,20 +132,9 @@ bool Instance::Init(
 			createInfo.pNext = &messengerCreateInfo;
 		}
 	}
-	else
-	{
-		// If not debug mode
-
-		createInfo.enabledLayerCount = 0;
-		createInfo.pNext = nullptr;
-	}
-
-	VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-	if (result != VK_SUCCESS)
-	{
-		std::cout << "Failed to create vulkan instance!" << std::endl;
+	
+	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
 		return false;
-	}
 
 	uint32_t extentionCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extentionCount, nullptr);

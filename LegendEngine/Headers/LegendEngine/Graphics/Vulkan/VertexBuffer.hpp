@@ -20,7 +20,7 @@ namespace LegendEngine::Vulkan
         VertexBuffer(VulkanRenderer* pRenderer)
             :
             pVulkanRenderer(pRenderer),
-            LegendEngine::VertexBuffer(pRenderer, RealRenderingAPI::VULKAN) 
+            LegendEngine::VertexBuffer(pRenderer, RenderingAPI::VULKAN) 
         {}
         
         VertexBuffer(const VertexBuffer&) = delete;

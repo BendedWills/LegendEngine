@@ -3,12 +3,12 @@
 layout(location = 0) in vec3 inColor;
 layout(location = 0) out vec4 fragColor;
 
-layout(binding = 0) uniform UBO
+layout(set = 0, binding = 0) uniform UBO
 {
     float test;
 };
 
-layout(binding = 1) uniform ColorChanger
+layout(set = 1, binding = 0) uniform ColorChanger
 {
     float green;
 };

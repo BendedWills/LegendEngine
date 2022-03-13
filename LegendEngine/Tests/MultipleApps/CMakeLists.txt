@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.8)
 project ("MultipleApps")
 
+find_package(Vulkan REQUIRED)
+
 set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE SOURCES 
@@ -8,40 +10,32 @@ file(GLOB_RECURSE SOURCES
     "Headers/*.hpp" "Headers/*.h"
 )
 
-add_definitions(-DVULKAN_API)
+add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 add_executable(${PROJECT_NAME} ${SOURCES})
+add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether)
+
+target_include_directories(${PROJECT_NAME} 
+PUBLIC 
+    "Headers"
+    "../../Headers"
+PRIVATE 
+    "../../Vendor/Tether/Headers"
+    "../../Vendor/VMA/include"
+    ${Vulkan_INCLUDE_DIR}
+)
 
 if (UNIX)
     target_link_libraries(${PROJECT_NAME} 
-        ${CMAKE_DL_LIBS} pthread LegendEngine X11 vulkan tether
-    )
-
-    target_include_directories(${PROJECT_NAME} 
-        PUBLIC "Headers"
-        PUBLIC "../../Headers"
-        PRIVATE "../../Vendor/Tether/Headers"
-    )
-
-    target_link_directories(${PROJECT_NAME}
-        PRIVATE "../../Build"
-        PRIVATE "../../Vendor/Tether/Build"
+        ${Vulkan_LIBRARIES} 
+        ${CMAKE_DL_LIBS} 
+        LegendEngine 
+        tether 
+        pthread 
+        X11
     )
 elseif(WIN32)
-    set(VULKAN_SDK_PATH "C:\\VulkanSDK\\1.3.204.1")
-    set(ENV{VULKAN_SDK} ${VULKAN_SDK_PATH})
-    find_package(Vulkan REQUIRED)
-
-    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} tether LegendEngine)
-
-    target_include_directories(${PROJECT_NAME} 
-        PUBLIC "Headers"
-        PUBLIC "../../Headers"
-        PRIVATE "../../Vendor/Tether/Headers"
-        PRIVATE "${VULKAN_SDK_PATH}\\Include"
-    )
-
-    target_link_directories(${PROJECT_NAME}
-        PRIVATE "../../Build"
-        PRIVATE "../../Vendor/Tether/Build"
+    target_link_libraries(${PROJECT_NAME} 
+        ${Vulkan_LIBRARIES}
+        LegendEngine
     )
 endif()

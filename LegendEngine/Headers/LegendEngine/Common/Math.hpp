@@ -99,6 +99,11 @@ namespace LegendEngine
 	typedef Vector2<float> Vector2f;
 	typedef Vector3<float> Vector3f;
 	typedef Vector4<float> Vector4f;
+
+	namespace Math
+	{
+		float Max(float arg0, float arg1);
+	}
 }
 
 #endif //_LEGENDENGINE_MATH_HPP

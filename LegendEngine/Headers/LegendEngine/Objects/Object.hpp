@@ -3,6 +3,7 @@
 #ifndef _LEGENDENGINE_OBJECT_HPP
 #define _LEGENDENGINE_OBJECT_HPP
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Math.hpp>
 #include <LegendEngine/Objects/Components/ComponentHolder.hpp>
 
@@ -24,16 +25,13 @@ namespace LegendEngine::Objects
         friend Application;
         friend Scene;
     public:
+        LEGENDENGINE_NO_COPY(Object);
+        
         Object() 
             :
             scale(1.0f),
             Components::ComponentHolder(this)
         {}
-        
-        Object(const Object&) = delete;
-		Object(Object&&) = delete;
-		Object& operator=(const Object&) = delete;
-		Object& operator=(Object&&) = delete;
 
         void AddPosition(Vector3f position);
         void AddRotation(Vector3f rotation);

@@ -20,11 +20,7 @@ namespace LegendEngine::Vulkan
     {
     public:
         Swapchain() {}
-
-		Swapchain(const Swapchain&) = delete;
-		Swapchain(Swapchain&&) = delete;
-		Swapchain& operator=(const Swapchain&) = delete;
-		Swapchain& operator=(Swapchain&&) = delete;
+        LEGENDENGINE_NO_COPY(Swapchain);
 
         /**
          * @brief Initializes the swapchain.
@@ -44,11 +40,33 @@ namespace LegendEngine::Vulkan
             VkSwapchainCreateInfoKHR* createInfo
         );
         
+        /**
+         * @brief If vsync is true, this function returns FIFO. 
+         *  If vsync is false, mailbox is preferrred, but immediate is 
+         *  returned if mailbox isn't available; 
+         *  if neither are supported, FIFO is returned.
+         * 
+         * @param presentModes A vector of available present modes.
+         * @param vsync If the present mode should be FIFO.
+         * 
+         * @returns The chosen present mode.
+         */
         VkPresentModeKHR ChoosePresentMode(std::vector<VkPresentModeKHR>& presentModes,
             bool vsync);
+        /**
+         * @brief Chooses an extent with a preferred width and height.
+         *  This function returns the width and height clamped within
+         *  capabilities.minImageExtent and capabilities.maxImageExtent.
+         * 
+         * @param capabilities The surface capabilities.
+         * @param width The preferred width.
+         * @param height The preferred height.
+         * 
+         * @returns The closest available extent to width and height.
+         */
         VkExtent2D ChooseExtent(VkSurfaceCapabilitiesKHR& capabilities,
             uint64_t width, uint64_t height);
-
+        
         uint32_t GetImageCount();
         std::vector<VkImage> GetImages();
         bool GetImageViews(std::vector<VkImageView>* pVec);

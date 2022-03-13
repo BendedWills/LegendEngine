@@ -45,6 +45,7 @@ namespace LegendEngine::Vulkan
         VkPipeline GetPipeline();
         VkPipelineLayout GetPipelineLayout();
     private:
+        // Initializes pipeline and pipelineLayout.
         bool InitPipeline(
             PipelineInfo* pPipelineInfo
         );

@@ -9,7 +9,8 @@ using namespace LegendEngine;
 bool Shader::Init(ShaderStage* pStages, uint64_t stageCount, 
     UniformDesc* pDescs, uint64_t uniformCount)
 {
-    if (initialized || !pStages || (!pDescs && uniformCount > 0) || stageCount == 0)
+    if (initialized || !pStages || (!pDescs && uniformCount > 0) || 
+        stageCount == 0)
         return false;
     
     pRenderer->shaders.push_back(this);
@@ -20,7 +21,7 @@ bool Shader::Init(ShaderStage* pStages, uint64_t stageCount,
     return true;
 }
 
-RealRenderingAPI Shader::GetType()
+RenderingAPI Shader::GetType()
 {
     return type;
 }

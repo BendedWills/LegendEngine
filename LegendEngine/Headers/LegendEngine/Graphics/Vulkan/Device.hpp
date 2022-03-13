@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 
 #include <vulkan/vulkan.h>
@@ -20,11 +21,7 @@ namespace LegendEngine::Vulkan
     {
     public:
         Device() {}
-
-		Device(const Device&) = delete;
-		Device(Device&&) = delete;
-		Device& operator=(const Device&) = delete;
-		Device& operator=(Device&&) = delete;
+        LEGENDENGINE_NO_COPY(Device);
         
         /**
          * @brief Initializes the device.
@@ -39,7 +36,7 @@ namespace LegendEngine::Vulkan
          * @param extentions An array of extentions for this device to use.
          * @param extentionCount The number of extentions.
          * 
-         * @returns True if initialization succeeded. Otherwise, false.
+         * @returns True if initialization succeeded; otherwise, false.
          */
         bool Init(
             Instance* pInstance,
@@ -61,6 +58,9 @@ namespace LegendEngine::Vulkan
          */
         VkQueue GetDeviceQueue(uint32_t familyIndex, uint32_t queueIndex);
 
+        /**
+         * @brief Waits for all work on the device to finish.
+         */
         void WaitIdle();
         
         VkDevice Get();

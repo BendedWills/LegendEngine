@@ -25,7 +25,7 @@ namespace LegendEngine
             Dispose();
         }
 
-        VertexBuffer(IRenderer* pRenderer, RealRenderingAPI type)
+        VertexBuffer(IRenderer* pRenderer, RenderingAPI type)
             :
             pRenderer(pRenderer),
             type(type)
@@ -47,7 +47,7 @@ namespace LegendEngine
          */
         bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
 
-        RealRenderingAPI GetType();
+        RenderingAPI GetType();
     protected:
         void OnDispose();
 
@@ -56,7 +56,7 @@ namespace LegendEngine
         virtual void OnBufferDispose() {}
 
         IRenderer* pRenderer = nullptr;
-        RealRenderingAPI type;
+        RenderingAPI type;
     };
 }
 

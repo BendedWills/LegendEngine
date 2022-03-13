@@ -34,9 +34,7 @@ bool Device::Init(
         createInfo.enabledLayerCount   = pInstance->validationLayers.size();
         createInfo.ppEnabledLayerNames = pInstance->validationLayers.data();
     }
-    else
-        createInfo.enabledLayerCount = 0;
-
+    
     // Create the device
     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device)
         != VK_SUCCESS)

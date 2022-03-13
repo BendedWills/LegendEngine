@@ -168,12 +168,6 @@ bool Application::IsApiInitialized()
     return initializedApi;
 }
 
-void Application::SetFullscreen(bool fullscreen, int monitor)
-{
-    LEGENDENGINE_ASSERT_INITIALIZED();
-    //window.SetFullscreen(fullscreen, monitor);
-}
-
 bool Application::IsVulkanInitialized()
 {
     LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
@@ -367,22 +361,30 @@ bool Application::InitScene(Scene* pScene)
 
 void Application::RenderFrame()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED();
+
     Update();
     Render();
 }
 
 Scene* Application::GetDefaultScene()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
+
     return &defaultScene;
 }
 
 void Application::SetActiveScene(Scene& scene)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED();
+
     SetActiveScene(&scene);
 }
 
 void Application::SetActiveScene(Scene* pScene)
 {
+    LEGENDENGINE_ASSERT_INITIALIZED();
+
     if (!pScene && pRenderer)
         pRenderer->OnSceneRemove(pScene);
 
@@ -394,11 +396,13 @@ void Application::SetActiveScene(Scene* pScene)
 
 void Application::RemoveActiveScene()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED();
     SetActiveScene(nullptr);
 }
 
 Scene* Application::GetActiveScene()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
     return activeScene;
 }
 
@@ -433,6 +437,8 @@ bool Application::InitWindow(const std::string& title)
 
 bool Application::StartLoop()
 {
+    LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+    
     while (!IsCloseRequested())
 	{
 		Update();
