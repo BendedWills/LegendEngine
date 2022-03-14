@@ -20,6 +20,8 @@ namespace LegendEngine::Vulkan
 		uint64_t stageCount;
 		UniformBuffer** ppUniforms;
 		uint64_t uniformCount;
+		VkDescriptorSetLayoutCreateInfo* setLayouts;
+		uint64_t setCount;
 		VkDynamicState* pDynamicStates;
 		uint64_t dynamicStateCount;
 		// The number of swapchain images. Only necessary if uniforms are present.

@@ -6,21 +6,15 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size,
-	uint64_t binding, VkShaderStageFlags shaderStages, uint64_t images)
+bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t images)
 {
     if (initialized)
         return false;
 
     this->pRenderer = pRenderer;
+	this->images = images;
+	this->size = size;
     
-    this->binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    this->binding.descriptorCount = 1;
-    this->binding.binding = binding;
-    this->binding.stageFlags = shaderStages;
-    this->size = size;
-    this->images = images;
-
     // It isn't needed for the uniform buffers to have buffers for each image but
     // this is specific to this scenario since the command buffers aren't being 
     // refreshed each frame.
@@ -45,8 +39,73 @@ bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size,
     return true;
 }
 
-bool UniformBuffer::UpdateBuffer(void* newData, uint64_t currentImage)
+bool UniformBuffer::BindToSet(Pipeline* pPipeline, uint64_t setIndex)
 {
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	FreeSet();
+
+	this->pDescriptorPool = pPipeline->GetDescriptorPool();
+
+	VkDescriptorSetLayout layout = pPipeline->GetSetLayouts()->at(setIndex);
+	std::vector<VkDescriptorSetLayout> layouts(images, layout);
+
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = *pDescriptorPool;
+	allocInfo.descriptorSetCount = images;
+	allocInfo.pSetLayouts = layouts.data();
+
+	if (vkAllocateDescriptorSets(pRenderer->device.Get(), &allocInfo,
+		descriptorSets.data()) != VK_SUCCESS)
+	{
+		vkDestroyDescriptorSetLayout(pRenderer->device.Get(),
+			layout, nullptr);
+		return false;
+	}
+
+	boundToSet = true;
+	return true;
+}
+
+bool UniformBuffer::Bind(uint64_t binding)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!boundToSet)
+		return false;
+
+	for (uint64_t i = 0; i < images; i++)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.offset = 0;
+		bufferInfo.range = size;
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSets[i];
+		descriptorWrite.dstBinding = binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(pRenderer->device.Get(), 1, &descriptorWrite, 0,
+			nullptr);
+	}
+
+	return true;
+}
+
+bool UniformBuffer::UpdateBuffer(void* newData, uint64_t size, 
+	uint64_t currentImage)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (size > this->size || size == 0)
+		return false;
+
     void* data;
     vmaMapMemory(pRenderer->allocator, allocations[currentImage], &data);
         memcpy(data, newData, size);
@@ -55,70 +114,30 @@ bool UniformBuffer::UpdateBuffer(void* newData, uint64_t currentImage)
     return true;
 }
 
-VkDescriptorSetLayoutBinding UniformBuffer::GetUboLayoutBinding()
+bool UniformBuffer::GetDescriptorSet(VkDescriptorSet* pSet, uint64_t index)
 {
-    return binding;
-}
-
-std::vector<VkDescriptorSet>& UniformBuffer::GetDescriptorSets()
-{
-	return descriptorSets;
-}
-
-bool UniformBuffer::InitByPipeline(VkDescriptorSetLayout& layout, 
-    VkDescriptorPool* pDescPool)
-{
-    if (initByPipeline)
-        return false;
-
-    this->pDescriptorPool = pDescPool;
-
-    std::vector<VkDescriptorSetLayout> layouts(images, layout);
-
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = *pDescriptorPool;
-	allocInfo.descriptorSetCount = images;
-	allocInfo.pSetLayouts = layouts.data();
-
-    VkResult result = vkAllocateDescriptorSets(pRenderer->device.Get(), &allocInfo,
-        descriptorSets.data());
-	if (result != VK_SUCCESS)
-	{
-		vkDestroyDescriptorSetLayout(pRenderer->device.Get(),
-			layout, nullptr);
+	if (index >= descriptorSets.size())
 		return false;
-	}
 
-	for (uint64_t i = 0; i < images; i++)
-	{
-		VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffers[i];
-        bufferInfo.offset = 0;
-        bufferInfo.range = size;
+	*pSet = descriptorSets[index];
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[i];
-        descriptorWrite.dstBinding = binding.binding;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
+	return true;
+}
 
-        vkUpdateDescriptorSets(pRenderer->device.Get(), 1, &descriptorWrite, 0, 
-            nullptr);
-	}
+void UniformBuffer::FreeSet()
+{
+	if (!boundToSet)
+		return;
 
-    initByPipeline = true;
-    return true;
+	vkFreeDescriptorSets(pRenderer->device.Get(), *pDescriptorPool,
+		descriptorSets.size(), descriptorSets.data());
+
+	boundToSet = false;
 }
 
 void UniformBuffer::OnDispose()
 {
-    if (initByPipeline)
-		vkFreeDescriptorSets(pRenderer->device.Get(), *pDescriptorPool,
-			descriptorSets.size(), descriptorSets.data());
+	FreeSet();
 
 	for (uint64_t i = 0; i < images; i++)
         vmaDestroyBuffer(pRenderer->allocator, uniformBuffers[i], allocations[i]);
@@ -126,8 +145,6 @@ void UniformBuffer::OnDispose()
     descriptorSets.clear();
     allocations.clear();
     uniformBuffers.clear();
-
-    initByPipeline = false;
 }
 
 #endif // VULKAN_API

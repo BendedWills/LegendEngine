@@ -65,7 +65,6 @@ namespace LegendEngine::Vulkan
 
         // Shader stuff
         Vulkan::UniformBuffer testUniform;
-        Vulkan::UniformBuffer greenUniform;
         Vulkan::ShaderModule vertexModule;
         Vulkan::ShaderModule fragmentModule;
         Vulkan::Pipeline shaderProgram;

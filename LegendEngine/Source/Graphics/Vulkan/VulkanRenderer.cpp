@@ -533,14 +533,9 @@ bool VulkanRenderer::InitRenderPass()
 
 bool VulkanRenderer::InitPipeline()
 {
-    if (!testUniform.Init(this, sizeof(float), 0, VK_SHADER_STAGE_FRAGMENT_BIT,
-        swapchain.GetImageCount()))
+    if (!testUniform.Init(this, sizeof(float) * 2, swapchain.GetImageCount()))
         return false;
-
-	if (!greenUniform.Init(this, sizeof(float), 1, VK_SHADER_STAGE_FRAGMENT_BIT,
-		swapchain.GetImageCount()))
-		return false;
-
+	
     VkPipelineShaderStageCreateInfo vertexStage{};
     vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertexStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -553,11 +548,25 @@ bool VulkanRenderer::InitPipeline()
     fragmentStage.module = fragmentModule.Get();
     fragmentStage.pName = "main";
 
-	UniformBuffer* uniforms[]
+    VkDescriptorSetLayoutBinding testBinding{};
+    testBinding.binding = 0;
+    testBinding.descriptorCount = 1;
+    testBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    testBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo setInfo{};
+    setInfo.bindingCount = 1;
+    setInfo.pBindings = &testBinding;
+
+	UniformBuffer* uniforms[] =
 	{
 		&testUniform,
-        &greenUniform
 	};
+
+    VkDescriptorSetLayoutCreateInfo sets[] =
+    {
+        setInfo,
+    };
 
     VkPipelineShaderStageCreateInfo stages[] =
     {
@@ -578,11 +587,16 @@ bool VulkanRenderer::InitPipeline()
     pipelineInfo.pDynamicStates = dynamicStates;
     pipelineInfo.uniformCount = sizeof(uniforms) / sizeof(uniforms[0]);
     pipelineInfo.ppUniforms = uniforms;
+	pipelineInfo.setCount = sizeof(sets) / sizeof(sets[0]);
+	pipelineInfo.setLayouts = sets;
     pipelineInfo.images = swapchain.GetImageCount();
 
     if (!shaderProgram.Init(this, &pipelineInfo))
         return false;
 
+    testUniform.BindToSet(&shaderProgram, 0);
+    testUniform.Bind(0);
+    
     vertexModule.Dispose();
     fragmentModule.Dispose();
 
@@ -678,11 +692,17 @@ bool VulkanRenderer::InitSyncObjects()
 
 void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 {
-    float test = (sin(timer.GetElapsedMillis() / 500.0f) + 1.0f) / 2;
-    testUniform.UpdateBuffer(&test, imageIndex);
+    struct Ubo
+    {
+        float test;
+        float green;
+    };
 
-	float green = (sin(timer.GetElapsedMillis() / 1000.0f) + 1.0f) / 2;
-	greenUniform.UpdateBuffer(&green, imageIndex);
+    Ubo ubo;
+    ubo.test = (sin(timer.GetElapsedMillis() / 500.0f) + 1.0f) / 2;
+    ubo.green = (sin(timer.GetElapsedMillis() / 1000.0f) + 1.0f) / 2;
+
+    testUniform.UpdateBuffer(&ubo, sizeof(Ubo), imageIndex);
 }
 
 bool VulkanRenderer::DrawFrame()
@@ -864,14 +884,11 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
         // Eventually, objects will have to be rendered in order of distance
         // from the camera.
 
-        VkDescriptorSet descSets[] =
-        {
-			testUniform.GetDescriptorSets()[commandBufferIndex],
-			greenUniform.GetDescriptorSets()[commandBufferIndex]
-        };
-
+        VkDescriptorSet descSets[1] = {};
+        testUniform.GetDescriptorSet(&descSets[0], commandBufferIndex);
+        
         vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            shaderProgram.GetPipelineLayout(), 0, 2, descSets, 0, nullptr);
+            shaderProgram.GetPipelineLayout(), 0, 1, descSets, 0, nullptr);
 
         // Default scene
         Scene* pDefault = pApplication->GetDefaultScene();

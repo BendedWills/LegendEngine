@@ -43,40 +43,21 @@ bool Pipeline::Init(
             &descriptorPool) != VK_SUCCESS)
             return false;
 
-		VkDescriptorSetLayoutBinding* bindings = (VkDescriptorSetLayoutBinding*)
-			malloc(sizeof(VkDescriptorSetLayoutBinding) * pPipelineInfo->uniformCount);
-		if (!bindings)
-			return false;
-
-        VkDescriptorSetLayoutCreateInfo dslCreateInfo{};
-        dslCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        dslCreateInfo.bindingCount = pPipelineInfo->uniformCount;
-        dslCreateInfo.pBindings = bindings;
-
-        for (uint64_t i = 0; i < pPipelineInfo->uniformCount; i++)
-            bindings[i] = pPipelineInfo->ppUniforms[i]->GetUboLayoutBinding();
-
-        if (vkCreateDescriptorSetLayout(pRenderer->device.Get(), &dslCreateInfo,
-            nullptr, &descriptorSetLayout) != VK_SUCCESS)
+        descriptorSetLayouts.resize(pPipelineInfo->setCount);
+        for (uint64_t i = 0; i < pPipelineInfo->setCount; i++)
         {
-            free(bindings);
-            return false;
+            VkDescriptorSetLayoutCreateInfo* pInfo = &pPipelineInfo->setLayouts[i];
+            pInfo->sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            
+			if (vkCreateDescriptorSetLayout(pRenderer->device.Get(),
+				pInfo, nullptr, &descriptorSetLayouts[i]) != VK_SUCCESS)
+				return false;
         }
-
-        free(bindings);
-        
-		for (uint64_t uniform = 0; uniform < pPipelineInfo->uniformCount; uniform++)
-            if (!pPipelineInfo->ppUniforms[uniform]->InitByPipeline(
-                descriptorSetLayout, &descriptorPool))
-                return false;
     }
 
     if (!InitPipeline(pPipelineInfo))
     {
-        if (uniforms)
-			vkDestroyDescriptorSetLayout(pRenderer->device.Get(), 
-                descriptorSetLayout, nullptr);
-
+        DisposeUniorms();
         return false;
     }
 
@@ -94,6 +75,17 @@ VkPipelineLayout Pipeline::GetPipelineLayout()
 	return pipelineLayout;
 }
 
+VkDescriptorPool* Pipeline::GetDescriptorPool()
+{
+    return &descriptorPool;
+}
+
+std::vector<VkDescriptorSetLayout>* Pipeline::GetSetLayouts()
+{
+    return &descriptorSetLayouts;
+}
+
+
 bool Pipeline::InitPipeline(
     PipelineInfo* pPipelineInfo
 )
@@ -103,8 +95,8 @@ bool Pipeline::InitPipeline(
     
     if (uniforms)
     {
-        pipelineLayoutDesc.setLayoutCount = 1;
-        pipelineLayoutDesc.pSetLayouts = &descriptorSetLayout;
+        pipelineLayoutDesc.setLayoutCount = descriptorSetLayouts.size();
+        pipelineLayoutDesc.pSetLayouts = descriptorSetLayouts.data();
     }
 
     if (vkCreatePipelineLayout(pRenderer->device.Get(), &pipelineLayoutDesc,
@@ -239,19 +231,28 @@ bool Pipeline::InitPipeline(
         1, &pipelineDesc, nullptr, &pipeline) == VK_SUCCESS;
 }
 
+void Pipeline::DisposeUniorms()
+{
+    if (!uniforms)
+        return;
+
+	vkDestroyDescriptorPool(pRenderer->device.Get(), descriptorPool, nullptr);
+
+	for (uint64_t i = 0; i < descriptorSetLayouts.size(); i++)
+		vkDestroyDescriptorSetLayout(pRenderer->device.Get(),
+			descriptorSetLayouts[i], nullptr);
+    descriptorSetLayouts.clear();
+
+    uniforms = false;
+}
+
 void Pipeline::OnDispose()
 {
     vkDestroyPipeline(pRenderer->device.Get(), pipeline, nullptr);
     vkDestroyPipelineLayout(pRenderer->device.Get(), pipelineLayout, nullptr);
-    
-    if (uniforms)
-    {
-        vkDestroyDescriptorPool(pRenderer->device.Get(), descriptorPool, nullptr);
-        vkDestroyDescriptorSetLayout(pRenderer->device.Get(), descriptorSetLayout, 
-            nullptr);
-    }
 
-    uniforms = false;
+    DisposeUniorms();
+    
     dynamicStates = false;
 }
 

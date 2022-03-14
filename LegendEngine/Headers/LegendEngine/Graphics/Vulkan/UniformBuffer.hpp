@@ -30,40 +30,31 @@ namespace LegendEngine::Vulkan
          * @brief Initializes the UniformBuffer object.
          * 
          * @param pRenderer A pointer to the Vulkan renderer.
-         * @param binding The binding in the shader of this uniform.
-         * @param shaderStages The shader stages this uniform is accessible from.
          * @param images The number of swapchain images. This parameter must be the
          *  same as the images parameter in the PipelineInfo struct used to initialize
          *  the pipeline.
          * 
          * @returns True if initialization succeeded; otherwise, false.
          */
-        bool Init(VulkanRenderer* pRenderer, uint64_t size,
-            uint64_t binding, VkShaderStageFlags shaderStages, uint64_t images);
+        bool Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t images);
+
+        bool BindToSet(Pipeline* pPipeline, uint64_t setIndex);
+        bool Bind(uint64_t binding);
 
         /**
          * @brief Updates the uniform buffer. This uniform buffer must be passed
          *  to a pipeline class and that pipeline must be initialized before this
          *  function is used.
          */
-        bool UpdateBuffer(void* newData, uint64_t currentImage);
+        bool UpdateBuffer(void* newData, uint64_t size, uint64_t currentImage);
 
-        VkDescriptorSetLayoutBinding GetUboLayoutBinding();
-        /**
-         * @brief Gets the descriptor sets. This uniform buffer must be passed
-         *  to a pipeline class and that pipeline must be initialized before this
-         *  function is used.
-         */
-        std::vector<VkDescriptorSet>& GetDescriptorSets();
-	protected:
-        bool InitByPipeline(VkDescriptorSetLayout& layout, VkDescriptorPool* pDescPool);
-    private:
+        bool GetDescriptorSet(VkDescriptorSet* pSet, uint64_t index);
+	private:
+        void FreeSet();
         void OnDispose();
 
         VulkanRenderer* pRenderer = nullptr;
         
-        VkDescriptorSetLayoutBinding binding{};
-
         std::vector<VkDescriptorSet> descriptorSets;
 
         std::vector<VmaAllocation> allocations;
@@ -73,7 +64,7 @@ namespace LegendEngine::Vulkan
         uint64_t images = 0;
 
         VkDescriptorPool* pDescriptorPool = nullptr;
-        bool initByPipeline = false;
+        bool boundToSet = false;
     };
 }
 
