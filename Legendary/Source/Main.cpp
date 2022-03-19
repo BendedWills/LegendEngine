@@ -13,11 +13,6 @@ class Triangle : public Application
 public:
 	bool OnInit()
 	{
-		if (!renderer.Init(this))
-			return false;
-		//renderer.SetVSyncEnabled(true);
-		SetRenderer(&renderer);
-
 		InitScene(testScene);
 		
 		srand(time(NULL));
@@ -37,8 +32,7 @@ public:
 				{  -0.05f + offsetX,  0.05f + offsetY, r, g, b, }
 			};
 
-			Ref<Object> object = RefTools::Create<Object>();
-			InitObject(object.get());
+			Ref<Object> object = CreateObject<Object>();
 
 			object->AddComponent<Components::MeshComponent>()->Init(
 				testVertices, 3
@@ -56,23 +50,34 @@ public:
 
 	void OnStop()
 	{
-		renderer.Dispose();
 		testScene.ClearObjects();
 	}
 private:
 	Scene testScene;
 	
 	std::vector<Ref<Object>> objects;
-	Vulkan::VulkanRenderer renderer;
 };
 
+#if defined(_WIN32) && !defined(_DEBUG)
+#include <Windows.h>
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, 
+	int nCmdShow)
+#else
 int main()
+#endif
 {
+	Context::InitAPI(RenderingAPI::VULKAN, true);
 	{
 		Triangle triangle;
-		if (!triangle.Start("Legendary", true, true))
+		if (!triangle.Init("Legendary", true, true))
 			return EXIT_FAILURE;
+
+		while (!triangle.IsCloseRequested())
+			triangle.RenderFrame();
+
+		triangle.Dispose();
 	}
-	
+	Context::Dispose();
+
 	return EXIT_SUCCESS;
 }

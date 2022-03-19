@@ -12,23 +12,22 @@
 
 namespace LegendEngine::Vulkan
 {
-    class Object : public LegendEngine::Objects::Object
-    {
-    public:
-        LEGENDENGINE_DISPOSE_ON_DESTRUCT(Object);
-        LEGENDENGINE_NO_COPY(Object);
+	class Object : public LegendEngine::Objects::Object
+	{
+	public:
+		LEGENDENGINE_NO_COPY(Object);
 
-        Object(VulkanRenderer* pRenderer)
-            :
-            pVulkanRenderer(pRenderer),
-            LegendEngine::Object(pRenderer, RenderingAPI::VULKAN)
-        {}
-    protected:
-        bool OnObjectCreate();
-        void OnObjectDispose();
+		Object(VulkanRenderer* pRenderer)
+			:
+			pVulkanRenderer(pRenderer)
+		{}
+	protected:
+		bool OnObjectCreate();
+		void OnObjectDispose();
 
-        uint64_t verticesSize = 0;
-    };
+		uint64_t verticesSize = 0;
+		VulkanRenderer* pVulkanRenderer = nullptr;
+	};
 }
 
 #endif //_LEGENDENGINE_VULKAN_OBJECT_HPP

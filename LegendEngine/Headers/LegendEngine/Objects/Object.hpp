@@ -26,12 +26,12 @@ namespace LegendEngine::Objects
         friend Scene;
     public:
         LEGENDENGINE_NO_COPY(Object);
-        
-        Object() 
-            :
-            scale(1.0f),
-            Components::ComponentHolder(this)
-        {}
+
+		Object()
+			:
+			scale(1.0f),
+			Components::ComponentHolder(this)
+		{}
 
         void AddPosition(Vector3f position);
         void AddRotation(Vector3f rotation);

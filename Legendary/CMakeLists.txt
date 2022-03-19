@@ -11,7 +11,11 @@ file(GLOB_RECURSE SOURCES
 )
 
 add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
-add_executable(${PROJECT_NAME} ${SOURCES})
+if (WIN32 AND ("${CMAKE_BUILD_TYPE}" MATCHES "Release"))
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
+else()
+    add_executable(${PROJECT_NAME} ${SOURCES})
+endif()
 add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether)
 
 target_include_directories(${PROJECT_NAME} 

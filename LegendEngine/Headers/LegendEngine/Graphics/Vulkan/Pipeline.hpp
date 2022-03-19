@@ -22,52 +22,52 @@
 
 namespace LegendEngine::Vulkan
 {
-    class VulkanRenderer;
-    class Pipeline : public IDisposable
-    {
-    public:
-        Pipeline() {}
-        LEGENDENGINE_NO_COPY(Pipeline);
+	class VulkanRenderer;
+	class Pipeline : public IDisposable
+	{
+	public:
+		Pipeline() {}
+		LEGENDENGINE_NO_COPY(Pipeline);
 
-        /**
-         * @brief Initializes the ShaderProgram.
-         *
-         * @param pRenderer A pointer to the renderer.
-         * @param pPipelineInfo A pointer to the PipelineInfo structure.
-         * 
-         * @returns True if initialization was successful; otherwise, false.
-         */
-        bool Init(
-            VulkanRenderer* pRenderer,
-            PipelineInfo* pPipelineInfo
-        );
+		/**
+		 * @brief Initializes the ShaderProgram.
+		 *
+		 * @param pRenderer A pointer to the renderer.
+		 * @param pPipelineInfo A pointer to the PipelineInfo structure.
+		 * 
+		 * @returns True if initialization was successful; otherwise, false.
+		 */
+		bool Init(
+			VulkanRenderer* pRenderer,
+			PipelineInfo* pPipelineInfo
+		);
 
-        VkPipeline GetPipeline();
-        VkPipelineLayout GetPipelineLayout();
-        VkDescriptorPool* GetDescriptorPool();
-        std::vector<VkDescriptorSetLayout>* GetSetLayouts();
-    private:
-        // Initializes pipeline and pipelineLayout.
-        bool InitPipeline(
-            PipelineInfo* pPipelineInfo
-        );
+		VkPipeline GetPipeline();
+		VkPipelineLayout GetPipelineLayout();
+		VkDescriptorPool* GetDescriptorPool();
+		std::vector<VkDescriptorSetLayout>* GetSetLayouts();
+	private:
+		// Initializes pipeline and pipelineLayout.
+		bool InitPipeline(
+			PipelineInfo* pPipelineInfo
+		);
 
-        void DisposeUniorms();
-        void OnDispose();
-        
-        VulkanRenderer* pRenderer = nullptr;
-        
-        VkPipeline pipeline;
-        VkPipelineLayout pipelineLayout;
-        VkDescriptorPool descriptorPool;
+		void DisposeUniorms();
+		void OnDispose();
+		
+		VulkanRenderer* pRenderer = nullptr;
+		
+		VkPipeline pipeline;
+		VkPipelineLayout pipelineLayout;
+		VkDescriptorPool descriptorPool;
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
-        uint64_t images = 0;
+		uint64_t images = 0;
 
-        bool uniforms = false;
-        bool dynamicStates = false;
-    };
+		bool uniforms = false;
+		bool dynamicStates = false;
+	};
 }
 
 #endif // VULKAN_API

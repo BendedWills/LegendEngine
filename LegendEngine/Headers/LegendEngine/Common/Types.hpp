@@ -13,8 +13,6 @@ namespace LegendEngine
 
     enum class RenderingAPI
     {
-        NONE,
-        AUTO_SELECT,
         VULKAN
     };
 

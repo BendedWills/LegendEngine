@@ -3,6 +3,18 @@
 
 #include <sstream>
 
+#ifdef __INTELLISENSE__
+
+#ifndef VULKAN_API
+#define VULKAN_API
+#endif // VULKAN_API
+
+#ifndef OPENGL_API
+#define OPENGL_API
+#endif // OPENGL_API
+
+#endif //__INTELLISENSE__
+
 /**
  * @brief Disables object copying.
  */

@@ -9,13 +9,13 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool Shader::OnObjectCreate()
+bool Object::OnObjectCreate()
 {
-    
-    return true;
+	
+	return true;
 }
 
-void Shader::OnObjectDispose()
+void Object::OnObjectDispose()
 {
-    
+	
 }

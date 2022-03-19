@@ -19,6 +19,12 @@ namespace LegendEngine
 
         /**
          * @brief Adds an object to the scene.
+         *
+         * @param object The object to add.
+         */
+        void AddObject(Ref<Objects::Object>& object);
+        /**
+         * @brief Adds an object to the scene.
          * 
          * @param object The object to add.
          */
@@ -29,6 +35,11 @@ namespace LegendEngine
          * @param pObject The object to add.
          */
         void AddObject(Objects::Object* pObject);
+
+        /**
+         * @returns True if an object is in the scene; otherwise, false.
+         */
+        bool HasObject(Ref<Objects::Object>& object);
         /**
          * @returns True if an object is in the scene; otherwise, false.
          */
@@ -37,6 +48,16 @@ namespace LegendEngine
          * @returns True if an object is in the scene; otherwise, false.
          */
         bool HasObject(Objects::Object* pObject);
+
+        /**
+         * @brief Removes an object from the scene.
+         *
+         * @param object The object to remove.
+         *
+         * @returns True if the object was successfully removed;
+         *  otherwise, false.
+         */
+        bool RemoveObject(Ref<Objects::Object>& object);
         /**
          * @brief Removes an object from the scene.
          * 

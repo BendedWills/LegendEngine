@@ -286,6 +286,8 @@ void Instance::OnDispose()
 {
 	if (debugMode)
 		Vulkan_DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+
+	debugCallbacks.clear();
 	
 	vkDestroyInstance(instance, nullptr);
 }

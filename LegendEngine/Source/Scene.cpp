@@ -7,6 +7,11 @@ using namespace LegendEngine;
     if (pApplication == nullptr) \
         return returnValue;
 
+void Scene::AddObject(Ref<Objects::Object>& object)
+{
+	AddObject(object.get());
+}
+
 void Scene::AddObject(Objects::Object& object)
 {
     AddObject(&object);
@@ -38,6 +43,12 @@ void Scene::AddObject(Objects::Object* pObject)
     pApplication->OnSceneObjectAdd(this, pObject);
 }
 
+bool Scene::HasObject(Ref<Objects::Object>& object)
+{
+	LEGENDENGINE_ASSERT_APP_NULL(false);
+	return HasObject(object.get());
+}
+
 bool Scene::HasObject(Objects::Object& object)
 {
     LEGENDENGINE_ASSERT_APP_NULL(false);
@@ -48,6 +59,11 @@ bool Scene::HasObject(Objects::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL(false);
     return std::count(objects.begin(), objects.end(), pObject);
+}
+
+bool Scene::RemoveObject(Ref<Objects::Object>& object)
+{
+	return RemoveObject(object.get());
 }
 
 bool Scene::RemoveObject(Objects::Object& object)

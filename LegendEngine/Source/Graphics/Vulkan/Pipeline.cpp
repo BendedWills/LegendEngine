@@ -9,28 +9,29 @@
 using namespace LegendEngine::Vulkan;
 
 bool Pipeline::Init(
-    VulkanRenderer* pRenderer,
-    PipelineInfo* pPipelineInfo
+	VulkanRenderer* pRenderer,
+	PipelineInfo* pPipelineInfo
 )
 {
-    this->uniforms = pPipelineInfo->uniformCount > 0;
+	this->uniforms = pPipelineInfo->uniformCount > 0;
 
 	if (initialized || !pPipelineInfo->pStages 
-        || (!pPipelineInfo->ppUniforms && uniforms))
+		|| (!pPipelineInfo->ppUniforms && uniforms))
 		return false;
 
-    this->pRenderer = pRenderer;
-    this->dynamicStates = dynamicStates;
+	this->pRenderer = pRenderer;
+	this->dynamicStates = dynamicStates;
 
-    if (uniforms)
-    {
-        if (pPipelineInfo->images < 1)
-            return false;
+	if (uniforms)
+	{
+		if (pPipelineInfo->images < 1)
+			return false;
 
+		// Each VkDescriptorPoolSize struct is for one descriptor type
 		VkDescriptorPoolSize poolSize{};
 		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSize.descriptorCount = pPipelineInfo->images 
-            * pPipelineInfo->uniformCount;
+		poolSize.descriptorCount = pPipelineInfo->images
+			* pPipelineInfo->uniformCount;
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -39,35 +40,35 @@ bool Pipeline::Init(
 		poolInfo.pPoolSizes = &poolSize;
 		poolInfo.maxSets = poolSize.descriptorCount;
 
-        if (vkCreateDescriptorPool(pRenderer->device.Get(), &poolInfo, nullptr, 
-            &descriptorPool) != VK_SUCCESS)
-            return false;
+		if (vkCreateDescriptorPool(pRenderer->device.Get(), &poolInfo, nullptr, 
+			&descriptorPool) != VK_SUCCESS)
+			return false;
 
-        descriptorSetLayouts.resize(pPipelineInfo->setCount);
-        for (uint64_t i = 0; i < pPipelineInfo->setCount; i++)
-        {
-            VkDescriptorSetLayoutCreateInfo* pInfo = &pPipelineInfo->setLayouts[i];
-            pInfo->sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            
+		descriptorSetLayouts.resize(pPipelineInfo->setCount);
+		for (uint64_t i = 0; i < pPipelineInfo->setCount; i++)
+		{
+			VkDescriptorSetLayoutCreateInfo* pInfo = &pPipelineInfo->setLayouts[i];
+			pInfo->sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			
 			if (vkCreateDescriptorSetLayout(pRenderer->device.Get(),
 				pInfo, nullptr, &descriptorSetLayouts[i]) != VK_SUCCESS)
 				return false;
-        }
-    }
+		}
+	}
 
-    if (!InitPipeline(pPipelineInfo))
-    {
-        DisposeUniorms();
-        return false;
-    }
+	if (!InitPipeline(pPipelineInfo))
+	{
+		DisposeUniorms();
+		return false;
+	}
 
-    initialized = true;
-    return true;
+	initialized = true;
+	return true;
 }
 
 VkPipeline Pipeline::GetPipeline()
 {
-    return pipeline;
+	return pipeline;
 }
 
 VkPipelineLayout Pipeline::GetPipelineLayout()
@@ -77,183 +78,183 @@ VkPipelineLayout Pipeline::GetPipelineLayout()
 
 VkDescriptorPool* Pipeline::GetDescriptorPool()
 {
-    return &descriptorPool;
+	return &descriptorPool;
 }
 
 std::vector<VkDescriptorSetLayout>* Pipeline::GetSetLayouts()
 {
-    return &descriptorSetLayouts;
+	return &descriptorSetLayouts;
 }
 
 
 bool Pipeline::InitPipeline(
-    PipelineInfo* pPipelineInfo
+	PipelineInfo* pPipelineInfo
 )
 {
-    VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
-    pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    
-    if (uniforms)
-    {
-        pipelineLayoutDesc.setLayoutCount = descriptorSetLayouts.size();
-        pipelineLayoutDesc.pSetLayouts = descriptorSetLayouts.data();
-    }
+	VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
+	pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	
+	if (uniforms)
+	{
+		pipelineLayoutDesc.setLayoutCount = descriptorSetLayouts.size();
+		pipelineLayoutDesc.pSetLayouts = descriptorSetLayouts.data();
+	}
 
-    if (vkCreatePipelineLayout(pRenderer->device.Get(), &pipelineLayoutDesc,
-        nullptr, &pipelineLayout) != VK_SUCCESS)
-        return false;
+	if (vkCreatePipelineLayout(pRenderer->device.Get(), &pipelineLayoutDesc,
+		nullptr, &pipelineLayout) != VK_SUCCESS)
+		return false;
 
-    std::vector<VkVertexInputBindingDescription> bindingDescs;
-    std::vector<VkVertexInputAttributeDescription> attribDescs;
+	std::vector<VkVertexInputBindingDescription> bindingDescs;
+	std::vector<VkVertexInputAttributeDescription> attribDescs;
 
-    // Vertex2
-    {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(VertexTypes::Vertex2);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	// Vertex2
+	{
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(VertexTypes::Vertex2);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-        VkVertexInputAttributeDescription position;
-        position.location = 0;
-        position.binding = 0;
-        position.format = VK_FORMAT_R32G32_SFLOAT;
-        position.offset = offsetof(VertexTypes::Vertex2, position);
-        VkVertexInputAttributeDescription color;
-        color.location = 1;
-        color.binding = 0;
-        color.format = VK_FORMAT_R32G32B32_SFLOAT;
-        color.offset = offsetof(VertexTypes::Vertex2, color);
+		VkVertexInputAttributeDescription position;
+		position.location = 0;
+		position.binding = 0;
+		position.format = VK_FORMAT_R32G32_SFLOAT;
+		position.offset = offsetof(VertexTypes::Vertex2, position);
+		VkVertexInputAttributeDescription color;
+		color.location = 1;
+		color.binding = 0;
+		color.format = VK_FORMAT_R32G32B32_SFLOAT;
+		color.offset = offsetof(VertexTypes::Vertex2, color);
 
-        bindingDescs.push_back(bindingDescription);
-        attribDescs.push_back(position);
-        attribDescs.push_back(color);
-    }
+		bindingDescs.push_back(bindingDescription);
+		attribDescs.push_back(position);
+		attribDescs.push_back(color);
+	}
 
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = bindingDescs.size();
-    vertexInputInfo.pVertexBindingDescriptions = bindingDescs.data();
-    vertexInputInfo.vertexAttributeDescriptionCount = attribDescs.size();
-    vertexInputInfo.pVertexAttributeDescriptions = attribDescs.data();
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInputInfo.vertexBindingDescriptionCount = bindingDescs.size();
+	vertexInputInfo.pVertexBindingDescriptions = bindingDescs.data();
+	vertexInputInfo.vertexAttributeDescriptionCount = attribDescs.size();
+	vertexInputInfo.pVertexAttributeDescriptions = attribDescs.data();
 
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    inputAssembly.primitiveRestartEnable = VK_FALSE;
+	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-    VkExtent2D swapchainExtent = pRenderer->swapchain.GetExtent();
+	VkExtent2D swapchainExtent = pRenderer->swapchain.GetExtent();
 
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float)swapchainExtent.width;
-    viewport.height = (float)swapchainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)swapchainExtent.width;
+	viewport.height = (float)swapchainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
 
-    VkRect2D scissor{};
-    scissor.offset.x = 0;
-    scissor.offset.y = 0;
-    scissor.extent.width = swapchainExtent.width;
-    scissor.extent.height = swapchainExtent.height;
+	VkRect2D scissor{};
+	scissor.offset.x = 0;
+	scissor.offset.y = 0;
+	scissor.extent.width = swapchainExtent.width;
+	scissor.extent.height = swapchainExtent.height;
 
-    VkPipelineViewportStateCreateInfo viewportState{};
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
-    viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
+	VkPipelineViewportStateCreateInfo viewportState{};
+	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportState.viewportCount = 1;
+	viewportState.pViewports = &viewport;
+	viewportState.scissorCount = 1;
+	viewportState.pScissors = &scissor;
 
-    VkPipelineRasterizationStateCreateInfo rasterizer{};
-    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_FALSE;
-    rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
+	VkPipelineRasterizationStateCreateInfo rasterizer{};
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizer.depthClampEnable = VK_FALSE;
+	rasterizer.rasterizerDiscardEnable = VK_FALSE;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizer.lineWidth = 1.0f;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizer.depthBiasEnable = VK_FALSE;
 
-    VkPipelineMultisampleStateCreateInfo multisampleState{};
-    multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampleState.sampleShadingEnable = VK_FALSE;
-    multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    multisampleState.minSampleShading = 0.0f;
-    multisampleState.pSampleMask = nullptr;
-    multisampleState.alphaToCoverageEnable = VK_FALSE;
-    multisampleState.alphaToOneEnable = VK_FALSE;
+	VkPipelineMultisampleStateCreateInfo multisampleState{};
+	multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisampleState.sampleShadingEnable = VK_FALSE;
+	multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	multisampleState.minSampleShading = 0.0f;
+	multisampleState.pSampleMask = nullptr;
+	multisampleState.alphaToCoverageEnable = VK_FALSE;
+	multisampleState.alphaToOneEnable = VK_FALSE;
 
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachment.blendEnable = VK_FALSE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
-    VkPipelineColorBlendStateCreateInfo colorBlending{};
-    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.logicOp = VK_LOGIC_OP_COPY;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+	VkPipelineColorBlendStateCreateInfo colorBlending{};
+	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorBlending.logicOpEnable = VK_FALSE;
+	colorBlending.logicOp = VK_LOGIC_OP_COPY;
+	colorBlending.attachmentCount = 1;
+	colorBlending.pAttachments = &colorBlendAttachment;
 
-    VkPipelineDynamicStateCreateInfo dynamicState{};
-    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicState.dynamicStateCount = pPipelineInfo->dynamicStateCount;
-    dynamicState.pDynamicStates = pPipelineInfo->pDynamicStates;
+	VkPipelineDynamicStateCreateInfo dynamicState{};
+	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicState.dynamicStateCount = pPipelineInfo->dynamicStateCount;
+	dynamicState.pDynamicStates = pPipelineInfo->pDynamicStates;
 
-    // Oh, yes, cool thing about Vulkan, you can actually have multiple shader
-    // stages for one shader module. That means that you can have a VSMain and
-    // a PSMain in one shader module (aka a glsl file in this case).
-    
-    VkGraphicsPipelineCreateInfo pipelineDesc{};
-    pipelineDesc.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineDesc.stageCount = pPipelineInfo->stageCount;
-    pipelineDesc.pStages = pPipelineInfo->pStages;
-    pipelineDesc.pVertexInputState = &vertexInputInfo;
-    pipelineDesc.pInputAssemblyState = &inputAssembly;
-    pipelineDesc.pViewportState = &viewportState;
-    pipelineDesc.pRasterizationState = &rasterizer;
-    pipelineDesc.pMultisampleState = &multisampleState;
-    pipelineDesc.pColorBlendState = &colorBlending;
-    pipelineDesc.layout = pipelineLayout;
-    pipelineDesc.renderPass = pRenderer->renderPass;
-    pipelineDesc.subpass = 0;
-    pipelineDesc.basePipelineHandle = VK_NULL_HANDLE;
+	// Oh, yes, cool thing about Vulkan, you can actually have multiple shader
+	// stages for one shader module. That means that you can have a VSMain and
+	// a PSMain in one shader module (aka a glsl file in this case).
+	
+	VkGraphicsPipelineCreateInfo pipelineDesc{};
+	pipelineDesc.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineDesc.stageCount = pPipelineInfo->stageCount;
+	pipelineDesc.pStages = pPipelineInfo->pStages;
+	pipelineDesc.pVertexInputState = &vertexInputInfo;
+	pipelineDesc.pInputAssemblyState = &inputAssembly;
+	pipelineDesc.pViewportState = &viewportState;
+	pipelineDesc.pRasterizationState = &rasterizer;
+	pipelineDesc.pMultisampleState = &multisampleState;
+	pipelineDesc.pColorBlendState = &colorBlending;
+	pipelineDesc.layout = pipelineLayout;
+	pipelineDesc.renderPass = pRenderer->renderPass;
+	pipelineDesc.subpass = 0;
+	pipelineDesc.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (pPipelineInfo->pDynamicStates && pPipelineInfo->dynamicStateCount > 0)
-        pipelineDesc.pDynamicState = &dynamicState;
+	if (pPipelineInfo->pDynamicStates && pPipelineInfo->dynamicStateCount > 0)
+		pipelineDesc.pDynamicState = &dynamicState;
 
-    return vkCreateGraphicsPipelines(pRenderer->device.Get(), VK_NULL_HANDLE,
-        1, &pipelineDesc, nullptr, &pipeline) == VK_SUCCESS;
+	return vkCreateGraphicsPipelines(pRenderer->device.Get(), VK_NULL_HANDLE,
+		1, &pipelineDesc, nullptr, &pipeline) == VK_SUCCESS;
 }
 
 void Pipeline::DisposeUniorms()
 {
-    if (!uniforms)
-        return;
+	if (!uniforms)
+		return;
 
 	vkDestroyDescriptorPool(pRenderer->device.Get(), descriptorPool, nullptr);
 
 	for (uint64_t i = 0; i < descriptorSetLayouts.size(); i++)
 		vkDestroyDescriptorSetLayout(pRenderer->device.Get(),
 			descriptorSetLayouts[i], nullptr);
-    descriptorSetLayouts.clear();
+	descriptorSetLayouts.clear();
 
-    uniforms = false;
+	uniforms = false;
 }
 
 void Pipeline::OnDispose()
 {
-    vkDestroyPipeline(pRenderer->device.Get(), pipeline, nullptr);
-    vkDestroyPipelineLayout(pRenderer->device.Get(), pipelineLayout, nullptr);
+	vkDestroyPipeline(pRenderer->device.Get(), pipeline, nullptr);
+	vkDestroyPipelineLayout(pRenderer->device.Get(), pipelineLayout, nullptr);
 
-    DisposeUniorms();
-    
-    dynamicStates = false;
+	DisposeUniorms();
+	
+	dynamicStates = false;
 }
 
 #endif // VULKAN_API
