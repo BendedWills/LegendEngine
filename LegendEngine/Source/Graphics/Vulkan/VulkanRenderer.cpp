@@ -12,6 +12,10 @@
 #include <set>
 #include <cmath>
 
+#ifdef VMA_VULKAN_VERSION
+#undef VMA_VULKAN_VERSION
+#endif
+
 #define VMA_VULKAN_VERSION 1000000
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>

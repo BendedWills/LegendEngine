@@ -15,7 +15,7 @@ public:
 	{
 		InitScene(testScene);
 		
-		srand(time(NULL));
+		srand(static_cast<unsigned int>(time(NULL)));
 		for (uint64_t i = 0; i < 100; i++)
 		{
 			float offsetX = (float)rand() / RAND_MAX * 2 - 1;
