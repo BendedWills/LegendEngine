@@ -13,22 +13,18 @@ class Triangle : public Application
 public:
 	bool OnInit()
 	{
-		if (!renderer.Init(this))
-			return false;
-		SetRenderer(&renderer);
-
 		InitScene(testScene);
-		InitObject(testObject);
-
+		testObject = CreateObject<Object>();
+		
 		VertexTypes::Vertex2 testVertices[] =
 		{
-			{  0.5f, -0.5f },
-			{ -0.5f, -0.5f },
-			{  0.0f,  0.5f }
+			{   0.0f,  -0.05f, 1, 0, 0, },
+			{   0.05f,  0.05f, 0, 1, 0, },
+			{  -0.05f,  0.05f, 0, 0, 1, }
 		};
 
 		testScene.AddObject(testObject);
-		testObject.AddComponent<Components::MeshComponent>()
+		testObject->AddComponent<Components::MeshComponent>()
 			->Init(testVertices, 3);
 		
 		SetActiveScene(testScene);
@@ -39,31 +35,34 @@ public:
 	void OnStop()
 	{
 		testScene.RemoveObject(testObject);
-		renderer.Dispose();
 	}
 private:
-	Scene3D testScene;
-	Object testObject;
-
-	Vulkan::VulkanRenderer renderer;
+	Scene testScene;
+	Ref<Object> testObject;
 };
 
 int main()
 {
+	Context::InitAPI(RenderingAPI::VULKAN, true);
+
 	Triangle triangle;
 	Triangle triangle2;
 
-	std::thread triangle2thread(
-	[&]() 
-	{
-		if (!triangle2.Start("Triangle 2", true, true))
-			return;
-	});
+	if (!triangle.Init("Triangle", true, true, RenderingAPI::VULKAN))
+		return false;
 
-	if (!triangle.Start("Triangle", true, true))
-		return EXIT_FAILURE;
+	if (!triangle2.Init("Triangle 2", true, true, RenderingAPI::VULKAN))
+		return false;
 	
-	triangle2thread.join();
+	while (!triangle.IsCloseRequested() || !triangle2.IsCloseRequested())
+	{
+		triangle.RenderFrame();
+		triangle2.RenderFrame();
+	}
 	
+	triangle.Dispose();
+	triangle2.Dispose();
+
+	Context::Dispose();
 	return EXIT_SUCCESS;
 }

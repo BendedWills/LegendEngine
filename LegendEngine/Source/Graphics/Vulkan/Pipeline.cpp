@@ -43,17 +43,6 @@ bool Pipeline::Init(
 		if (vkCreateDescriptorPool(pRenderer->device.Get(), &poolInfo, nullptr, 
 			&descriptorPool) != VK_SUCCESS)
 			return false;
-
-		descriptorSetLayouts.resize(pPipelineInfo->setCount);
-		for (uint64_t i = 0; i < pPipelineInfo->setCount; i++)
-		{
-			VkDescriptorSetLayoutCreateInfo* pInfo = &pPipelineInfo->setLayouts[i];
-			pInfo->sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			
-			if (vkCreateDescriptorSetLayout(pRenderer->device.Get(),
-				pInfo, nullptr, &descriptorSetLayouts[i]) != VK_SUCCESS)
-				return false;
-		}
 	}
 
 	if (!InitPipeline(pPipelineInfo))
@@ -81,24 +70,14 @@ VkDescriptorPool* Pipeline::GetDescriptorPool()
 	return &descriptorPool;
 }
 
-std::vector<VkDescriptorSetLayout>* Pipeline::GetSetLayouts()
-{
-	return &descriptorSetLayouts;
-}
-
-
 bool Pipeline::InitPipeline(
 	PipelineInfo* pPipelineInfo
 )
 {
 	VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
 	pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	
-	if (uniforms)
-	{
-		pipelineLayoutDesc.setLayoutCount = descriptorSetLayouts.size();
-		pipelineLayoutDesc.pSetLayouts = descriptorSetLayouts.data();
-	}
+	pipelineLayoutDesc.setLayoutCount = pPipelineInfo->setCount;
+	pipelineLayoutDesc.pSetLayouts = pPipelineInfo->pSetLayouts;
 
 	if (vkCreatePipelineLayout(pRenderer->device.Get(), &pipelineLayoutDesc,
 		nullptr, &pipelineLayout) != VK_SUCCESS)
@@ -238,11 +217,6 @@ void Pipeline::DisposeUniorms()
 		return;
 
 	vkDestroyDescriptorPool(pRenderer->device.Get(), descriptorPool, nullptr);
-
-	for (uint64_t i = 0; i < descriptorSetLayouts.size(); i++)
-		vkDestroyDescriptorSetLayout(pRenderer->device.Get(),
-			descriptorSetLayouts[i], nullptr);
-	descriptorSetLayouts.clear();
 
 	uniforms = false;
 }

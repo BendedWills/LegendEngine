@@ -20,7 +20,7 @@ namespace LegendEngine::Vulkan
 		uint64_t stageCount;
 		UniformBuffer** ppUniforms;
 		uint64_t uniformCount;
-		VkDescriptorSetLayoutCreateInfo* setLayouts;
+		VkDescriptorSetLayout* pSetLayouts;
 		uint64_t setCount;
 		VkDynamicState* pDynamicStates;
 		uint64_t dynamicStateCount;

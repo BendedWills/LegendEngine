@@ -16,20 +16,17 @@ public:
 		InitScene(testScene);
 		
 		srand(static_cast<unsigned int>(time(NULL)));
-		for (uint64_t i = 0; i < 100; i++)
+		for (uint64_t i = 0; i < 1000; i++)
 		{
-			float offsetX = (float)rand() / RAND_MAX * 2 - 1;
-			float offsetY = (float)rand() / RAND_MAX * 2 - 1;
-
 			float r = (float)rand() / RAND_MAX;
 			float g = (float)rand() / RAND_MAX;
 			float b = (float)rand() / RAND_MAX;
 
 			VertexTypes::Vertex2 testVertices[] =
 			{
-				{   0.0f  + offsetX, -0.05f + offsetY, r, g, b, },
-				{   0.05f + offsetX,  0.05f + offsetY, r, g, b, },
-				{  -0.05f + offsetX,  0.05f + offsetY, r, g, b, }
+				{   0.0f,  -0.05f, r, g, b, },
+				{   0.05f,  0.05f, r, g, b, },
+				{  -0.05f,  0.05f, r, g, b, }
 			};
 
 			Ref<Object> object = CreateObject<Object>();
@@ -39,13 +36,23 @@ public:
 			);
 
 			objects.push_back(object);
-
 			testScene.AddObject(object.get());
 		}
 
 		SetActiveScene(testScene);
 
 		return true;
+	}
+
+	void OnUpdate()
+	{
+		for (uint64_t i = 0; i < objects.size(); i++)
+		{
+			float offsetX = (float)rand() / RAND_MAX * 2 - 1;
+			float offsetY = (float)rand() / RAND_MAX * 2 - 1;
+
+			objects[i]->SetPosition(Vector3f(offsetX, offsetY, 0));
+		}
 	}
 
 	void OnStop()
@@ -78,6 +85,6 @@ int main()
 		triangle.Dispose();
 	}
 	Context::Dispose();
-
+	
 	return EXIT_SUCCESS;
 }

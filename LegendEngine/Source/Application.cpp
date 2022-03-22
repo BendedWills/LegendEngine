@@ -40,7 +40,7 @@ bool Application::Init(
 		Log("Tried to initialize twice, continuing...", LogType::DEBUG);
 		return false;
 	}
-	
+
 	this->pRenderer = nullptr;
 	this->applicationName = applicationName;
 	this->logging = logging;
@@ -57,6 +57,9 @@ bool Application::Init(
 	}
 
 	initialized = true;
+
+	if (!Context::InitAPI(api, debug))
+		return false;
 
 	switch (api)
 	{
@@ -303,6 +306,8 @@ bool Application::InitVulkan()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
+	callback.pApplication = this;
+
 	pRenderer = RefTools::Create<Vulkan::VulkanRenderer>();
 	if (!pRenderer->Init(this))
 	{
@@ -342,16 +347,24 @@ void Application::OnDispose()
 {
 	Log("Disposing application", LogType::INFO);
 
+	window.SetVisible(false);
+
 	OnStop();
 	RemoveActiveScene();
 
 	window.Dispose();
+
+	std::vector<Objects::Object*> oldObjects(objects);
+	for (uint64_t i = 0; i < oldObjects.size(); i++)
+	{
+		oldObjects[i]->Dispose();
+	}
 	
 	DisposeGraphics();
 
-	OnDisposed();
-
 	defaultScene.ClearObjects();
+
+	OnDisposed();
 }
 
 void Application::OnSceneObjectAdd(Scene* pScene,

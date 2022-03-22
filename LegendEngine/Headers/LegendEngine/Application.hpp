@@ -34,6 +34,7 @@ namespace LegendEngine
 	class Application : public IDisposable
 	{
 		friend Scene;
+		friend Objects::Object;
 	public:
 		LEGENDENGINE_NO_COPY(Application);
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
@@ -206,6 +207,8 @@ namespace LegendEngine
 		// that are always rendered, no matter what the current set scene is.
 		Scene defaultScene;
 		Scene* activeScene = nullptr;
+
+		std::vector<Objects::Object*> objects;
 	};
 
 	template<typename T>
@@ -222,6 +225,10 @@ namespace LegendEngine
 
 		Ref<T> object = RefTools::Create<T>();
 		object->pApplication = this;
+
+		pRenderer->CreateObjectNative(object.get());
+
+		objects.push_back(object.get());
 
 		std::stringstream str;
 		str << "Created Object (" << (uint64_t)object.get() << ")";

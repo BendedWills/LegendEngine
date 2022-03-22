@@ -1,5 +1,7 @@
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Scene.hpp>
+#include <LegendEngine/Application.hpp>
+#include <Tether/Common/VectorUtils.hpp>
 
 using namespace LegendEngine;
 using namespace LegendEngine::Objects;
@@ -77,6 +79,24 @@ void Object::RemoveFromScene(Scene* pScene)
             scenes.erase(scenes.begin() + i);
 }
 
+void Object::SetNative(Ref<IObjectNative> native)
+{
+	if (nativeSet)
+	{
+		LEGENDENGINE_OBJECT_LOG(pApplication, "Objects::Object",
+			"Tried to set object native twice. Ignoring.", LogType::WARN);
+		return;
+	}
+
+    this->native = native;
+    nativeSet = true;
+}
+
+IObjectNative* Object::GetNative()
+{
+    return native.get();
+}
+
 void Object::OnComponentAdd(const std::string& typeName, 
     Components::Component* pComponent)
 {
@@ -89,4 +109,14 @@ void Object::OnComponentRemove(const std::string& typeName,
 {
     for (Scene* pScene : scenes)
         pScene->OnObjectComponentRemove(this, typeName, pComponent);
+}
+
+void Object::OnDispose()
+{
+	if (nativeSet)
+		native->OnDispose();
+
+    ClearComponents();
+    
+    Tether::VectorUtils::EraseAll(pApplication->objects, this);
 }

@@ -45,7 +45,6 @@ namespace LegendEngine::Vulkan
 		VkPipeline GetPipeline();
 		VkPipelineLayout GetPipelineLayout();
 		VkDescriptorPool* GetDescriptorPool();
-		std::vector<VkDescriptorSetLayout>* GetSetLayouts();
 	private:
 		// Initializes pipeline and pipelineLayout.
 		bool InitPipeline(
@@ -60,8 +59,6 @@ namespace LegendEngine::Vulkan
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
 		VkDescriptorPool descriptorPool;
-
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
 		uint64_t images = 0;
 

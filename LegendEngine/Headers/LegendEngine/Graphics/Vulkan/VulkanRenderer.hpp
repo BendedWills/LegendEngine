@@ -7,6 +7,7 @@
 #ifdef VULKAN_API
 
 #include <LegendEngine/Common/Stopwatch.hpp>
+#include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 #include <LegendEngine/Graphics/Vulkan/Surface.hpp>
@@ -15,6 +16,7 @@
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 #include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanObjectNative.hpp>
 
 #include <vk_mem_alloc.h>
 
@@ -31,6 +33,7 @@ namespace LegendEngine::Vulkan
 		friend VertexBuffer;
 		friend Pipeline;
 		friend UniformBuffer;
+		friend VulkanObjectNative;
 	public:
 		VulkanRenderer() 
 			:
@@ -56,6 +59,8 @@ namespace LegendEngine::Vulkan
 		Vulkan::Surface surface;
 		Vulkan::Device device;
 		Vulkan::Swapchain swapchain;
+
+		VkDescriptorSetLayout objectLayout;
 		
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
@@ -64,7 +69,6 @@ namespace LegendEngine::Vulkan
 		VkCommandPool commandPool;
 
 		// Shader stuff
-		Vulkan::UniformBuffer testUniform;
 		Vulkan::ShaderModule vertexModule;
 		Vulkan::ShaderModule fragmentModule;
 		Vulkan::Pipeline shaderProgram;
@@ -109,6 +113,8 @@ namespace LegendEngine::Vulkan
 		bool shouldRecreateSwapchain = false;
 		bool enableVsync = false;
 	private:
+		bool CreateObjectNative(Objects::Object* pObject);
+
 		bool RecreateSwapchain();
 
 		bool RecreateCommandBuffers();
@@ -149,6 +155,7 @@ namespace LegendEngine::Vulkan
 		bool InitSwapchain(uint64_t width, uint64_t height);
 		bool InitShaders();
 		bool InitRenderPass();
+		bool InitUniforms();
 		bool InitPipeline();
 		bool InitFramebuffers();
 		bool InitCommandPool();

@@ -7,18 +7,19 @@
 #include <vector>
 #include <string>
 
-namespace LegendEngine::Objects
-{
-    class Object;
-
-    namespace Components
-    {
-        class Component;
-    }
-}
-
 namespace LegendEngine
 {
+	namespace Objects
+	{
+		class Object;
+		class IObjectNative;
+
+		namespace Components
+		{
+			class Component;
+		}
+	}
+
     class VertexBuffer;
     class Shader;
     class Application;
@@ -29,10 +30,9 @@ namespace LegendEngine
         friend Application;
         friend LegendEngine::VertexBuffer;
         friend LegendEngine::Shader;
+        friend Objects::IObjectNative;
     public:
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(IRenderer);
-
-        IRenderer() {}
         
         IRenderer(const IRenderer&) = delete;
 		IRenderer(IRenderer&&) = delete;
@@ -58,6 +58,8 @@ namespace LegendEngine
 
         Application* GetApplication();
     protected:
+        IRenderer() {}
+
         bool RenderFrame() { return OnRenderFrame(); }
 
         /**
@@ -137,9 +139,20 @@ namespace LegendEngine
         {}
 
         /**
-         * @brief Called when the renderer is desposed.
+         * @brief Called when the renderer is disposed.
          */
         virtual void OnRendererDispose() {}
+
+        /**
+         * @brief Creates an object's native. An object's native is a class that has
+         *  specific utilities native to the Application's graphics API.
+         *  It's called a native because I have literally no clue what else to call it.
+         */
+        virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
+
+        void SetObjectNative(Objects::Object* pObject, 
+            Ref<Objects::IObjectNative> native);
+        Objects::IObjectNative* GetObjectNative(Objects::Object* pObject);
 
         std::vector<VertexBuffer*> vertexBuffers;
         std::vector<Shader*> shaders;

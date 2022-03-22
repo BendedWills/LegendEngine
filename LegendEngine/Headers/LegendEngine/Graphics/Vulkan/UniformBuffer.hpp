@@ -38,7 +38,7 @@ namespace LegendEngine::Vulkan
 		 */
 		bool Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t images);
 
-		bool BindToSet(Pipeline* pPipeline, uint64_t setIndex);
+		bool BindToSet(Pipeline* pPipeline, VkDescriptorSetLayout layout);
 		bool Bind(uint64_t binding);
 
 		/**
@@ -56,7 +56,6 @@ namespace LegendEngine::Vulkan
 		VulkanRenderer* pRenderer = nullptr;
 		
 		std::vector<VkDescriptorSet> descriptorSets;
-
 		std::vector<VmaAllocation> allocations;
 		std::vector<VkBuffer> uniformBuffers;
 

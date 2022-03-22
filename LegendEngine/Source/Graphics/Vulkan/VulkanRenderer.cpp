@@ -143,6 +143,12 @@ bool VulkanRenderer::OnRendererInit()
 		return false;
 	}
 
+	if (!InitUniforms())
+	{
+		pApplication->Log("Failed to initialize uniforms!", LogType::ERROR);
+		return false;
+	}
+
 	if (!InitPipeline())
 	{
 		pApplication->Log("Failed to initialize pipeline!", LogType::ERROR);
@@ -250,8 +256,10 @@ void VulkanRenderer::OnRendererDispose()
 	
 	DisposeSwapchain();
 
-	testUniform.Dispose();
 	shaderProgram.Dispose();
+
+	vkDestroyDescriptorSetLayout(device.Get(), objectLayout, nullptr);
+
 	vkDestroyRenderPass(device.Get(), renderPass, nullptr);
 	
 	for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -280,16 +288,16 @@ void VulkanRenderer::OnRendererDispose()
 	pApplication->GetWindow()->RemoveEventHandler(&eventHandler);
 }
 
-bool VulkanRenderer::PickDevice(VkPhysicalDevice* pDevice, 
+bool VulkanRenderer::PickDevice(VkPhysicalDevice* pDevice,
 	Vulkan::Surface* pSurface)
 {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(pInstance->Get(), &deviceCount, nullptr);
 	if (deviceCount == 0)
 		return false;
-	
+
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(pInstance->Get(), &deviceCount, 
+	vkEnumeratePhysicalDevices(pInstance->Get(), &deviceCount,
 		devices.data());
 
 	for (VkPhysicalDevice device : devices)
@@ -298,7 +306,7 @@ bool VulkanRenderer::PickDevice(VkPhysicalDevice* pDevice,
 			*pDevice = device;
 			return true;
 		}
-	
+
 	return false;
 }
 
@@ -535,12 +543,28 @@ bool VulkanRenderer::InitRenderPass()
 	return true;
 }
 
+bool VulkanRenderer::InitUniforms()
+{
+	VkDescriptorSetLayoutBinding testBinding{};
+	testBinding.binding = 0;
+	testBinding.descriptorCount = 1;
+	testBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	testBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	VkDescriptorSetLayoutCreateInfo setInfo{};
+	setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	setInfo.bindingCount = 1;
+	setInfo.pBindings = &testBinding;
+
+	if (vkCreateDescriptorSetLayout(device.Get(),
+		&setInfo, nullptr, &objectLayout) != VK_SUCCESS)
+		return false;
+
+	return true;
+}
 
 bool VulkanRenderer::InitPipeline()
 {
-	if (!testUniform.Init(this, sizeof(float) * 2, swapchain.GetImageCount()))
-		return false;
-	
 	VkPipelineShaderStageCreateInfo vertexStage{};
 	vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vertexStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -553,26 +577,6 @@ bool VulkanRenderer::InitPipeline()
 	fragmentStage.module = fragmentModule.Get();
 	fragmentStage.pName = "main";
 
-	VkDescriptorSetLayoutBinding testBinding{};
-	testBinding.binding = 0;
-	testBinding.descriptorCount = 1;
-	testBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	testBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	VkDescriptorSetLayoutCreateInfo setInfo{};
-	setInfo.bindingCount = 1;
-	setInfo.pBindings = &testBinding;
-
-	UniformBuffer* uniforms[] =
-	{
-		&testUniform,
-	};
-
-	VkDescriptorSetLayoutCreateInfo sets[] =
-	{
-		setInfo,
-	};
-
 	VkPipelineShaderStageCreateInfo stages[] =
 	{
 		vertexStage, fragmentStage
@@ -584,24 +588,24 @@ bool VulkanRenderer::InitPipeline()
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
+	VkDescriptorSetLayout sets[] =
+	{
+		objectLayout
+	};
+
 	PipelineInfo pipelineInfo{};
 	pipelineInfo.stageCount = sizeof(stages) / sizeof(stages[0]);
 	pipelineInfo.pStages = stages;
 	pipelineInfo.pDynamicStates = dynamicStates;
 	pipelineInfo.dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]);
 	pipelineInfo.pDynamicStates = dynamicStates;
-	pipelineInfo.uniformCount = sizeof(uniforms) / sizeof(uniforms[0]);
-	pipelineInfo.ppUniforms = uniforms;
 	pipelineInfo.setCount = sizeof(sets) / sizeof(sets[0]);
-	pipelineInfo.setLayouts = sets;
+	pipelineInfo.pSetLayouts = sets;
 	pipelineInfo.images = swapchain.GetImageCount();
 
 	if (!shaderProgram.Init(this, &pipelineInfo))
 		return false;
 
-	testUniform.BindToSet(&shaderProgram, 0);
-	testUniform.Bind(0);
-	
 	vertexModule.Dispose();
 	fragmentModule.Dispose();
 
@@ -697,17 +701,27 @@ bool VulkanRenderer::InitSyncObjects()
 
 void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 {
-	struct Ubo
+	std::vector<Objects::Object*>* defaultObjects = pApplication->GetDefaultScene()
+		->GetObjects();
+	for (uint64_t i = 0; i < defaultObjects->size(); i++)
 	{
-		float test;
-		float green;
-	};
+		VulkanObjectNative* vkNative =
+			(VulkanObjectNative*)GetObjectNative(defaultObjects->at(i));
 
-	Ubo ubo;
-	ubo.test = (sin(timer.GetElapsedMillis() / 500.0f) + 1.0f) / 2;
-	ubo.green = (sin(timer.GetElapsedMillis() / 1000.0f) + 1.0f) / 2;
+		vkNative->SetCurrentImage(imageIndex);
 
-	testUniform.UpdateBuffer(&ubo, sizeof(Ubo), imageIndex);
+	}
+
+	std::vector<Objects::Object*>* activeObjects = pApplication->GetActiveScene()
+		->GetObjects();
+	for (uint64_t i = 0; i < activeObjects->size(); i++)
+	{
+		VulkanObjectNative* vkNative =
+			(VulkanObjectNative*)GetObjectNative(activeObjects->at(i));
+
+		vkNative->SetCurrentImage(imageIndex);
+		vkNative->OnUniformsUpdate();
+	}
 }
 
 bool VulkanRenderer::DrawFrame()
@@ -787,6 +801,12 @@ bool VulkanRenderer::DrawFrame()
 	
 	// Increment the frame.
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	return true;
+}
+
+bool VulkanRenderer::CreateObjectNative(Objects::Object* pObject)
+{
+	SetObjectNative(pObject, RefTools::Create<VulkanObjectNative>(pObject, this));
 	return true;
 }
 
@@ -889,18 +909,13 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 		// Eventually, objects will have to be rendered in order of distance
 		// from the camera.
 
-		VkDescriptorSet descSets[1] = {};
-		testUniform.GetDescriptorSet(&descSets[0], commandBufferIndex);
-		
-		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-			shaderProgram.GetPipelineLayout(), 0, 1, descSets, 0, nullptr);
-
 		// Default scene
 		Scene* pDefault = pApplication->GetDefaultScene();
 		std::vector<Object*>* objects = pDefault->GetObjects();
 		for (uint64_t i = 0; i < objects->size(); i++)
 		{
 			Object* object = objects->at(i);
+			VulkanObjectNative* native = (VulkanObjectNative*)GetObjectNative(object);
 
 			// The object must have a mesh component
 			MeshComponent* component = object->GetComponent<MeshComponent>();
@@ -913,6 +928,10 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 				continue;
 
 			VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
+
+			VkDescriptorSet objectSet = native->GetDescriptorSets()[commandBufferIndex];
+			vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+				shaderProgram.GetPipelineLayout(), 0, 1, &objectSet, 0, nullptr);
 
 			VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
 			VkDeviceSize offsets[] = { 0 };
@@ -929,6 +948,8 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 			for (uint64_t i = 0; i < activeObjects->size(); i++)
 			{
 				Object* object = activeObjects->at(i);
+				VulkanObjectNative* native = 
+					(VulkanObjectNative*)GetObjectNative(object);
 
 				// The object must have a mesh component
 				MeshComponent* component = object->GetComponent<MeshComponent>();
@@ -941,6 +962,10 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 					continue;
 
 				VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
+
+				VkDescriptorSet objectSet = native->GetDescriptorSets()[commandBufferIndex];
+				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+					shaderProgram.GetPipelineLayout(), 0, 1, &objectSet, 0, nullptr);
 
 				VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
 				VkDeviceSize offsets[] = { 0 };

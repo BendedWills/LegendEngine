@@ -1,5 +1,6 @@
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Application.hpp>
+#include <LegendEngine/Objects/Object.hpp>
 
 using namespace LegendEngine;
 
@@ -20,8 +21,8 @@ bool IRenderer::Init(Application* pApplication)
         pApplication->Log("Failed to initialize renderer", LogType::ERROR);
         return false;
     }
-    else
-        pApplication->Log("Initialized renderer", LogType::DEBUG);
+
+    pApplication->Log("Initialized renderer", LogType::DEBUG);
 
     initialized = true;
     return true;
@@ -30,6 +31,17 @@ bool IRenderer::Init(Application* pApplication)
 Application* IRenderer::GetApplication()
 {
     return pApplication;
+}
+
+void IRenderer::SetObjectNative(Objects::Object* pObject, 
+    Ref<Objects::IObjectNative> native)
+{
+    pObject->SetNative(native);
+}
+
+Objects::IObjectNative* IRenderer::GetObjectNative(Objects::Object* pObject)
+{
+    return pObject->GetNative();
 }
 
 void IRenderer::OnDispose()

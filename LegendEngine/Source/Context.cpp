@@ -31,7 +31,7 @@ bool ContextInternal::InitAPI(RenderingAPI api, bool debugMode)
 bool ContextInternal::InitVulkan(bool debugMode)
 {
 	if (vulkanInitialized)
-		return false;
+		return true;
 
 	if (!instance.Init("LegendEngineApp", "LegendEngine", debugMode))
 		return false;

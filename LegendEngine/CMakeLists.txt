@@ -163,6 +163,7 @@ project ("LegendEngine")
 # Add Tests
 add_subdirectory(Tests/Triangle)
 add_subdirectory(Tests/APIMisuse)
+add_subdirectory(Tests/MultipleApps)
 
 # Add tether
 add_subdirectory(Vendor/Tether)

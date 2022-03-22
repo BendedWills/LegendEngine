@@ -3,13 +3,12 @@
 layout(location = 0) in vec3 inColor;
 layout(location = 0) out vec4 fragColor;
 
-layout(set = 0, binding = 0) uniform UBO
+layout(set = 0, binding = 0) uniform ObjectBuffer
 {
-    float test;
-    float green;
+    float brightness;
 };
 
 void main() 
 {
-    fragColor = vec4(inColor.xyz * test * vec3(1, green, 1), 1.0);
+    fragColor = vec4(inColor.xyz * brightness, 1.0);
 }

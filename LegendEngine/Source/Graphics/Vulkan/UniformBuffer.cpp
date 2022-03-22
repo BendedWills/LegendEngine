@@ -39,7 +39,7 @@ bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t imag
     return true;
 }
 
-bool UniformBuffer::BindToSet(Pipeline* pPipeline, uint64_t setIndex)
+bool UniformBuffer::BindToSet(Pipeline* pPipeline, VkDescriptorSetLayout layout)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
@@ -47,7 +47,6 @@ bool UniformBuffer::BindToSet(Pipeline* pPipeline, uint64_t setIndex)
 
 	this->pDescriptorPool = pPipeline->GetDescriptorPool();
 
-	VkDescriptorSetLayout layout = pPipeline->GetSetLayouts()->at(setIndex);
 	std::vector<VkDescriptorSetLayout> layouts(images, layout);
 
 	VkDescriptorSetAllocateInfo allocInfo{};
