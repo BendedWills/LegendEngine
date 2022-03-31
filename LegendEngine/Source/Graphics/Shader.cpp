@@ -6,16 +6,15 @@
 
 using namespace LegendEngine;
 
-bool Shader::Init(ShaderStage* pStages, uint64_t stageCount, 
-    UniformDesc* pDescs, uint64_t uniformCount)
+bool Shader::Init(ShaderStage* pStages, uint64_t stageCount)
 {
-    if (initialized || !pStages || (!pDescs && uniformCount > 0) || 
-        stageCount == 0)
+    if (initialized || !pStages || stageCount == 0)
         return false;
     
     pRenderer->shaders.push_back(this);
-    if (!OnShaderCreate(pStages, stageCount, pDescs, uniformCount))
-        return false;
+    if (nativeSet)
+        if (!native->OnCreate(pStages, stageCount))
+            return false;
     
     initialized = true;
     return true;
@@ -28,7 +27,9 @@ RenderingAPI Shader::GetType()
 
 void Shader::OnDispose()
 {
-    OnShaderDispose();
+    if (nativeSet)
+        native->OnDispose();
+
     Tether::VectorUtils::EraseAll(pRenderer->shaders, this);
 
     LEGENDENGINE_OBJECT_LOG(

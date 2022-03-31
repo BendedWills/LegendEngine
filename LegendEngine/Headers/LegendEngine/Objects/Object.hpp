@@ -7,7 +7,8 @@
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Ref.hpp>
-#include <LegendEngine/Common/Math.hpp>
+#include <LegendEngine/Math/Math.hpp>
+#include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Objects/Components/ComponentHolder.hpp>
 
 #include <type_traits>
@@ -30,24 +31,25 @@ namespace LegendEngine::Objects
     public:
         LEGENDENGINE_NO_COPY(IObjectNative);
 
-        struct ObjectUniforms
-        {
-            float brightness;
-        };
-
         IObjectNative(Object* pObject)
             :
             pObject(pObject)
         {}
 
+		struct ObjectUniforms
+		{
+			Matrix4x4f transform;
+		};
+
         virtual void OnUniformsUpdate() {}
 
         virtual void OnDispose() {}
-    private:
+    protected:
         Object* pObject = nullptr;
     };
 
-    class Object : public Components::ComponentHolder, IDisposable
+    class Object : public Components::ComponentHolder, IDisposable, 
+        public NativeHolder<IObjectNative>
     {
         friend Application;
         friend Scene;
@@ -57,13 +59,7 @@ namespace LegendEngine::Objects
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(Object);
         LEGENDENGINE_NO_COPY(Object);
         
-		Object()
-			:
-			scale(1.0f),
-			Components::ComponentHolder(this)
-		{
-            initialized = true;
-        }
+        Object();
 
         void AddPosition(Vector3f position);
         void AddRotation(Vector3f rotation);
@@ -75,17 +71,18 @@ namespace LegendEngine::Objects
         Vector3f GetRotation();
         Vector3f GetScale();
 
+        Matrix4x4f& GetTransformationMatrix();
+
         Application* GetApplication();
     protected:
         void AddToScene(Scene* pScene);
         void RemoveFromScene(Scene* pScene);
 
-        void SetNative(Ref<IObjectNative> native);
-        IObjectNative* GetNative();
-
 		Vector3f position;
 		Vector3f rotation;
 		Vector3f scale;
+
+        Matrix4x4f transform;
 
         Application* pApplication = nullptr;
     private:
@@ -97,9 +94,6 @@ namespace LegendEngine::Objects
             Components::Component* pComponent);
         
         void CalculateTransformMatrix();
-        
-        bool nativeSet = false;
-        Ref<IObjectNative> native;
         
         std::vector<Scene*> scenes;
     };

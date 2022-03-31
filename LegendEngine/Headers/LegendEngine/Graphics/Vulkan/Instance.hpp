@@ -4,12 +4,13 @@
 
 #ifndef _LEGENDENGINE_VULKAN_INSTANCE_HPP
 #define _LEGENDENGINE_VULKAN_INSTANCE_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <vector>
 #include <unordered_map>
 
-#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Graphics/Vulkan/DebugCallback.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>

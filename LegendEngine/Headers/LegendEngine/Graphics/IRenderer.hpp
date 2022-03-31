@@ -51,10 +51,14 @@ namespace LegendEngine
         bool Init(Application* pApplication);
 
         virtual void SetVSyncEnabled(bool vsync) {}
-        virtual bool CreateVertexBuffer(Ref<VertexBuffer>* buffer) 
-        { return false; }
         virtual bool CreateShader(Ref<Shader>* shader)
         { return false; }
+
+        /**
+         * @brief An VertexBuffer's native is a class that has
+         *  specific utilities native to the Application's graphics API.
+         */
+        virtual bool CreateVertexBufferNative(LegendEngine::VertexBuffer* pObject) = 0;
 
         Application* GetApplication();
     protected:
@@ -144,15 +148,11 @@ namespace LegendEngine
         virtual void OnRendererDispose() {}
 
         /**
-         * @brief Creates an object's native. An object's native is a class that has
+         * @brief CAn object's native is a class that has
          *  specific utilities native to the Application's graphics API.
          *  It's called a native because I have literally no clue what else to call it.
          */
         virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
-
-        void SetObjectNative(Objects::Object* pObject, 
-            Ref<Objects::IObjectNative> native);
-        Objects::IObjectNative* GetObjectNative(Objects::Object* pObject);
 
         std::vector<VertexBuffer*> vertexBuffers;
         std::vector<Shader*> shaders;

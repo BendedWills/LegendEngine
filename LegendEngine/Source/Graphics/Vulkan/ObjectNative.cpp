@@ -1,6 +1,7 @@
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
-#include <LegendEngine/Graphics/Vulkan/VulkanObjectNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/ObjectNative.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 
 #include <iostream>
@@ -9,8 +10,7 @@
 using namespace LegendEngine::Vulkan;
 using namespace LegendEngine::Objects;
 
-VulkanObjectNative::VulkanObjectNative(Object* pObject,
-	VulkanRenderer* pRenderer)
+ObjectNative::ObjectNative(VulkanRenderer* pRenderer, Object* pObject)
 	:
 	IObjectNative(pObject)
 {
@@ -85,15 +85,15 @@ VulkanObjectNative::VulkanObjectNative(Object* pObject,
 	}
 }
 
-void VulkanObjectNative::SetCurrentImage(uint64_t imageIndex)
+void ObjectNative::SetCurrentImage(uint64_t imageIndex)
 {
 	this->imageIndex = imageIndex;
 }
 
-void VulkanObjectNative::OnUniformsUpdate()
+void ObjectNative::OnUniformsUpdate()
 {
 	IObjectNative::ObjectUniforms ubo;
-	ubo.brightness = pRenderer->timer.GetElapsedMillis() / 10000.0f;
+	ubo.transform = pObject->GetTransformationMatrix();
 
 	void* data;
 	vmaMapMemory(pRenderer->allocator, allocations[imageIndex], &data);
@@ -101,13 +101,15 @@ void VulkanObjectNative::OnUniformsUpdate()
 	vmaUnmapMemory(pRenderer->allocator, allocations[imageIndex]);
 }
 
-VkDescriptorSet* VulkanObjectNative::GetDescriptorSets()
+VkDescriptorSet* ObjectNative::GetDescriptorSets()
 {
 	return descriptorSets.data();
 }
 
-void VulkanObjectNative::OnDispose()
+void ObjectNative::OnDispose()
 {
+	pRenderer->device.WaitIdle();
+
 	vkFreeDescriptorSets(pRenderer->device.Get(), descriptorPool,
 		descriptorSets.size(), descriptorSets.data());
 

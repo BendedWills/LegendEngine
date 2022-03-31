@@ -1,7 +1,7 @@
 #ifndef _LEGENDENGINE_LEGENDENGINE_HPP
 #define _LEGENDENGINE_LEGENDENGINE_HPP
 
-#include <LegendEngine/Common/Math.hpp>
+#include <LegendEngine/Math/Math.hpp>
 
 #include <LegendEngine/Context.hpp>
 #include <LegendEngine/Application.hpp>

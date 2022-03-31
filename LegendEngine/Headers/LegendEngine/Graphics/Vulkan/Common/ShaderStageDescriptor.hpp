@@ -1,5 +1,7 @@
 #ifndef _LEGENDENGINE_VULKAN_SHADERSTAGEDESCRIPTOR_HPP
 #define _LEGENDENGINE_VULKAN_SHADERSTAGEDESCRIPTOR_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>

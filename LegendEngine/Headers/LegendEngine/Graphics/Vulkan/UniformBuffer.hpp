@@ -5,10 +5,11 @@
 
 #ifndef _LEGENDENGINE_VULKAN_UNIFORMBUFFER_HPP
 #define _LEGENDENGINE_VULKAN_UNIFORMBUFFER_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
-#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>
 #include <Tether/Tether.hpp>
 

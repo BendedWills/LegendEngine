@@ -4,6 +4,8 @@
 
 #ifndef _LEGENDENGINE_VULKAN_SWAPCHAIN_HPP
 #define _LEGENDENGINE_VULKAN_SWAPCHAIN_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
@@ -42,7 +44,7 @@ namespace LegendEngine::Vulkan
         
         /**
          * @brief If vsync is true, this function returns FIFO. 
-         *  If vsync is false, mailbox is preferrred, but immediate is 
+         *  If vsync is false, mailbox is preferred, but immediate is 
          *  returned if mailbox isn't available; 
          *  if neither are supported, FIFO is returned.
          * 

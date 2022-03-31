@@ -122,17 +122,17 @@ void Application::UpdateWindow()
 	window.PollEvents();
 }
 
-void Application::Update(bool updateWindow)
+void Application::Update(float delta, bool updateWindow)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED();
 
 	if (updateWindow)
 		UpdateWindow();
 	
-	OnUpdate();
+	OnUpdate(delta);
 }
 
-void Application::Render()
+void Application::Render(float delta)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED();
 	
@@ -140,6 +140,8 @@ void Application::Render()
 		return;
 	
 	pRenderer->RenderFrame();
+
+	OnRendered(delta);
 }
 
 void Application::Log(const std::string& message, LogType type)
@@ -254,12 +256,12 @@ bool Application::InitScene(Scene* pScene)
 	return true;
 }
 
-void Application::RenderFrame()
+void Application::RenderFrame(float delta)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED();
 
-	Update();
-	Render();
+	Update(delta);
+	Render(delta);
 }
 
 Scene* Application::GetDefaultScene()

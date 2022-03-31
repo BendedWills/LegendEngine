@@ -1,8 +1,6 @@
 #ifdef VULKAN_API
 
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
-#include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
-#include <LegendEngine/Graphics/Vulkan/Shader.hpp>
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Context.hpp>
 
@@ -43,26 +41,7 @@ void VulkanRenderer::SetVSyncEnabled(bool vsync)
 	Reload();
 }
 
-bool VulkanRenderer::CreateVertexBuffer(
-	Ref<LegendEngine::VertexBuffer>* buffer)
-{
-	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
-	if (!buffer)
-	{
-		pApplication->Log(
-			"Creating vertex buffer: Buffer is nullptr. Returning.",
-			LogType::WARN);
-		return false;
-	}
-
-	*buffer = RefTools::Create<VertexBuffer>(this);
-	
-	return true;
-}
-
-bool VulkanRenderer::CreateShader(
-	Ref<LegendEngine::Shader>* shader)
+bool VulkanRenderer::CreateShaderNative(Shader* shader)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
@@ -74,7 +53,7 @@ bool VulkanRenderer::CreateShader(
 		return false;
 	}
 
-	*shader = RefTools::Create<Shader>(this);
+	shader->SetNative(RefTools::Create<ShaderNative>(this, shader));
 
 	return true;
 }
@@ -87,7 +66,7 @@ bool VulkanRenderer::Reload()
 
 bool VulkanRenderer::OnRendererInit()
 {
-	timer.Start();
+	timer.Set();
 
 	pApplication = GetApplication();
 	pInstance = Context::GetVulkanInstance();
@@ -549,7 +528,7 @@ bool VulkanRenderer::InitUniforms()
 	testBinding.binding = 0;
 	testBinding.descriptorCount = 1;
 	testBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	testBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	testBinding.stageFlags = VK_SHADER_STAGE_ALL;
 
 	VkDescriptorSetLayoutCreateInfo setInfo{};
 	setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -705,8 +684,7 @@ void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 		->GetObjects();
 	for (uint64_t i = 0; i < defaultObjects->size(); i++)
 	{
-		VulkanObjectNative* vkNative =
-			(VulkanObjectNative*)GetObjectNative(defaultObjects->at(i));
+		ObjectNative* vkNative = (ObjectNative*)defaultObjects->at(i)->GetNative();
 
 		vkNative->SetCurrentImage(imageIndex);
 
@@ -716,8 +694,7 @@ void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 		->GetObjects();
 	for (uint64_t i = 0; i < activeObjects->size(); i++)
 	{
-		VulkanObjectNative* vkNative =
-			(VulkanObjectNative*)GetObjectNative(activeObjects->at(i));
+		ObjectNative* vkNative = (ObjectNative*)activeObjects->at(i)->GetNative();
 
 		vkNative->SetCurrentImage(imageIndex);
 		vkNative->OnUniformsUpdate();
@@ -806,7 +783,34 @@ bool VulkanRenderer::DrawFrame()
 
 bool VulkanRenderer::CreateObjectNative(Objects::Object* pObject)
 {
-	SetObjectNative(pObject, RefTools::Create<VulkanObjectNative>(pObject, this));
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!pObject)
+	{
+		pApplication->Log(
+			"Creating object native: Object is nullptr. Returning.",
+			LogType::WARN);
+		return false;
+	}
+
+	pObject->SetNative(RefTools::Create<ObjectNative>(this, pObject));
+	return true;
+}
+
+bool VulkanRenderer::CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!buffer)
+	{
+		pApplication->Log(
+			"Creating vertex buffer native: Buffer is nullptr. Returning.",
+			LogType::WARN);
+		return false;
+	}
+
+	buffer->SetNative(RefTools::Create<VertexBufferNative>(this, buffer));
+
 	return true;
 }
 
@@ -915,19 +919,17 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 		for (uint64_t i = 0; i < objects->size(); i++)
 		{
 			Object* object = objects->at(i);
-			VulkanObjectNative* native = (VulkanObjectNative*)GetObjectNative(object);
+			ObjectNative* native = (ObjectNative*)object->GetNative();
 
 			// The object must have a mesh component
 			MeshComponent* component = object->GetComponent<MeshComponent>();
 			if (!component)
 				continue;
 
-			LegendEngine::VertexBuffer* pVertexBuffer =
-				component->GetVertexBuffer();
-			if (pVertexBuffer->GetType() != RenderingAPI::VULKAN)
-				continue;
-
-			VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
+			LegendEngine::VertexBuffer* pVertexBuffer = component->GetVertexBuffer();
+			
+			VertexBufferNative* pVkVertexBuffer = 
+				(VertexBufferNative*)pVertexBuffer->GetNative();
 
 			VkDescriptorSet objectSet = native->GetDescriptorSets()[commandBufferIndex];
 			vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -948,8 +950,7 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 			for (uint64_t i = 0; i < activeObjects->size(); i++)
 			{
 				Object* object = activeObjects->at(i);
-				VulkanObjectNative* native = 
-					(VulkanObjectNative*)GetObjectNative(object);
+				ObjectNative* native = (ObjectNative*)object->GetNative();
 
 				// The object must have a mesh component
 				MeshComponent* component = object->GetComponent<MeshComponent>();
@@ -958,10 +959,8 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 
 				LegendEngine::VertexBuffer* pVertexBuffer =
 					component->GetVertexBuffer();
-				if (pVertexBuffer->GetType() != RenderingAPI::VULKAN)
-					continue;
-
-				VertexBuffer* pVkVertexBuffer = (VertexBuffer*)pVertexBuffer;
+				VertexBufferNative* pVkVertexBuffer =
+					(VertexBufferNative*)pVertexBuffer->GetNative();
 
 				VkDescriptorSet objectSet = native->GetDescriptorSets()[commandBufferIndex];
 				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

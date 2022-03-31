@@ -6,40 +6,49 @@
 using namespace LegendEngine;
 using namespace LegendEngine::Objects;
 
+Object::Object()
+	:
+	scale(1.0f),
+	Components::ComponentHolder(this)
+{
+    CalculateTransformMatrix();
+	initialized = true;
+}
+
 void Object::AddPosition(Vector3f position)
 {
-    this->position.x += position.x;
-    this->position.y += position.y;
-    this->position.z += position.z;
+    this->position += position;
+    CalculateTransformMatrix();
 }
 
 void Object::AddRotation(Vector3f rotation)
 {
-    this->rotation.x += rotation.x;
-    this->rotation.y += rotation.y;
-    this->rotation.z += rotation.z;
+    this->rotation += rotation;
+    CalculateTransformMatrix();
 }
 
 void Object::AddScale(Vector3f scale)
 {
-    this->scale.x += scale.x;
-    this->scale.y += scale.y;
-    this->scale.z += scale.z;
+    this->scale += scale;
+    CalculateTransformMatrix();
 }
 
 void Object::SetPosition(Vector3f position)
 {
     this->position = position;
+    CalculateTransformMatrix();
 }
 
 void Object::SetRotation(Vector3f rotation)
 {
     this->rotation = rotation;
+    CalculateTransformMatrix();
 }
 
 void Object::SetScale(Vector3f scale)
 {
     this->scale = scale;
+    CalculateTransformMatrix();
 }
 
 Vector3f Object::GetPosition()
@@ -54,7 +63,12 @@ Vector3f Object::GetRotation()
 
 Vector3f Object::GetScale()
 {
-    return scale;    
+    return scale;
+}
+
+Matrix4x4f& Object::GetTransformationMatrix()
+{
+    return transform;
 }
 
 Application* Object::GetApplication()
@@ -64,7 +78,15 @@ Application* Object::GetApplication()
 
 void Object::CalculateTransformMatrix()
 {
-    // TODO
+    transform = Matrix4x4f::MakeIdentity();
+    transform = Matrix4x4f::Translate(transform, position);
+    transform = Matrix4x4f::Scale(transform, scale);
+	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.x),
+		Vector3f(1, 0, 0));
+	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.y),
+		Vector3f(0, 1, 0));
+	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.z),
+		Vector3f(0, 0, 1));
 }
 
 void Object::AddToScene(Scene* pScene)
@@ -77,24 +99,6 @@ void Object::RemoveFromScene(Scene* pScene)
     for (uint64_t i = 0; i < scenes.size(); i++)
         if (scenes[i] == pScene)
             scenes.erase(scenes.begin() + i);
-}
-
-void Object::SetNative(Ref<IObjectNative> native)
-{
-	if (nativeSet)
-	{
-		LEGENDENGINE_OBJECT_LOG(pApplication, "Objects::Object",
-			"Tried to set object native twice. Ignoring.", LogType::WARN);
-		return;
-	}
-
-    this->native = native;
-    nativeSet = true;
-}
-
-IObjectNative* Object::GetNative()
-{
-    return native.get();
 }
 
 void Object::OnComponentAdd(const std::string& typeName, 

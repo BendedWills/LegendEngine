@@ -8,11 +8,23 @@ namespace LegendEngine
 	class Stopwatch 
 	{
 	public:
-		void Start();
+		Stopwatch()
+			:
+			startTime(std::chrono::high_resolution_clock::now())
+		{}
+
+		/**
+		 * @brief Sets the clock to the current time.
+		 *  In other words, this function resets the timer.
+		 */
+		void Set();
+
+		/**
+		 * @returns The time (in milliseconds) since the last time Set was called.
+		 */
 		float GetElapsedMillis();
 	private:
-		std::chrono::high_resolution_clock::time_point startTime = 
-			std::chrono::high_resolution_clock::now();
+		std::chrono::high_resolution_clock::time_point startTime;
 	};
 }
 

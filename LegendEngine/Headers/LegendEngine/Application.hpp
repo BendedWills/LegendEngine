@@ -92,7 +92,7 @@ namespace LegendEngine
 		 */
 		bool InitScene(Scene* pScene);
 
-		void RenderFrame();
+		void RenderFrame(float delta);
 
 		/**
 		 * @brief Sets the active scene.
@@ -135,13 +135,13 @@ namespace LegendEngine
 		 */
 		virtual bool OnInit() { return true; }
 		/**
-		 * @brief Called every frame before screen clearing.
-		 */
-		virtual void OnPreUpdate() {}
-		/**
 		 * @brief Called every frame
 		 */
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(float delta) {}
+		/**
+		 * @brief Called after every frame
+		 */
+		virtual void OnRendered(float delta) {}
 		/**
 		 * @brief Called before the application is disposed.
 		 */
@@ -154,8 +154,8 @@ namespace LegendEngine
 		bool InitWindow(const std::string& title);
 
 		void UpdateWindow();
-		void Update(bool updateWindow = true);
-		void Render();
+		void Update(float delta, bool updateWindow = true);
+		void Render(float delta);
 
 		void DisposeGraphics();
 		

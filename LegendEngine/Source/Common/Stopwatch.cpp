@@ -2,7 +2,7 @@
 
 using namespace LegendEngine;
 
-void Stopwatch::Start()
+void Stopwatch::Set()
 {
 	this->startTime = std::chrono::high_resolution_clock::now();
 }

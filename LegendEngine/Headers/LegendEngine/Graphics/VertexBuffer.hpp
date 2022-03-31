@@ -1,8 +1,10 @@
 #ifndef _LEGENDENGINE_VERTEXBUFFER_HPP
 #define _LEGENDENGINE_VERTEXBUFFER_HPP
 
+#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
+#include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <stdint.h>
 
@@ -17,25 +19,35 @@ namespace LegendEngine
         };
     }
 
-    class VertexBuffer : public IDisposable
+	class VertexBuffer;
+	class IVertexBufferNative
+	{
+	public:
+		LEGENDENGINE_NO_COPY(IVertexBufferNative);
+
+        IVertexBufferNative(VertexBuffer* pVertexBuffer)
+			:
+            pVertexBuffer(pVertexBuffer)
+		{}
+
+		virtual bool OnCreate(VertexTypes::Vertex2* pVertices,
+			uint64_t vertexCount) { return false; }
+		virtual void OnDispose() {}
+	private:
+        VertexBuffer* pVertexBuffer = nullptr;
+	};
+
+    class VertexBuffer : public IDisposable, public NativeHolder<IVertexBufferNative>
     {
     public:
-        ~VertexBuffer()
-        {
-            Dispose();
-        }
+        LEGENDENGINE_NO_COPY(VertexBuffer);
+        LEGENDENGINE_DISPOSE_ON_DESTRUCT(VertexBuffer);
 
-        VertexBuffer(IRenderer* pRenderer, RenderingAPI type)
+        VertexBuffer(IRenderer* pRenderer)
             :
-            pRenderer(pRenderer),
-            type(type)
-        {}
+			pRenderer(pRenderer)
+		{}
         
-        VertexBuffer(const VertexBuffer&) = delete;
-		VertexBuffer(VertexBuffer&&) = delete;
-		VertexBuffer& operator=(const VertexBuffer&) = delete;
-		VertexBuffer& operator=(VertexBuffer&&) = delete;
-
         /**
          * @brief Initializes the vertex buffer.
          * 
@@ -46,17 +58,10 @@ namespace LegendEngine
          *  otherwise, false.
          */
         bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
-
-        RenderingAPI GetType();
-    protected:
+    private:
         void OnDispose();
 
-        virtual bool OnBufferCreate(VertexTypes::Vertex2* pVertices, 
-            uint64_t vertexCount) { return false; }
-        virtual void OnBufferDispose() {}
-
         IRenderer* pRenderer = nullptr;
-        RenderingAPI type;
     };
 }
 

@@ -4,9 +4,10 @@
 
 #ifndef _LEGENDENGINE_VULKAN_SHADERMODULE_HPP
 #define _LEGENDENGINE_VULKAN_SHADERMODULE_HPP
-#ifdef VULKAN_API
 
 #include <LegendEngine/Common/Defs.hpp>
+#ifdef VULKAN_API
+
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>

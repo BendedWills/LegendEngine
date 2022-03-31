@@ -1,5 +1,7 @@
 #ifndef _LEGENDENGINE_VULKAN_VULKANOBJECTNATIVE_HPP
 #define _LEGENDENGINE_VULKAN_VULKANOBJECTNATIVE_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
@@ -11,12 +13,11 @@
 namespace LegendEngine::Vulkan
 {
 	class VulkanRenderer;
-	class VulkanObjectNative : public Objects::IObjectNative
+	class ObjectNative : public Objects::IObjectNative
 	{
 	public:
-		LEGENDENGINE_NO_COPY(VulkanObjectNative);
-
-		VulkanObjectNative(Objects::Object* pObject, VulkanRenderer* pRenderer);
+		LEGENDENGINE_NO_COPY(ObjectNative);
+		ObjectNative(VulkanRenderer* pRenderer, Objects::Object* pObject);
 
 		void SetCurrentImage(uint64_t imageIndex);
 		void OnUniformsUpdate();

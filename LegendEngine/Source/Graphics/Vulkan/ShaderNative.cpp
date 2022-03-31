@@ -1,6 +1,10 @@
-#include <LegendEngine/Graphics/Vulkan/Shader.hpp>
-#include <LegendEngine/Application.hpp>
 #include <LegendEngine/Common/Defs.hpp>
+#ifdef VULKAN_API
+
+#include <LegendEngine/Graphics/Vulkan/ShaderNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
+
+#include <LegendEngine/Application.hpp>
 
 #include <Tether/Common/VectorUtils.hpp>
 
@@ -9,8 +13,7 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool Shader::OnShaderCreate(ShaderStage* pStages, uint64_t stageCount,
-    UniformDesc* pDescs, uint64_t uniformCount)
+bool ShaderNative::OnCreate(ShaderStage* pStages, uint64_t stageCount)
 {
     // TODO
     LEGENDENGINE_OBJECT_LOG(
@@ -28,7 +31,9 @@ bool Shader::OnShaderCreate(ShaderStage* pStages, uint64_t stageCount,
     return true;
 }
 
-void Shader::OnShaderDispose()
+void ShaderNative::OnDispose()
 {
     
 }
+
+#endif // VULKAN_API

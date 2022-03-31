@@ -1,5 +1,7 @@
 #ifndef _LEGENDENGINE_VULKAN_QUEUEFAMILYINDICES_HPP
 #define _LEGENDENGINE_VULKAN_QUEUEFAMILYINDICES_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <iostream>

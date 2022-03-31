@@ -14,10 +14,12 @@ public:
 	bool OnInit()
 	{
 		InitScene(testScene);
-		
-		srand(static_cast<unsigned int>(time(NULL)));
+
 		for (uint64_t i = 0; i < 1000; i++)
 		{
+			float x = (float)rand() / RAND_MAX * 2 - 1;
+			float y = (float)rand() / RAND_MAX * 2 - 1;
+
 			float r = (float)rand() / RAND_MAX;
 			float g = (float)rand() / RAND_MAX;
 			float b = (float)rand() / RAND_MAX;
@@ -30,44 +32,40 @@ public:
 			};
 
 			Ref<Object> object = CreateObject<Object>();
-
 			object->AddComponent<Components::MeshComponent>()->Init(
 				testVertices, 3
 			);
+			object->SetPosition(Vector3f(x, y, 0));
 
 			objects.push_back(object);
 			testScene.AddObject(object.get());
 		}
-
+		
 		SetActiveScene(testScene);
 
 		return true;
 	}
 
-	void OnUpdate()
+	void OnUpdate(float delta)
 	{
 		for (uint64_t i = 0; i < objects.size(); i++)
-		{
-			float offsetX = (float)rand() / RAND_MAX * 2 - 1;
-			float offsetY = (float)rand() / RAND_MAX * 2 - 1;
-
-			objects[i]->SetPosition(Vector3f(offsetX, offsetY, 0));
-		}
+			objects[i]->AddRotation(Vector3f(0, 0, 0.1f * delta));
 	}
 
 	void OnStop()
 	{
 		testScene.ClearObjects();
+		objects.clear();
 	}
 private:
 	Scene testScene;
-	
+
 	std::vector<Ref<Object>> objects;
 };
 
 #if defined(_WIN32) && !defined(_DEBUG)
 #include <Windows.h>
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, 
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 	int nCmdShow)
 #else
 int main()
@@ -79,12 +77,18 @@ int main()
 		if (!triangle.Init("Legendary", true, true))
 			return EXIT_FAILURE;
 
+		Stopwatch deltaTimer;
 		while (!triangle.IsCloseRequested())
-			triangle.RenderFrame();
+		{
+			float delta = deltaTimer.GetElapsedMillis();
+			deltaTimer.Set();
+
+			triangle.RenderFrame(delta);
+		}
 
 		triangle.Dispose();
 	}
 	Context::Dispose();
-	
+
 	return EXIT_SUCCESS;
 }

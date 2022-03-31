@@ -13,21 +13,19 @@ bool VertexBuffer::Init(VertexTypes::Vertex2* pVertices,
         return false;
     
     pRenderer->vertexBuffers.push_back(this);
-    if (!OnBufferCreate(pVertices, vertexCount))
-        return false;
+    if (nativeSet)
+        if (!native->OnCreate(pVertices, vertexCount))
+            return false;
     
     initialized = true;
     return true;
 }
 
-RenderingAPI VertexBuffer::GetType()
-{
-    return type;
-}
-
 void VertexBuffer::OnDispose()
 {
-    OnBufferDispose();
+    if (nativeSet)
+        native->OnDispose();
+
     Tether::VectorUtils::EraseAll(pRenderer->vertexBuffers, this);
 
     LEGENDENGINE_OBJECT_LOG(

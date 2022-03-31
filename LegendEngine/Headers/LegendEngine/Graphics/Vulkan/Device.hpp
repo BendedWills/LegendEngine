@@ -4,13 +4,13 @@
 
 #ifndef _LEGENDENGINE_VULKAN_DEVICE_HPP
 #define _LEGENDENGINE_VULKAN_DEVICE_HPP
-#ifdef VULKAN_API
-
-
-#include <vector>
 
 #include <LegendEngine/Common/Defs.hpp>
+#ifdef VULKAN_API
+
 #include <LegendEngine/Common/IDisposable.hpp>
+
+#include <vector>
 
 #include <vulkan/vulkan.h>
 

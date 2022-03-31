@@ -33,17 +33,6 @@ Application* IRenderer::GetApplication()
     return pApplication;
 }
 
-void IRenderer::SetObjectNative(Objects::Object* pObject, 
-    Ref<Objects::IObjectNative> native)
-{
-    pObject->SetNative(native);
-}
-
-Objects::IObjectNative* IRenderer::GetObjectNative(Objects::Object* pObject)
-{
-    return pObject->GetNative();
-}
-
 void IRenderer::OnDispose()
 {
     pApplication->Log("Disposing renderer", LogType::DEBUG);

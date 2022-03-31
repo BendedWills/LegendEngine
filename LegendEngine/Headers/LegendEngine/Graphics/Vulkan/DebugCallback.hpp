@@ -5,6 +5,8 @@
 
 #ifndef _LEGENDENGINE_VULKAN_DEBUGCALLBACK_HPP
 #define _LEGENDENGINE_VULKAN_DEBUGCALLBACK_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <vulkan/vulkan.h>

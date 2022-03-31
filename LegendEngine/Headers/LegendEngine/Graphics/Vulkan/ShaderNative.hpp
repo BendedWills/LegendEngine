@@ -1,9 +1,11 @@
 #ifndef _LEGENDENGINE_VULKAN_SHADER_HPP
 #define _LEGENDENGINE_VULKAN_SHADER_HPP
 
+#include <LegendEngine/Common/Defs.hpp>
+#ifdef VULKAN_API
+
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Graphics/Shader.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -11,22 +13,21 @@
 
 namespace LegendEngine::Vulkan
 {
-    class Shader : public LegendEngine::Shader
+    class VulkanRenderer;
+    class ShaderNative : public IShaderNative
     {
         friend VulkanRenderer;
     public:
-        LEGENDENGINE_DISPOSE_ON_DESTRUCT(Shader);
-        LEGENDENGINE_NO_COPY(Shader);
+        LEGENDENGINE_NO_COPY(ShaderNative);
 
-        Shader(VulkanRenderer* pRenderer)
+        ShaderNative(VulkanRenderer* pRenderer, Shader* pShader)
             :
             pVulkanRenderer(pRenderer),
-            LegendEngine::Shader(pRenderer, RenderingAPI::VULKAN)
+            IShaderNative(pShader)
         {}
     protected:
-        bool OnShaderCreate(ShaderStage* pStages, uint64_t stageCount,
-            UniformDesc* pDescs, uint64_t uniformCount);
-        void OnShaderDispose();
+        bool OnCreate(ShaderStage* pStages, uint64_t stageCount);
+        void OnDispose();
 
         // TODO
 
@@ -36,4 +37,5 @@ namespace LegendEngine::Vulkan
     };
 }
 
+#endif // VULKAN_API
 #endif //_LEGENDENGINE_VULKAN_SHADER_HPP

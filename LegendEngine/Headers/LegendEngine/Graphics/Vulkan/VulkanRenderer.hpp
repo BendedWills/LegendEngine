@@ -1,10 +1,11 @@
-#if !defined(VULKAN_API) && defined(__INTELLISENSE__)
-#define VULKAN_API
-#endif
-
 #ifndef _LEGENDENGINE_VULKANRENDERER_HPP
 #define _LEGENDENGINE_VULKANRENDERER_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
+
+#include <iostream>
+#include <vector>
 
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Objects/Object.hpp>
@@ -16,24 +17,25 @@
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 #include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanObjectNative.hpp>
 
-#include <vk_mem_alloc.h>
+#include <LegendEngine/Graphics/Vulkan/VertexBufferNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/ShaderNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/ObjectNative.hpp>
 
 #include <Tether/Tether.hpp>
 
-#include <iostream>
-#include <vector>
+#include <vk_mem_alloc.h>
 
 namespace LegendEngine::Vulkan
 {
-	class VertexBuffer;
 	class VulkanRenderer : public IRenderer
 	{
-		friend VertexBuffer;
 		friend Pipeline;
 		friend UniformBuffer;
-		friend VulkanObjectNative;
+
+		friend VertexBufferNative;
+		friend ShaderNative;
+		friend ObjectNative;
 	public:
 		VulkanRenderer() 
 			:
@@ -46,8 +48,7 @@ namespace LegendEngine::Vulkan
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 		
 		void SetVSyncEnabled(bool vsync);
-		bool CreateVertexBuffer(Ref<LegendEngine::VertexBuffer>* buffer);
-		bool CreateShader(Ref<LegendEngine::Shader>* shader);
+		bool CreateShaderNative(Shader* shader);
 
 		/**
 		 * @brief Reloads the renderer. Required after a settings change.
@@ -114,6 +115,7 @@ namespace LegendEngine::Vulkan
 		bool enableVsync = false;
 	private:
 		bool CreateObjectNative(Objects::Object* pObject);
+		bool CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer);
 
 		bool RecreateSwapchain();
 

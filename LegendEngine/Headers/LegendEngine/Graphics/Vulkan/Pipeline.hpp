@@ -3,16 +3,13 @@
  * layout.
  */
 
-#if !defined(VULKAN_API) && defined(__INTELLISENSE__)
-#define VULKAN_API
-#endif
-
 #ifndef _LEGENDENGINE_VULKAN_PIPELINE_HPP
 #define _LEGENDENGINE_VULKAN_PIPELINE_HPP
+
+#include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
-#include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 #include <LegendEngine/Graphics/Vulkan/Swapchain.hpp>
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>

@@ -31,7 +31,8 @@ bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
         return false;
     }
 
-    if (!pRenderer->CreateVertexBuffer(&vertexBuffer))
+    vertexBuffer = RefTools::Create<VertexBuffer>(pRenderer);
+    if (!pRenderer->CreateVertexBufferNative(vertexBuffer.get()))
     {
         LEGENDENGINE_OBJECT_LOG(
             pApplication, "MeshComponent",

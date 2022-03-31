@@ -1,6 +1,9 @@
-#include <LegendEngine/Graphics/Vulkan/VertexBuffer.hpp>
-#include <LegendEngine/Application.hpp>
 #include <LegendEngine/Common/Defs.hpp>
+#ifdef VULKAN_API
+
+#include <LegendEngine/Graphics/Vulkan/VertexBufferNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
+#include <LegendEngine/Application.hpp>
 
 #include <Tether/Common/VectorUtils.hpp>
 
@@ -9,7 +12,7 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool VertexBuffer::OnBufferCreate(VertexTypes::Vertex2* pVertices, 
+bool VertexBufferNative::OnCreate(VertexTypes::Vertex2* pVertices,
     uint64_t vertexCount)
 {
     if (!pVertices || vertexCount == 0)
@@ -46,12 +49,12 @@ bool VertexBuffer::OnBufferCreate(VertexTypes::Vertex2* pVertices,
     return true;
 }
 
-void VertexBuffer::OnBufferDispose()
+void VertexBufferNative::OnDispose()
 {
     vmaDestroyBuffer(pVulkanRenderer->allocator, vertexBuffer, allocation);
 }
 
-bool VertexBuffer::UploadVertexData(void* pVertices)
+bool VertexBufferNative::UploadVertexData(void* pVertices)
 {
     LEGENDENGINE_OBJECT_LOG(
         pVulkanRenderer->GetApplication(), "Vulkan::VertexBuffer",
@@ -81,7 +84,7 @@ bool VertexBuffer::UploadVertexData(void* pVertices)
     memcpy(stagingAllocInfo.pMappedData, pVertices, verticesSize);
 
     // Create a command buffer and copy the data
-    // Eventually, maybe use a queue specifically for transfering.
+    // Eventually, maybe use a queue specifically for transferring.
     {
         VkCommandBuffer stagingCmdBuffer;
 
@@ -141,3 +144,5 @@ bool VertexBuffer::UploadVertexData(void* pVertices)
 
     return true;
 }
+
+#endif // VULKAN_API
