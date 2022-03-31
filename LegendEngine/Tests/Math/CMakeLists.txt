@@ -18,6 +18,7 @@ target_include_directories(${PROJECT_NAME}
 PUBLIC 
     "Headers"
     "../../Headers"
+    "Vendor/glm"
 PRIVATE 
     "../../Vendor/Tether/Headers"
     "../../Vendor/VMA/include"
