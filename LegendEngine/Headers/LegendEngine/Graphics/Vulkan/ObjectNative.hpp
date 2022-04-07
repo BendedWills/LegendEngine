@@ -7,8 +7,8 @@
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Objects/Object.hpp>
 
-#include <vulkan/vulkan.h>
-#include <vk_mem_alloc.h>
+#include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/UniformManager.hpp>
 
 namespace LegendEngine::Vulkan
 {
@@ -22,15 +22,13 @@ namespace LegendEngine::Vulkan
 		void SetCurrentImage(uint64_t imageIndex);
 		void OnUniformsUpdate();
 
-		VkDescriptorSet* GetDescriptorSets();
+		Vulkan::UniformBuffer* GetUniform();
 
 		void OnDispose();
 	private:
-		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VmaAllocation> allocations;
-		std::vector<VkBuffer> uniformBuffers;
-
-		VkDescriptorPool descriptorPool;
+		Vulkan::UniformBuffer uniform;
+		Vulkan::UniformManager uniformManager;
+		IObjectNative::ObjectUniforms ubo;
 		
 		uint64_t images = 0;
 		uint64_t imageIndex = 0;

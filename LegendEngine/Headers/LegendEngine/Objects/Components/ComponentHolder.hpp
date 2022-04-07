@@ -3,6 +3,7 @@
 
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Ref.hpp>
+#include <LegendEngine/Common/TypeTools.hpp>
 #include <LegendEngine/Objects/Components/Component.hpp>
 
 #include <unordered_map>
@@ -36,19 +37,19 @@ namespace LegendEngine::Objects::Components
         T* AddComponent(Args... args)
         {
             AssureComponent<T>(args...);
-            return (T*)components[GetTypeName<T>()].get();
+            return (T*)components[TypeTools::GetTypeName<T>()].get();
         }
 
         template<typename T>
         bool HasComponent()
         {
-            return components.count(GetTypeName<T>()) != 0;
+            return components.count(TypeTools::GetTypeName<T>()) != 0;
         }
 
         template<typename T>
         T* GetComponent()
         {
-            std::string id = GetTypeName<T>();
+            std::string id = TypeTools::GetTypeName<T>();
             if (components.count(id) != 0)
                 return (T*)components[id].get();
 
@@ -58,7 +59,7 @@ namespace LegendEngine::Objects::Components
         template<typename T>
         bool RemoveComponent()
         {
-            std::string id = GetTypeName<T>();
+            std::string id = TypeTools::GetTypeName<T>();
             if (components.count(id))
             {
                 auto componentIter = components.find(id);
@@ -81,29 +82,12 @@ namespace LegendEngine::Objects::Components
         {
             components.clear();
         }
-
-        template<typename Type>
-        std::string GetTypeName()
-        {
-            std::string_view prettyFunc{ LEGENDENGINE_PRETTY_FUNCTION };
-
-            auto first = prettyFunc.find_first_not_of(' ',
-                prettyFunc.find_first_of(LEGENDENGINE_PRETTY_FUNCTION_PREFIX)
-                + 1
-            );
-            auto last = prettyFunc.find_last_of(
-                LEGENDENGINE_PRETTY_FUNCTION_SUFFIX) - first;
-
-            std::string prettyFuncStr(prettyFunc.begin(), prettyFunc.end());
-
-            return prettyFuncStr.substr(first, last);
-        }
     protected:
         // Returns true if the component was created
         template<typename T, typename... Args>
         bool AssureComponent(Args... args)
         {
-            std::string id = GetTypeName<T>();
+            std::string id = TypeTools::GetTypeName<T>();
             if (components.count(id) == 0)
             {
                 components[id] = RefTools::Create<T>(args...);

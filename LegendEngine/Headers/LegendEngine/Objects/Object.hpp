@@ -10,6 +10,7 @@
 #include <LegendEngine/Math/Math.hpp>
 #include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Objects/Components/ComponentHolder.hpp>
+#include <LegendEngine/Objects/Scripts/ScriptHolder.hpp>
 
 #include <type_traits>
 #include <string>
@@ -39,6 +40,7 @@ namespace LegendEngine::Objects
 		struct ObjectUniforms
 		{
 			Matrix4x4f transform;
+            // Material material;
 		};
 
         virtual void OnUniformsUpdate() {}
@@ -48,8 +50,11 @@ namespace LegendEngine::Objects
         Object* pObject = nullptr;
     };
 
-    class Object : public Components::ComponentHolder, IDisposable, 
-        public NativeHolder<IObjectNative>
+    class Object : 
+        public Components::ComponentHolder, 
+        public Scripts::ScriptHolder, 
+        public NativeHolder<IObjectNative>,
+        public IDisposable
     {
         friend Application;
         friend Scene;
@@ -78,6 +83,10 @@ namespace LegendEngine::Objects
         void AddToScene(Scene* pScene);
         void RemoveFromScene(Scene* pScene);
 
+        virtual void OnPositionChange() {}
+        virtual void OnRotationChange() {}
+		virtual void OnScaleChange() {}
+
 		Vector3f position;
 		Vector3f rotation;
 		Vector3f scale;
@@ -99,4 +108,4 @@ namespace LegendEngine::Objects
     };
 }
 
-#endif //_LEGENDENGINE_OBJECT3D_HPP
+#endif //_LEGENDENGINE_OBJECT_HPP

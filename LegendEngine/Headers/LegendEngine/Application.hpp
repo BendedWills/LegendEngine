@@ -18,23 +18,30 @@
 
 #include <Tether/Tether.hpp>
 
-namespace LegendEngine::Objects
-{
-	class Object;
-
-	namespace Components
-	{
-		class Component;
-	}
-}
-
 namespace LegendEngine
 {
+	namespace Objects
+	{
+		class Object;
+		class Camera;
+
+		namespace Components
+		{
+			class Component;
+		}
+
+		namespace Scripts
+		{
+			class Script;
+		}
+	}
+
 	class IRenderer;
 	class Application : public IDisposable
 	{
 		friend Scene;
 		friend Objects::Object;
+		friend Objects::Scripts::Script;
 	public:
 		LEGENDENGINE_NO_COPY(Application);
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
@@ -94,6 +101,9 @@ namespace LegendEngine
 
 		void RenderFrame(float delta);
 
+		void SetActiveCamera(Objects::Camera* pCamera);
+		Objects::Camera* GetActiveCamera();
+
 		/**
 		 * @brief Sets the active scene.
 		 *
@@ -150,7 +160,7 @@ namespace LegendEngine
 		 * @brief Called after the application is disposed.
 		 */
 		virtual void OnDisposed() {}
-	protected:
+		
 		bool InitWindow(const std::string& title);
 
 		void UpdateWindow();
@@ -202,6 +212,13 @@ namespace LegendEngine
 			const std::string& typeName, 
 			Objects::Components::Component* pComponent
 		);
+
+		void SetScriptRecieveUpdates(
+			bool enabled, Objects::Scripts::Script* pScript
+		);
+		void SetScriptRecieveRenderUpdates(
+			bool enabled, Objects::Scripts::Script* pScript
+		);
 	private:
 		// Every application has a default scene. This scene contains objects
 		// that are always rendered, no matter what the current set scene is.
@@ -209,6 +226,12 @@ namespace LegendEngine
 		Scene* activeScene = nullptr;
 
 		std::vector<Objects::Object*> objects;
+		std::vector<Objects::Scripts::Script*> updateScripts;
+		std::vector<Objects::Scripts::Script*> renderUpdateScripts;
+
+		// This will be changed later since there will be multiple cameras that can
+		// be active at once
+		Objects::Camera* pActiveCamera = nullptr;
 	};
 
 	template<typename T>

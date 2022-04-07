@@ -41,25 +41,19 @@ namespace LegendEngine::Vulkan
 
 		VkPipeline GetPipeline();
 		VkPipelineLayout GetPipelineLayout();
-		VkDescriptorPool* GetDescriptorPool();
 	private:
 		// Initializes pipeline and pipelineLayout.
 		bool InitPipeline(
 			PipelineInfo* pPipelineInfo
 		);
 
-		void DisposeUniorms();
 		void OnDispose();
 		
 		VulkanRenderer* pRenderer = nullptr;
 		
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
-		VkDescriptorPool descriptorPool;
-
-		uint64_t images = 0;
-
-		bool uniforms = false;
+		
 		bool dynamicStates = false;
 	};
 }

@@ -77,7 +77,7 @@ bool Scene::RemoveObject(Objects::Object& object)
 
 #define LEGENDENGINE_COMPONENT_NAMES() \
     using namespace Objects::Components; \
-    std::string meshComponentName = pObject->GetTypeName<MeshComponent>();
+    std::string meshComponentName = TypeTools::GetTypeName<MeshComponent>();
 
 bool Scene::RemoveObject(Objects::Object* pObject)
 {

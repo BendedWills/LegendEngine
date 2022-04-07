@@ -1,8 +1,3 @@
-/*
- * This header defines the surface. Surfaces in Vulkan are interfaces with
- * the window.
- */
-
 #ifndef _LEGENDENGINE_VULKAN_UNIFORMBUFFER_HPP
 #define _LEGENDENGINE_VULKAN_UNIFORMBUFFER_HPP
 
@@ -11,10 +6,9 @@
 
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Graphics/Vulkan/Device.hpp>
-#include <Tether/Tether.hpp>
+#include <LegendEngine/Graphics/Vulkan/UniformManager.hpp>
 
 #include <vulkan/vulkan.h>
-
 #include <vk_mem_alloc.h>
 
 namespace LegendEngine::Vulkan
@@ -22,7 +16,6 @@ namespace LegendEngine::Vulkan
 	class VulkanRenderer;
 	class UniformBuffer : public IDisposable
 	{
-		friend class Pipeline;
 	public:
 		UniformBuffer() {}
 		LEGENDENGINE_NO_COPY(UniformBuffer);
@@ -39,7 +32,7 @@ namespace LegendEngine::Vulkan
 		 */
 		bool Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t images);
 
-		bool BindToSet(Pipeline* pPipeline, VkDescriptorSetLayout layout);
+		bool BindToSet(UniformManager* manager, VkDescriptorSetLayout layout);
 		bool Bind(uint64_t binding);
 
 		/**
@@ -58,6 +51,7 @@ namespace LegendEngine::Vulkan
 		
 		std::vector<VkDescriptorSet> descriptorSets;
 		std::vector<VmaAllocation> allocations;
+		std::vector<VmaAllocationInfo> allocInfos;
 		std::vector<VkBuffer> uniformBuffers;
 
 		uint64_t size = 0;

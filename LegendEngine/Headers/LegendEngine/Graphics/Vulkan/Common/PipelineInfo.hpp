@@ -19,12 +19,8 @@ namespace LegendEngine::Vulkan
 {
     struct PipelineInfo
 	{
-		// The number of swapchain images. Only necessary if uniforms are present.
-		uint64_t images;
 		uint64_t stageCount;
 		VkPipelineShaderStageCreateInfo* pStages;
-		uint64_t uniformCount;
-		UniformBuffer** ppUniforms;
 		uint64_t setCount;
 		VkDescriptorSetLayout* pSetLayouts;
 		uint64_t dynamicStateCount;

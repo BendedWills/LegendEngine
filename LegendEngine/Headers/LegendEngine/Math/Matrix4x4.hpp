@@ -35,7 +35,6 @@ namespace LegendEngine
 		 */
 		static Matrix4x4<T> Rotate(Matrix4x4<T> m, T angle, Vector3<T> rotation);
 		static Matrix4x4<T> Translate(Matrix4x4<T> m, Vector3<T> position);
-
 		static Matrix4x4<T> MakeIdentity();
 		
 		Vector4<T> c[COL_COUNT];
@@ -47,5 +46,6 @@ namespace LegendEngine
 }
 
 #include <LegendEngine/Math/Matrix4x4.inl>
+#include <LegendEngine/Math/Matrix4x4Funcs.inl>
 
 #endif //_LEGENDENGINE_MATH_MATRIX4X4_HPP

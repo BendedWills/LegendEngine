@@ -2,16 +2,19 @@
 #include <LegendEngine/Context.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
+#include <LegendEngine/Objects/Camera.hpp>
+#include <LegendEngine/Objects/Scripts/Script.hpp>
 
 #include <iostream>
 #include <chrono>
 #include <sstream>
+#include <algorithm>
 
 using namespace LegendEngine;
 
-#define LEGENDENGINE_ASSERT_RENDERER_NULL(returnValue) \
+#define LEGENDENGINE_ASSERT_RENDERER_NULL() \
 	if (!pRenderer) \
-		return returnValue;
+		return;
 
 void Application::DebugCallback::OnDebugLog(
 	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -130,6 +133,9 @@ void Application::Update(float delta, bool updateWindow)
 		UpdateWindow();
 	
 	OnUpdate(delta);
+
+	for (uint64_t i = 0; i < updateScripts.size(); i++)
+		updateScripts[i]->OnUpdate(delta);
 }
 
 void Application::Render(float delta)
@@ -138,6 +144,9 @@ void Application::Render(float delta)
 	
 	if (!pRenderer)
 		return;
+
+	for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
+		renderUpdateScripts[i]->OnRender();
 	
 	pRenderer->RenderFrame();
 
@@ -264,6 +273,16 @@ void Application::RenderFrame(float delta)
 	Render(delta);
 }
 
+void Application::SetActiveCamera(Objects::Camera* pCamera)
+{
+	pActiveCamera = pCamera;
+}
+
+Objects::Camera* Application::GetActiveCamera()
+{
+	return pActiveCamera;
+}
+
 Scene* Application::GetDefaultScene()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
@@ -366,6 +385,10 @@ void Application::OnDispose()
 
 	defaultScene.ClearObjects();
 
+	objects.clear();
+	updateScripts.clear();
+	renderUpdateScripts.clear();
+
 	OnDisposed();
 }
 
@@ -419,4 +442,43 @@ void Application::OnSceneObjectComponentRemove(Scene* pScene,
 		return;
 
 	pRenderer->OnSceneObjectComponentRemove(pScene, pObject, typeName, pComponent);
+}
+
+void Application::SetScriptRecieveUpdates(
+	bool enabled, Objects::Scripts::Script* pScript
+)
+{
+	if (enabled)
+	{
+		for (uint64_t i = 0; i < updateScripts.size(); i++)
+			if (updateScripts[i] == pScript)
+				return;
+		
+		updateScripts.push_back(pScript);
+		return;
+	}
+	
+	for (uint64_t i = 0; i < updateScripts.size(); i++)
+		if (updateScripts[i] == pScript)
+			updateScripts.erase(updateScripts.begin() + i);
+}
+
+void Application::SetScriptRecieveRenderUpdates(
+	bool enabled, Objects::Scripts::Script* pScript
+)
+{
+	if (enabled)
+	{
+		for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
+			if (renderUpdateScripts[i] == pScript)
+				return;
+
+		renderUpdateScripts.push_back(pScript);
+
+		return;
+	}
+
+	for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
+		if (renderUpdateScripts[i] == pScript)
+			renderUpdateScripts.erase(renderUpdateScripts.begin() + i);
 }

@@ -13,43 +13,14 @@ bool Pipeline::Init(
 	PipelineInfo* pPipelineInfo
 )
 {
-	this->uniforms = pPipelineInfo->uniformCount > 0;
-
-	if (initialized || !pPipelineInfo->pStages 
-		|| (!pPipelineInfo->ppUniforms && uniforms))
+	if (initialized || !pPipelineInfo->pStages)
 		return false;
 
 	this->pRenderer = pRenderer;
 	this->dynamicStates = dynamicStates;
 
-	if (uniforms)
-	{
-		if (pPipelineInfo->images < 1)
-			return false;
-
-		// Each VkDescriptorPoolSize struct is for one descriptor type
-		VkDescriptorPoolSize poolSize{};
-		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSize.descriptorCount = pPipelineInfo->images
-			* pPipelineInfo->uniformCount;
-
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		poolInfo.poolSizeCount = 1;
-		poolInfo.pPoolSizes = &poolSize;
-		poolInfo.maxSets = poolSize.descriptorCount;
-
-		if (vkCreateDescriptorPool(pRenderer->device.Get(), &poolInfo, nullptr, 
-			&descriptorPool) != VK_SUCCESS)
-			return false;
-	}
-
 	if (!InitPipeline(pPipelineInfo))
-	{
-		DisposeUniorms();
 		return false;
-	}
 
 	initialized = true;
 	return true;
@@ -63,11 +34,6 @@ VkPipeline Pipeline::GetPipeline()
 VkPipelineLayout Pipeline::GetPipelineLayout()
 {
 	return pipelineLayout;
-}
-
-VkDescriptorPool* Pipeline::GetDescriptorPool()
-{
-	return &descriptorPool;
 }
 
 bool Pipeline::InitPipeline(
@@ -211,23 +177,11 @@ bool Pipeline::InitPipeline(
 		1, &pipelineDesc, nullptr, &pipeline) == VK_SUCCESS;
 }
 
-void Pipeline::DisposeUniorms()
-{
-	if (!uniforms)
-		return;
-
-	vkDestroyDescriptorPool(pRenderer->device.Get(), descriptorPool, nullptr);
-
-	uniforms = false;
-}
-
 void Pipeline::OnDispose()
 {
 	vkDestroyPipeline(pRenderer->device.Get(), pipeline, nullptr);
 	vkDestroyPipelineLayout(pRenderer->device.Get(), pipelineLayout, nullptr);
 
-	DisposeUniorms();
-	
 	dynamicStates = false;
 }
 

@@ -238,6 +238,9 @@ void VulkanRenderer::OnRendererDispose()
 	shaderProgram.Dispose();
 
 	vkDestroyDescriptorSetLayout(device.Get(), objectLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device.Get(), cameraLayout, nullptr);
+	cameraUniform.Dispose();
+	cameraManager.Dispose();
 
 	vkDestroyRenderPass(device.Get(), renderPass, nullptr);
 	
@@ -524,20 +527,46 @@ bool VulkanRenderer::InitRenderPass()
 
 bool VulkanRenderer::InitUniforms()
 {
-	VkDescriptorSetLayoutBinding testBinding{};
-	testBinding.binding = 0;
-	testBinding.descriptorCount = 1;
-	testBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	testBinding.stageFlags = VK_SHADER_STAGE_ALL;
+	uint32_t swapchainImages = swapchain.GetImageCount();
 
-	VkDescriptorSetLayoutCreateInfo setInfo{};
-	setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	setInfo.bindingCount = 1;
-	setInfo.pBindings = &testBinding;
+	VkDescriptorSetLayoutBinding objectSetBinding{};
+	objectSetBinding.binding = 0;
+	objectSetBinding.descriptorCount = 1;
+	objectSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	objectSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	VkDescriptorSetLayoutCreateInfo objectSetInfo{};
+	objectSetInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	objectSetInfo.bindingCount = 1;
+	objectSetInfo.pBindings = &objectSetBinding;
 
 	if (vkCreateDescriptorSetLayout(device.Get(),
-		&setInfo, nullptr, &objectLayout) != VK_SUCCESS)
+		&objectSetInfo, nullptr, &objectLayout) != VK_SUCCESS)
 		return false;
+
+	VkDescriptorSetLayoutBinding cameraSetBinding{};
+	cameraSetBinding.binding = 0;
+	cameraSetBinding.descriptorCount = 1;
+	cameraSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	cameraSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	VkDescriptorSetLayoutCreateInfo cameraSetInfo{};
+	cameraSetInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	cameraSetInfo.bindingCount = 1;
+	cameraSetInfo.pBindings = &cameraSetBinding;
+
+	if (vkCreateDescriptorSetLayout(device.Get(),
+		&cameraSetInfo, nullptr, &cameraLayout) != VK_SUCCESS)
+		return false;
+
+	if (!cameraManager.Init(&device, 1, swapchainImages))
+		return false;
+	if (!cameraUniform.Init(this, sizeof(Objects::Camera::CameraUniforms), 
+		swapchain.GetImageCount()))
+		return false;
+
+	cameraUniform.BindToSet(&cameraManager, cameraLayout);
+	cameraUniform.Bind(0);
 
 	return true;
 }
@@ -569,7 +598,8 @@ bool VulkanRenderer::InitPipeline()
 
 	VkDescriptorSetLayout sets[] =
 	{
-		objectLayout
+		objectLayout,
+		cameraLayout
 	};
 
 	PipelineInfo pipelineInfo{};
@@ -580,8 +610,7 @@ bool VulkanRenderer::InitPipeline()
 	pipelineInfo.pDynamicStates = dynamicStates;
 	pipelineInfo.setCount = sizeof(sets) / sizeof(sets[0]);
 	pipelineInfo.pSetLayouts = sets;
-	pipelineInfo.images = swapchain.GetImageCount();
-
+	
 	if (!shaderProgram.Init(this, &pipelineInfo))
 		return false;
 
@@ -680,6 +709,15 @@ bool VulkanRenderer::InitSyncObjects()
 
 void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 {
+	Objects::Camera* pCamera = pApplication->GetActiveCamera();
+	if (pCamera)
+	{
+		// Upload camera matrices
+
+		cameraUniform.UpdateBuffer(pCamera->GetUniforms(), 
+			sizeof(Objects::Camera::CameraUniforms), imageIndex);
+	}
+
 	std::vector<Objects::Object*>* defaultObjects = pApplication->GetDefaultScene()
 		->GetObjects();
 	for (uint64_t i = 0; i < defaultObjects->size(); i++)
@@ -687,7 +725,7 @@ void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 		ObjectNative* vkNative = (ObjectNative*)defaultObjects->at(i)->GetNative();
 
 		vkNative->SetCurrentImage(imageIndex);
-
+		vkNative->OnUniformsUpdate();
 	}
 
 	std::vector<Objects::Object*>* activeObjects = pApplication->GetActiveScene()
@@ -906,73 +944,17 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 		vkCmdSetViewport(buffer, 0, 1, &viewport);
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-		using namespace Objects;
-		using namespace Objects::Components;
-
 		// This will probably be changed later on
 		// Eventually, objects will have to be rendered in order of distance
 		// from the camera.
 
 		// Default scene
 		Scene* pDefault = pApplication->GetDefaultScene();
-		std::vector<Object*>* objects = pDefault->GetObjects();
-		for (uint64_t i = 0; i < objects->size(); i++)
-		{
-			Object* object = objects->at(i);
-			ObjectNative* native = (ObjectNative*)object->GetNative();
-
-			// The object must have a mesh component
-			MeshComponent* component = object->GetComponent<MeshComponent>();
-			if (!component)
-				continue;
-
-			LegendEngine::VertexBuffer* pVertexBuffer = component->GetVertexBuffer();
-			
-			VertexBufferNative* pVkVertexBuffer = 
-				(VertexBufferNative*)pVertexBuffer->GetNative();
-
-			VkDescriptorSet objectSet = native->GetDescriptorSets()[commandBufferIndex];
-			vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				shaderProgram.GetPipelineLayout(), 0, 1, &objectSet, 0, nullptr);
-
-			VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
-
-			vkCmdDraw(buffer, component->GetVertexCount(), 1, 0, 0);
-		}
+		PopulateByScene(buffer, framebuffer, commandBufferIndex, pDefault);
 
 		// ActiveScene
 		Scene* pActive = pApplication->GetActiveScene();
-		if (pActive)
-		{
-			std::vector<Object*>* activeObjects = pActive->GetObjects();
-			for (uint64_t i = 0; i < activeObjects->size(); i++)
-			{
-				Object* object = activeObjects->at(i);
-				ObjectNative* native = (ObjectNative*)object->GetNative();
-
-				// The object must have a mesh component
-				MeshComponent* component = object->GetComponent<MeshComponent>();
-				if (!component)
-					continue;
-
-				LegendEngine::VertexBuffer* pVertexBuffer =
-					component->GetVertexBuffer();
-				VertexBufferNative* pVkVertexBuffer =
-					(VertexBufferNative*)pVertexBuffer->GetNative();
-
-				VkDescriptorSet objectSet = native->GetDescriptorSets()[commandBufferIndex];
-				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-					shaderProgram.GetPipelineLayout(), 0, 1, &objectSet, 0, nullptr);
-
-				VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
-
-				vkCmdDraw(buffer, component->GetVertexCount(), 1, 0, 0);
-			}
-		}
+		PopulateByScene(buffer, framebuffer, commandBufferIndex, pActive);
 	}
 	vkCmdEndRenderPass(buffer);
 	
@@ -980,6 +962,45 @@ bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 		return false;
 
 	return true;
+}
+
+void VulkanRenderer::PopulateByScene(VkCommandBuffer buffer, 
+	VkFramebuffer framebuffer, uint64_t commandBufferIndex, Scene* pScene)
+{
+	if (!pScene)
+		return;
+
+	using namespace Objects;
+	using namespace Objects::Components;
+
+	std::vector<Object*>* activeObjects = pScene->GetObjects();
+	for (uint64_t i = 0; i < activeObjects->size(); i++)
+	{
+		Object* object = activeObjects->at(i);
+		ObjectNative* native = (ObjectNative*)object->GetNative();
+
+		// The object must have a mesh component
+		MeshComponent* component = object->GetComponent<MeshComponent>();
+		if (!component)
+			continue;
+
+		LegendEngine::VertexBuffer* pVertexBuffer =
+			component->GetVertexBuffer();
+		VertexBufferNative* pVkVertexBuffer =
+			(VertexBufferNative*)pVertexBuffer->GetNative();
+
+		VkDescriptorSet objectSet;
+		native->GetUniform()->GetDescriptorSet(&objectSet, commandBufferIndex);
+
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			shaderProgram.GetPipelineLayout(), 0, 1, &objectSet, 0, nullptr);
+
+		VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
+
+		vkCmdDraw(buffer, component->GetVertexCount(), 1, 0, 0);
+	}
 }
 
 void VulkanRenderer::DisposeSwapchain()

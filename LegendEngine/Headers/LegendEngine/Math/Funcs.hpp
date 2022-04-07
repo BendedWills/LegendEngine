@@ -3,7 +3,7 @@
 
 namespace LegendEngine::Math
 {
-	constexpr const double PI = 3.14159265358979323846;
+	constexpr const float PI = 3.14159265358979323846;
 
 	float Max(float arg0, float arg1);
 	float Radians(float degrees);

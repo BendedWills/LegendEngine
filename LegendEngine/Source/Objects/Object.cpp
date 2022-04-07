@@ -9,7 +9,8 @@ using namespace LegendEngine::Objects;
 Object::Object()
 	:
 	scale(1.0f),
-	Components::ComponentHolder(this)
+	Components::ComponentHolder(this),
+    Scripts::ScriptHolder(this)
 {
     CalculateTransformMatrix();
 	initialized = true;
@@ -19,36 +20,42 @@ void Object::AddPosition(Vector3f position)
 {
     this->position += position;
     CalculateTransformMatrix();
+    OnPositionChange();
 }
 
 void Object::AddRotation(Vector3f rotation)
 {
     this->rotation += rotation;
     CalculateTransformMatrix();
+    OnRotationChange();
 }
 
 void Object::AddScale(Vector3f scale)
 {
     this->scale += scale;
     CalculateTransformMatrix();
+    OnScaleChange();
 }
 
 void Object::SetPosition(Vector3f position)
 {
     this->position = position;
     CalculateTransformMatrix();
+    OnPositionChange();
 }
 
 void Object::SetRotation(Vector3f rotation)
 {
     this->rotation = rotation;
     CalculateTransformMatrix();
+    OnRotationChange();
 }
 
 void Object::SetScale(Vector3f scale)
 {
     this->scale = scale;
     CalculateTransformMatrix();
+    OnScaleChange();
 }
 
 Vector3f Object::GetPosition()

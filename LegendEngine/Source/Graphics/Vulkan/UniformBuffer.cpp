@@ -20,6 +20,7 @@ bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t imag
     // refreshed each frame.
     descriptorSets.resize(images);
     allocations.resize(images);
+	allocInfos.resize(images);
     uniformBuffers.resize(images);
 
 	VkBufferCreateInfo createInfo{};
@@ -29,23 +30,24 @@ bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t imag
 
 	VmaAllocationCreateInfo allocInfo{};
 	allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+	allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
     for (uint64_t i = 0; i < images; i++)
 		if (vmaCreateBuffer(pRenderer->allocator, &createInfo,
-			&allocInfo, &uniformBuffers[i], &allocations[i], nullptr) != VK_SUCCESS)
+			&allocInfo, &uniformBuffers[i], &allocations[i], &allocInfos[i]) != VK_SUCCESS)
 			return false;
 
     initialized = true;
     return true;
 }
 
-bool UniformBuffer::BindToSet(Pipeline* pPipeline, VkDescriptorSetLayout layout)
+bool UniformBuffer::BindToSet(UniformManager* manager, VkDescriptorSetLayout layout)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
 	FreeSet();
 
-	this->pDescriptorPool = pPipeline->GetDescriptorPool();
+	this->pDescriptorPool = manager->GetPool();
 
 	std::vector<VkDescriptorSetLayout> layouts(images, layout);
 
@@ -102,14 +104,11 @@ bool UniformBuffer::UpdateBuffer(void* newData, uint64_t size,
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
-	if (size > this->size || size == 0)
+	if (size > this->size || size == 0 || currentImage >= images)
 		return false;
-
-    void* data;
-    vmaMapMemory(pRenderer->allocator, allocations[currentImage], &data);
-        memcpy(data, newData, size);
-    vmaUnmapMemory(pRenderer->allocator, allocations[currentImage]);
-
+    
+    memcpy(allocInfos[currentImage].pMappedData, newData, size);
+    
     return true;
 }
 
@@ -143,6 +142,7 @@ void UniformBuffer::OnDispose()
 
     descriptorSets.clear();
     allocations.clear();
+    allocInfos.clear();
     uniformBuffers.clear();
 }
 

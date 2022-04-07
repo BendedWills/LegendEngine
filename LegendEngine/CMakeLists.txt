@@ -161,8 +161,6 @@ endforeach()
 project ("LegendEngine")
 
 # Add Tests
-add_subdirectory(Tests/Triangle)
-add_subdirectory(Tests/APIMisuse)
 add_subdirectory(Tests/MultipleApps)
 add_subdirectory(Tests/Math)
 

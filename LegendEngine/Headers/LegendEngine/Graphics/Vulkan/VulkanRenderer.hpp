@@ -9,6 +9,7 @@
 
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Objects/Object.hpp>
+#include <LegendEngine/Objects/Camera.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 #include <LegendEngine/Graphics/Vulkan/Surface.hpp>
@@ -30,9 +31,6 @@ namespace LegendEngine::Vulkan
 {
 	class VulkanRenderer : public IRenderer
 	{
-		friend Pipeline;
-		friend UniformBuffer;
-
 		friend VertexBufferNative;
 		friend ShaderNative;
 		friend ObjectNative;
@@ -56,12 +54,15 @@ namespace LegendEngine::Vulkan
 		 * @returns True if the reload was successful; otherwise, false.
 		 */
 		bool Reload();
-	protected:
+		
 		Vulkan::Surface surface;
 		Vulkan::Device device;
 		Vulkan::Swapchain swapchain;
 
 		VkDescriptorSetLayout objectLayout;
+		VkDescriptorSetLayout cameraLayout;
+		Vulkan::UniformManager cameraManager;
+		Vulkan::UniformBuffer cameraUniform;
 		
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
@@ -72,6 +73,7 @@ namespace LegendEngine::Vulkan
 		// Shader stuff
 		Vulkan::ShaderModule vertexModule;
 		Vulkan::ShaderModule fragmentModule;
+
 		Vulkan::Pipeline shaderProgram;
 
 		Vulkan::QueueFamilyIndices indices;
@@ -122,6 +124,8 @@ namespace LegendEngine::Vulkan
 		bool RecreateCommandBuffers();
 		bool PopulateCommandBuffer(VkCommandBuffer buffer, VkFramebuffer framebuffer,
 			uint64_t commandBufferIndex);
+		void PopulateByScene(VkCommandBuffer buffer, VkFramebuffer framebuffer,
+			uint64_t commandBufferIndex, Scene* pScene);
 
 		bool OnRendererInit();
 
