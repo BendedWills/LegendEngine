@@ -42,10 +42,10 @@ namespace LegendEngine::Vulkan
             Instance* pInstance,
             VkPhysicalDevice physicalDevice,
             VkDeviceQueueCreateInfo* queueFamilies, 
-            uint64_t queueFamilyCount, 
+            uint32_t queueFamilyCount,
             VkPhysicalDeviceFeatures features,
             const char *const * extentions = nullptr,
-            uint64_t extentionCount = 0
+            uint32_t extentionCount = 0
         );
 
         /**

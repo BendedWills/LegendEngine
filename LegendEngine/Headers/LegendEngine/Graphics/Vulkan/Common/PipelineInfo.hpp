@@ -19,11 +19,11 @@ namespace LegendEngine::Vulkan
 {
     struct PipelineInfo
 	{
-		uint64_t stageCount;
+		uint32_t stageCount;
 		VkPipelineShaderStageCreateInfo* pStages;
-		uint64_t setCount;
+		uint32_t setCount;
 		VkDescriptorSetLayout* pSetLayouts;
-		uint64_t dynamicStateCount;
+		uint32_t dynamicStateCount;
 		VkDynamicState* pDynamicStates;
 	};
 }

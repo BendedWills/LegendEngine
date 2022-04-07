@@ -77,9 +77,11 @@ bool Pipeline::InitPipeline(
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = bindingDescs.size();
+	vertexInputInfo.vertexBindingDescriptionCount = 
+		static_cast<uint32_t>(bindingDescs.size());
 	vertexInputInfo.pVertexBindingDescriptions = bindingDescs.data();
-	vertexInputInfo.vertexAttributeDescriptionCount = attribDescs.size();
+	vertexInputInfo.vertexAttributeDescriptionCount = 
+		static_cast<uint32_t>(attribDescs.size());
 	vertexInputInfo.pVertexAttributeDescriptions = attribDescs.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};

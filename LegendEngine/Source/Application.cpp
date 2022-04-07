@@ -199,13 +199,16 @@ void Application::Log(const std::string& message, LogType type)
 	{
 		auto now = std::chrono::system_clock::now();
 		std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-		std::tm* organizedTime = std::gmtime(&currentTime);
-		time += std::to_string(organizedTime->tm_hour > 12 ? 
-			organizedTime->tm_hour - 12 : organizedTime->tm_hour);
+
+		std::tm organizedTime;
+		gmtime_s(&organizedTime, &currentTime);
+
+		time += std::to_string(organizedTime.tm_hour > 12 ? 
+			organizedTime.tm_hour - 12 : organizedTime.tm_hour);
 		time += ":";
-		time += std::to_string(organizedTime->tm_min);
+		time += std::to_string(organizedTime.tm_min);
 		time += ":";
-		time += std::to_string(organizedTime->tm_sec);
+		time += std::to_string(organizedTime.tm_sec);
 	}
 
 	std::cout 

@@ -14,8 +14,8 @@ namespace LegendEngine::Objects
 
 		struct CameraUniforms
 		{
-			Matrix4x4f view;
-			Matrix4x4f projection;
+            alignas(16) Matrix4x4f view;
+			alignas(16) Matrix4x4f projection;
 		};
         
         Camera() {}

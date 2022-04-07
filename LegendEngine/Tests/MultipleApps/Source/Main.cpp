@@ -56,8 +56,8 @@ int main()
 	
 	while (!triangle.IsCloseRequested() || !triangle2.IsCloseRequested())
 	{
-		triangle.RenderFrame();
-		triangle2.RenderFrame();
+		triangle.RenderFrame(1);
+		triangle2.RenderFrame(1);
 	}
 	
 	triangle.Dispose();

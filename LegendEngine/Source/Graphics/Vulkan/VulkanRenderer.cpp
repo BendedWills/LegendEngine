@@ -1005,8 +1005,8 @@ void VulkanRenderer::PopulateByScene(VkCommandBuffer buffer,
 
 void VulkanRenderer::DisposeSwapchain()
 {
-	vkFreeCommandBuffers(device.Get(), commandPool, commandBuffers.size(), 
-		commandBuffers.data());
+	vkFreeCommandBuffers(device.Get(), commandPool, 
+		static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
 	for (VkFramebuffer framebuffer : framebuffers)
 		vkDestroyFramebuffer(device.Get(), framebuffer, nullptr);

@@ -3,18 +3,15 @@
 #ifndef _LEGENDENGINE_OBJECT_HPP
 #define _LEGENDENGINE_OBJECT_HPP
 
+#include <LegendEngine/Math/Math.hpp>
 #include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Ref.hpp>
-#include <LegendEngine/Math/Math.hpp>
 #include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Objects/Components/ComponentHolder.hpp>
 #include <LegendEngine/Objects/Scripts/ScriptHolder.hpp>
 
-#include <type_traits>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace LegendEngine

@@ -100,7 +100,8 @@ bool Instance::Init(
 	std::vector<const char*> requiredExtentions = 
 		GetRequiredExtentions(debugMode);
 
-	createInfo.enabledExtensionCount = requiredExtentions.size();
+	createInfo.enabledExtensionCount = 
+		static_cast<uint32_t>(requiredExtentions.size());
 	createInfo.ppEnabledExtensionNames = requiredExtentions.data();
 
 	VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
@@ -111,7 +112,8 @@ bool Instance::Init(
 		if (!CheckValidationLayerSupport(validationLayers))
 			return false;
 		
-		createInfo.enabledLayerCount = validationLayers.size();
+		createInfo.enabledLayerCount = 
+			static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
 		
 		// Initialize debug messenger

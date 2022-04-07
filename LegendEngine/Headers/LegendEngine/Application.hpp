@@ -99,7 +99,7 @@ namespace LegendEngine
 		 */
 		bool InitScene(Scene* pScene);
 
-		void RenderFrame(float delta);
+		void RenderFrame(float delta = 1.0f);
 
 		void SetActiveCamera(Objects::Camera* pCamera);
 		Objects::Camera* GetActiveCamera();

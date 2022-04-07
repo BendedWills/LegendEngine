@@ -6,7 +6,7 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t images)
+bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint32_t images)
 {
     if (initialized)
         return false;
@@ -69,7 +69,7 @@ bool UniformBuffer::BindToSet(UniformManager* manager, VkDescriptorSetLayout lay
 	return true;
 }
 
-bool UniformBuffer::Bind(uint64_t binding)
+bool UniformBuffer::Bind(uint32_t binding)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
@@ -128,7 +128,7 @@ void UniformBuffer::FreeSet()
 		return;
 
 	vkFreeDescriptorSets(pRenderer->device.Get(), *pDescriptorPool,
-		descriptorSets.size(), descriptorSets.data());
+		static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data());
 
 	boundToSet = false;
 }

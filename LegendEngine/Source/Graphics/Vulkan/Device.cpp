@@ -8,10 +8,10 @@ bool Device::Init(
     Instance* pInstance,
     VkPhysicalDevice physicalDevice,
     VkDeviceQueueCreateInfo* queueFamilies, 
-    uint64_t queueFamilyCount, 
+    uint32_t queueFamilyCount, 
     VkPhysicalDeviceFeatures features,
     const char *const * extentions,
-    uint64_t extentionCount
+    uint32_t extentionCount
 )
 {
     if (initialized)
@@ -31,7 +31,8 @@ bool Device::Init(
     {
         // Enable validation layers
 
-        createInfo.enabledLayerCount   = pInstance->validationLayers.size();
+        createInfo.enabledLayerCount   = 
+            static_cast<uint32_t>(pInstance->validationLayers.size());
         createInfo.ppEnabledLayerNames = pInstance->validationLayers.data();
     }
     

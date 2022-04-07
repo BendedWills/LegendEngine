@@ -16,15 +16,15 @@ namespace LegendEngine::Objects::Components
 
         MeshComponent() {}
 
-        bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
+        bool Init(VertexTypes::Vertex2* pVertices, uint32_t vertexCount);
 
         VertexBuffer* GetVertexBuffer();
-        uint64_t GetVertexCount();
+        uint32_t GetVertexCount();
     private:
         void OnDispose();
 
         Ref<VertexBuffer> vertexBuffer;
-        uint64_t vertexCount = 0;
+        uint32_t vertexCount = 0;
     };
 }
 

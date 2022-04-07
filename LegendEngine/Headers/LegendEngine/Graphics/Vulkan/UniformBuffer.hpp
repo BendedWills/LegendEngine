@@ -30,10 +30,10 @@ namespace LegendEngine::Vulkan
 		 * 
 		 * @returns True if initialization succeeded; otherwise, false.
 		 */
-		bool Init(VulkanRenderer* pRenderer, uint64_t size, uint64_t images);
+		bool Init(VulkanRenderer* pRenderer, uint64_t size, uint32_t images);
 
 		bool BindToSet(UniformManager* manager, VkDescriptorSetLayout layout);
-		bool Bind(uint64_t binding);
+		bool Bind(uint32_t binding);
 
 		/**
 		 * @brief Updates the uniform buffer. This uniform buffer must be passed
@@ -55,7 +55,7 @@ namespace LegendEngine::Vulkan
 		std::vector<VkBuffer> uniformBuffers;
 
 		uint64_t size = 0;
-		uint64_t images = 0;
+		uint32_t images = 0;
 
 		VkDescriptorPool* pDescriptorPool = nullptr;
 		bool boundToSet = false;

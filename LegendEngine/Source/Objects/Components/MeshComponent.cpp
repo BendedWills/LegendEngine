@@ -7,7 +7,7 @@
 
 using namespace LegendEngine::Objects::Components;
 
-bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount)
+bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint32_t vertexCount)
 {
     if (initialized)
         return false;
@@ -71,7 +71,7 @@ LegendEngine::VertexBuffer* MeshComponent::GetVertexBuffer()
     return vertexBuffer.get();
 }
 
-uint64_t MeshComponent::GetVertexCount()
+uint32_t MeshComponent::GetVertexCount()
 {
     return vertexCount;
 }

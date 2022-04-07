@@ -30,7 +30,7 @@ namespace LegendEngine::Vulkan
 		Vulkan::UniformManager uniformManager;
 		IObjectNative::ObjectUniforms ubo;
 		
-		uint64_t images = 0;
+		uint32_t images = 0;
 		uint64_t imageIndex = 0;
 
 		VulkanRenderer* pRenderer = nullptr;
