@@ -5,7 +5,7 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool UniformManager::Init(Device* pDevice, uint64_t uniformCount, uint64_t images)
+bool UniformManager::Init(Device* pDevice, uint32_t uniformCount, uint32_t images)
 {
     if (initialized)
         return false;

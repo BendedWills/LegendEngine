@@ -17,10 +17,6 @@ set(VK_SHADER_SOURCE_DIR ${ASSETS_DIR}/Shaders)
 # TWO_DIM
 add_definitions(-DVULKAN_API -DTHREE_DIM -DTWO_DIM)
 
-if ("${CMAKE_BUILD_TYPE}" MATCHES "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -02")
-endif()
-
 file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/LegendEngine/${COMPILED_ASSETS_DIR})
 file(GLOB_RECURSE ASSETS
     ${ASSETS_DIR}/*.*
@@ -167,7 +163,15 @@ add_subdirectory(Tests/Math)
 # Add tether
 add_subdirectory(Vendor/Tether)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+# Enable optimizations for release mode
+if ("${CMAKE_BUILD_TYPE}" MATCHES "Release")
+    if (WIN32)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+    elseif (UNIX)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+    endif()
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 # Collect all sources

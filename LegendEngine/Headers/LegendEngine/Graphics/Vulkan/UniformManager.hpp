@@ -15,7 +15,7 @@ namespace LegendEngine::Vulkan
 		UniformManager() {}
 		LEGENDENGINE_NO_COPY(UniformManager);
 
-		bool Init(Device* pDevice, uint64_t uniformCount, uint64_t images);
+		bool Init(Device* pDevice, uint32_t uniformCount, uint32_t images);
 
 		VkDescriptorPool* GetPool();
 	private:

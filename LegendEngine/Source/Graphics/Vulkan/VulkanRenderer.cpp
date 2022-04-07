@@ -350,10 +350,10 @@ bool VulkanRenderer::InitDevice()
 			pInstance, 
 			physicalDevice, 
 			queueCreateInfos.data(), 
-			queueCreateInfos.size(), 
+			static_cast<uint32_t>(queueCreateInfos.size()),
 			features, 
 			deviceExtensions.data(),
-			deviceExtensions.size()
+			static_cast<uint32_t>(deviceExtensions.size())
 		))
 		return false;
 	
