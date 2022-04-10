@@ -17,11 +17,6 @@ set(VK_SHADER_SOURCE_DIR ${ASSETS_DIR}/Shaders)
 # TWO_DIM
 add_definitions(-DVULKAN_API -DTHREE_DIM -DTWO_DIM)
 
-file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/LegendEngine/${COMPILED_ASSETS_DIR})
-file(GLOB_RECURSE ASSETS
-    ${ASSETS_DIR}/*.*
-)
-
 # Compile vulkan shaders
 # Only if VULKAN_API is defined above
 get_directory_property(COMPDEFS COMPILE_DEFINITIONS)
@@ -81,6 +76,11 @@ if (COMPDEFS MATCHES "^VULKAN_API")
 
     add_custom_target(vkshaders ALL DEPENDS ${SPV_SHADERS} shaderdir)
 endif()
+
+file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/LegendEngine/${COMPILED_ASSETS_DIR})
+file(GLOB_RECURSE ASSETS
+    ${ASSETS_DIR}/*.*
+)
 
 set (FULL_COMPILED_DIR "\"${CMAKE_SOURCE_DIR}/LegendEngine/${COMPILED_ASSETS_DIR}\"")
 if (WIN32)

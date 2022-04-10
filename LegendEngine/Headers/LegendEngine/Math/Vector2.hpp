@@ -47,8 +47,6 @@ namespace LegendEngine
 		static float Dot(Vector2<T> v1, Vector2<T> v2);
 		static float Length(Vector2<T> v);
 	};
-
-	typedef Vector2<float> Vector2f;
 }
 
 #include <LegendEngine/Math/Vector2.inl>

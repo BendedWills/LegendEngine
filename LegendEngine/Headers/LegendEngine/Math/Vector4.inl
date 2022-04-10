@@ -1,5 +1,3 @@
-#include <LegendEngine/Math/Funcs.hpp>
-
 namespace LegendEngine
 {
 	template<typename T>

@@ -78,5 +78,5 @@ uint32_t MeshComponent::GetVertexCount()
 
 void MeshComponent::OnDispose()
 {
-    vertexBuffer->Dispose();
+	vertexBuffer->Dispose();
 }

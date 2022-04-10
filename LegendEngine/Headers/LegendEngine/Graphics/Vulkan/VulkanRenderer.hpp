@@ -113,8 +113,6 @@ namespace LegendEngine::Vulkan
 
 		Stopwatch timer;
 
-		bool shouldRecreateSwapchain = false;
-		bool enableVsync = false;
 	private:
 		bool CreateObjectNative(Objects::Object* pObject);
 		bool CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer);
@@ -148,6 +146,9 @@ namespace LegendEngine::Vulkan
 			Objects::Components::Component* pComponent
 		);
 
+		void OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject);
+		void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject);
+
 		bool OnRenderFrame();
 
 		void OnRendererDispose();
@@ -173,6 +174,10 @@ namespace LegendEngine::Vulkan
 		bool DrawFrame();
 
 		void DisposeSwapchain();
+
+		bool shouldRecreateSwapchain = false;
+		bool shouldRecreateCommandBuffers = false;
+		bool enableVsync = false;
 	};
 }
 

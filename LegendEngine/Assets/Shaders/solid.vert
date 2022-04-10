@@ -10,9 +10,15 @@ layout(set = 0, binding = 0) uniform ObjectBuffer
     mat4 transform;
 };
 
+layout(set = 1, binding = 0) uniform CameraBuffer
+{
+    mat4 view;
+    mat4 projection;
+};
+
 void main() 
 {
     outColor = color;
 
-    gl_Position = transform * vec4(pos.xy, 0, 1);
+    gl_Position = projection * view * transform * vec4(pos.xy, 0, 1);
 }

@@ -80,20 +80,25 @@ namespace LegendEngine
         void ClearObjects();
 
         std::vector<Objects::Object*>* GetObjects();
+		std::unordered_map<std::string,
+			std::vector<Objects::Components::Component*>>* GetObjectComponents();
     protected:
-        void OnObjectComponentAdd(Objects::Object*, std::string typeName, 
+        void OnObjectComponentAdd(Objects::Object* pObject, std::string typeName, 
             Objects::Components::Component* pComponent);
-        void OnObjectComponentRemove(Objects::Object*, std::string typeName,
+        void OnObjectComponentRemove(Objects::Object* pObject, std::string typeName,
             Objects::Components::Component* pComponent);
+		void OnObjectEnable(Objects::Object* pObject);
+		void OnObjectDisable(Objects::Object* pObject);
 
         Application* pApplication = nullptr;
     private:
-        // Commented because it might be unnessesary and extra work is required.
-        // void AddComponents(Objects::Object* pObject);
-        // void RemoveComponents(Objects::Object* pObject);
+        void AddObjectComponents(Objects::Object* pObject);
+        void RemoveObjectComponents(Objects::Object* pObject);
 
         std::vector<Objects::Object*> objects;
-        // std::vector<Objects::Components::MeshComponent*> meshComponents;
+		std::unordered_map<std::string,
+std::vector<Objects::Components::Component*>>
+			components;
     };
 }
 

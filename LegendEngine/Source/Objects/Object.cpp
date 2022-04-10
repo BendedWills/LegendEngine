@@ -6,12 +6,24 @@
 using namespace LegendEngine;
 using namespace LegendEngine::Objects;
 
+void IObjectNative::UpdateUniforms()
+{
+    if (!pObject->updateUniforms)
+        return;
+
+    OnUniformsUpdate();
+
+    pObject->updateUniforms = false;
+}
+
 Object::Object()
 	:
 	scale(1.0f),
 	Components::ComponentHolder(this),
     Scripts::ScriptHolder(this)
 {
+    transform = Matrix4x4f::MakeIdentity();
+
     CalculateTransformMatrix();
 	initialized = true;
 }
@@ -73,6 +85,24 @@ Vector3f Object::GetScale()
     return scale;
 }
 
+void Object::SetEnabled(bool enabled)
+{
+    if (this->enabled != enabled)
+		if (enabled)
+			for (Scene* pScene : scenes)
+				pScene->OnObjectEnable(this);
+		else
+			for (Scene* pScene : scenes)
+				pScene->OnObjectDisable(this);
+
+    this->enabled = enabled;
+}
+
+bool Object::IsEnabled()
+{
+    return enabled;
+}
+
 Matrix4x4f& Object::GetTransformationMatrix()
 {
     return transform;
@@ -85,6 +115,9 @@ Application* Object::GetApplication()
 
 void Object::CalculateTransformMatrix()
 {
+    if (!objCalculateMatrices)
+        return;
+
     transform = Matrix4x4f::MakeIdentity();
     transform = Matrix4x4f::Translate(transform, position);
     transform = Matrix4x4f::Scale(transform, scale);
@@ -94,6 +127,8 @@ void Object::CalculateTransformMatrix()
 		Vector3f(0, 1, 0));
 	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.z),
 		Vector3f(0, 0, 1));
+
+    updateUniforms = true;
 }
 
 void Object::AddToScene(Scene* pScene)
@@ -128,6 +163,7 @@ void Object::OnDispose()
 		native->OnDispose();
 
     ClearComponents();
+    ClearScripts();
     
     Tether::VectorUtils::EraseAll(pApplication->objects, this);
 }

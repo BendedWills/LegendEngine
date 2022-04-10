@@ -39,10 +39,17 @@ void Scene::AddObject(Objects::Object* pObject)
         return;
     }
 
+    if (HasObject(pObject))
+    {
+		pApplication->Log("Tried to add object to a scene twice. Returning", 
+            LogType::WARN);
+		return;
+    }
+
     objects.push_back(pObject);
     pObject->AddToScene(this);
 
-    //AddComponents(pObject);
+    AddObjectComponents(pObject);
 
     pApplication->OnSceneObjectAdd(this, pObject);
 }
@@ -75,10 +82,6 @@ bool Scene::RemoveObject(Objects::Object& object)
     return RemoveObject(&object);
 }
 
-#define LEGENDENGINE_COMPONENT_NAMES() \
-    using namespace Objects::Components; \
-    std::string meshComponentName = TypeTools::GetTypeName<MeshComponent>();
-
 bool Scene::RemoveObject(Objects::Object* pObject)
 {
     LEGENDENGINE_ASSERT_APP_NULL_RET(false);
@@ -93,16 +96,15 @@ bool Scene::RemoveObject(Objects::Object* pObject)
     if (pObject->GetApplication() != pApplication)
         return false;
     
-    LEGENDENGINE_COMPONENT_NAMES();
-    
     for (uint64_t i = 0; i < objects.size(); i++)
         if (objects[i] == pObject)
         {
             objects[i]->RemoveFromScene(this);
-            objects.erase(objects.begin() + i);
-            //RemoveComponents(pObject);
 
+            RemoveObjectComponents(pObject);
             pApplication->OnSceneObjectRemove(this, pObject);
+
+            objects.erase(objects.begin() + i);
         }
 
     return false;
@@ -136,33 +138,61 @@ void Scene::OnObjectComponentRemove(Objects::Object* pObject, std::string typeNa
         pComponent);
 }
 
-// void Scene::AddComponents(Objects::Object* pObject)
-// {
-//     LEGENDENGINE_COMPONENT_NAMES();
+void Scene::OnObjectEnable(Objects::Object* pObject)
+{
+    LEGENDENGINE_ASSERT_APP_NULL();
 
-//     auto components = pObject->GetComponents();
-//     for (auto it : *components)
-//     {
-//         if (it.first == meshComponentName) 
-//             meshComponents.push_back((MeshComponent*)it.second.get());
-//     }
-// }
+	pApplication->OnSceneObjectEnable(this, pObject);
+}
 
-// void Scene::RemoveComponents(Objects::Object* pObject)
-// {
-//     LEGENDENGINE_COMPONENT_NAMES();
+void Scene::OnObjectDisable(Objects::Object* pObject)
+{
+    LEGENDENGINE_ASSERT_APP_NULL();
+    
+    pApplication->OnSceneObjectDisable(this, pObject);
+}
 
-//     #define LEGENDENGINE_COMPONENT_REMOVE_LOOP(name, nameOfComponent) \
-//         if (it.first == nameOfComponent) \
-//             for (uint64_t i = 0; i < name.size(); i++) \
-//             { \
-//                 if (name[i] == it.second.get()) \
-//                     name.erase(name.begin() + i); \
-//             }
+void Scene::AddObjectComponents(Objects::Object* pObject)
+{
+	using namespace Objects::Components;
+	using namespace Objects;
 
-//     auto components = pObject->GetComponents();
-//     for (auto it : *components)
-//     {
-//         LEGENDENGINE_COMPONENT_REMOVE_LOOP(meshComponents, meshComponentName);
-//     }
-// }
+    auto* objComponents = pObject->GetComponents();
+	for (auto it = objComponents->begin(); it != objComponents->end(); it++)
+	{
+		const std::string& componentType = it->first;
+		Component* pComponent = it->second.get();
+
+		std::vector<Component*>* compVec = &components[componentType];
+
+        compVec->push_back(pComponent);
+	}
+}
+
+void Scene::RemoveObjectComponents(Objects::Object* pObject)
+{
+	using namespace Objects::Components;
+	using namespace Objects;
+
+	auto* objComponents = pObject->GetComponents();
+	for (auto it = objComponents->begin(); it != objComponents->end(); it++)
+	{
+		const std::string& componentType = it->first;
+		Component* pComponent = it->second.get();
+
+		std::vector<Component*>* compVec = &components[componentType];
+
+		auto findIter = std::find(compVec->begin(), compVec->end(), pComponent);
+
+        if (findIter == compVec->end())
+            continue;
+
+        compVec->erase(findIter);
+	}
+}
+
+std::unordered_map<std::string, std::vector<Objects::Components::Component*>>*
+Scene::GetObjectComponents()
+{
+    return &components;
+}

@@ -51,8 +51,6 @@ namespace LegendEngine
 		static float Dot(Vector4<T> v1, Vector4<T> v2);
 		static float Length(Vector4<T> v);
 	};
-
-	typedef Vector4<float> Vector4f;
 }
 
 #include <LegendEngine/Math/Vector4.inl>

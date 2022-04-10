@@ -20,18 +20,34 @@ namespace LegendEngine::TypeTools
 	template<typename Type>
 	std::string GetTypeName()
 	{
-		std::string_view prettyFunc{ LEGENDENGINE_PRETTY_FUNCTION };
+		const char* prettyFunc = LEGENDENGINE_PRETTY_FUNCTION;
+		uint64_t size = strlen(prettyFunc);
 
-		auto first = prettyFunc.find_first_not_of(' ',
-			prettyFunc.find_first_of(LEGENDENGINE_PRETTY_FUNCTION_PREFIX)
-			+ 1
-		);
-		auto last = prettyFunc.find_last_of(
-			LEGENDENGINE_PRETTY_FUNCTION_SUFFIX) - first;
+		uint64_t firstOfPrefix = 0;
+		for (uint64_t i = 0; i < size; i++)
+			if (prettyFunc[i] == LEGENDENGINE_PRETTY_FUNCTION_PREFIX)
+			{
+				firstOfPrefix = i;
+				break;
+			}
 
-		std::string prettyFuncStr(prettyFunc.begin(), prettyFunc.end());
+		uint64_t firstIndex = 0;
+		for (uint64_t i = firstOfPrefix + 1; i < size; i++)
+			if (prettyFunc[i] != ' ')
+			{
+				firstIndex = i;
+				break;
+			}
 
-		return prettyFuncStr.substr(first, last);
+		uint64_t lastIndex = 0;
+		for (uint64_t i = size - 1; i >= 0; i--)
+			if (prettyFunc[i] != LEGENDENGINE_PRETTY_FUNCTION_SUFFIX)
+			{
+				lastIndex = i;
+				break;
+			}
+
+		return std::string(prettyFunc + firstIndex, lastIndex - firstIndex);
 	}
 }
 

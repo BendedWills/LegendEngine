@@ -447,6 +447,26 @@ void Application::OnSceneObjectComponentRemove(Scene* pScene,
 	pRenderer->OnSceneObjectComponentRemove(pScene, pObject, typeName, pComponent);
 }
 
+void Application::OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject)
+{
+	LEGENDENGINE_ASSERT_RENDERER_NULL();
+
+	if (pScene != activeScene && pScene != &defaultScene)
+		return;
+
+	pRenderer->OnSceneObjectEnable(pScene, pObject);
+}
+
+void Application::OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
+{
+	LEGENDENGINE_ASSERT_RENDERER_NULL();
+
+	if (pScene != activeScene && pScene != &defaultScene)
+		return;
+
+	pRenderer->OnSceneObjectDisable(pScene, pObject);
+}
+
 void Application::SetScriptRecieveUpdates(
 	bool enabled, Objects::Scripts::Script* pScript
 )

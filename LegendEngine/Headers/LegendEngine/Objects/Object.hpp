@@ -26,6 +26,7 @@ namespace LegendEngine::Objects
     class Object;
     class IObjectNative
     {
+        friend Object;
     public:
         LEGENDENGINE_NO_COPY(IObjectNative);
 
@@ -40,10 +41,11 @@ namespace LegendEngine::Objects
             // Material material;
 		};
 
-        virtual void OnUniformsUpdate() {}
-
-        virtual void OnDispose() {}
+        void UpdateUniforms();
     protected:
+		virtual void OnUniformsUpdate() {}
+		virtual void OnDispose() {}
+
         Object* pObject = nullptr;
     };
 
@@ -73,6 +75,9 @@ namespace LegendEngine::Objects
         Vector3f GetRotation();
         Vector3f GetScale();
 
+        void SetEnabled(bool enabled);
+        bool IsEnabled();
+
         Matrix4x4f& GetTransformationMatrix();
 
         Application* GetApplication();
@@ -89,6 +94,11 @@ namespace LegendEngine::Objects
 		Vector3f scale;
 
         Matrix4x4f transform;
+
+        bool objCalculateMatrices = true;
+        bool enabled = true;
+
+        bool updateUniforms = false;
 
         Application* pApplication = nullptr;
     private:

@@ -23,95 +23,103 @@
 
 namespace LegendEngine::Objects::Components
 {
-    class ComponentHolder
-    {
-    public:
-        ComponentHolder() {}
-        ComponentHolder(Object* pObject)
-            :
-            pObject(pObject)
-        {}
-        LEGENDENGINE_NO_COPY(ComponentHolder);
+	class ComponentHolder
+	{
+	public:
+		using HolderType = std::unordered_map<std::string, Scope<Component>>;
 
-        template<typename T, typename... Args>
-        T* AddComponent(Args... args)
-        {
-            AssureComponent<T>(args...);
-            return (T*)components[TypeTools::GetTypeName<T>()].get();
-        }
+		ComponentHolder() {}
+		ComponentHolder(Object* pObject)
+			:
+			pObject(pObject)
+		{}
 
-        template<typename T>
-        bool HasComponent()
-        {
-            return components.count(TypeTools::GetTypeName<T>()) != 0;
-        }
+		~ComponentHolder()
+		{
+			ClearComponents();
+		}
 
-        template<typename T>
-        T* GetComponent()
-        {
-            std::string id = TypeTools::GetTypeName<T>();
-            if (components.count(id) != 0)
-                return (T*)components[id].get();
+		LEGENDENGINE_NO_COPY(ComponentHolder);
 
-            return nullptr;
-        }
+		template<typename T, typename... Args>
+		T* AddComponent(Args... args)
+		{
+			AssureComponent<T>(args...);
+			return (T*)components[TypeTools::GetTypeName<T>()].get();
+		}
 
-        template<typename T>
-        bool RemoveComponent()
-        {
-            std::string id = TypeTools::GetTypeName<T>();
-            if (components.count(id))
-            {
-                auto componentIter = components.find(id);
+		template<typename T>
+		bool HasComponent()
+		{
+			return components.count(TypeTools::GetTypeName<T>()) != 0;
+		}
 
-                OnComponentRemove(id, componentIter->second.get());
-                components.erase(componentIter);
+		template<typename T>
+		T* GetComponent()
+		{
+			std::string id = TypeTools::GetTypeName<T>();
+			if (components.count(id) != 0)
+				return (T*)components[id].get();
 
-                return true;
-            }
+			return nullptr;
+		}
 
-            return false;
-        }
+		template<typename T>
+		bool RemoveComponent()
+		{
+			std::string id = TypeTools::GetTypeName<T>();
+			if (components.count(id))
+			{
+				auto componentIter = components.find(id);
 
-        std::unordered_map<std::string, Ref<Component>>* GetComponents()
-        {
-            return &components;
-        }
+				OnComponentRemove(id, componentIter->second.get());
+				components.erase(componentIter);
 
-        void ClearComponents()
-        {
-            components.clear();
-        }
-    protected:
-        // Returns true if the component was created
-        template<typename T, typename... Args>
-        bool AssureComponent(Args... args)
-        {
-            std::string id = TypeTools::GetTypeName<T>();
-            if (components.count(id) == 0)
-            {
-                components[id] = RefTools::Create<T>(args...);
-                components[id]->SetObject(pObject);
+				return true;
+			}
 
-                OnComponentAdd(id, components[id].get());
+			return false;
+		}
 
-                return true;
-            }
+		HolderType* GetComponents()
+		{
+			return &components;
+		}
 
-            return false;
-        }
+		void ClearComponents()
+		{
+			components.clear();
+		}
+	protected:
+		// Returns true if the component was created
+		template<typename T, typename... Args>
+		bool AssureComponent(Args... args)
+		{
+			std::string id = TypeTools::GetTypeName<T>();
+			if (components.count(id) == 0)
+			{
+				components.emplace(id, std::make_unique<T>(args...));
+				components[id]->SetObject(pObject);
 
-        virtual void OnComponentAdd(const std::string& typeName, 
-            Component* pComponent) 
-        {}
-        virtual void OnComponentRemove(const std::string& typeName, 
-            Component* pComponent)
-        {}
+				OnComponentAdd(id, components[id].get());
 
-        std::unordered_map<std::string, Ref<Component>> components;
-    private:
-        Objects::Object* pObject = nullptr;
-    };
+				return true;
+			}
+
+			return false;
+		}
+
+		virtual void OnComponentAdd(const std::string& typeName, 
+			Component* pComponent) 
+		{}
+		virtual void OnComponentRemove(const std::string& typeName, 
+			Component* pComponent)
+		{}
+
+		HolderType components;
+	private:
+		Objects::Object* pObject = nullptr;
+	};
 }
 
 #endif //_LEGENDENGINE_COMPONENTHOLDER_HPP

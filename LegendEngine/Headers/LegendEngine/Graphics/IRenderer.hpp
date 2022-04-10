@@ -142,6 +142,11 @@ namespace LegendEngine
             Objects::Components::Component* pComponent) 
         {}
 
+		virtual void OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject) 
+        {}
+        virtual void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
+        {}
+
         /**
          * @brief Called when the renderer is disposed.
          */

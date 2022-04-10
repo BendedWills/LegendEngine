@@ -16,6 +16,11 @@ namespace LegendEngine::Objects::Components
         friend ComponentHolder;
     public:
         Component();
+
+        // Tells the compiler to generate extra code to figure out the type
+        // at runtime and delete the object correctly.
+        virtual ~Component() {}
+
         LEGENDENGINE_NO_COPY(Component);
         
         Object* GetObject();

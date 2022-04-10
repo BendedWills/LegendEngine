@@ -163,36 +163,36 @@ bool VulkanRenderer::OnRendererInit()
 
 void VulkanRenderer::OnSceneChange(Scene* pScene)
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnSceneObjectAdd(Scene* pScene, 
 	Objects::Object* pObject)
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnSceneObjectRemove(Scene* pScene, 
 	Objects::Object* pObject)
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnSceneRemove(Scene* pScene)
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnDefaultObjectAdd(Scene* pScene, 
 	Objects::Object* pObject)
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnDefaultObjectRemove(Scene* pScene, 
 	Objects::Object* pObject)
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnSceneObjectComponentAdd(
@@ -202,7 +202,7 @@ void VulkanRenderer::OnSceneObjectComponentAdd(
 	Objects::Components::Component* pComponent
 )
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
 }
 
 void VulkanRenderer::OnSceneObjectComponentRemove(
@@ -212,7 +212,17 @@ void VulkanRenderer::OnSceneObjectComponentRemove(
 	Objects::Components::Component* pComponent
 )
 {
-	RecreateCommandBuffers();
+	shouldRecreateCommandBuffers = true;
+}
+
+void VulkanRenderer::OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject)
+{
+	shouldRecreateCommandBuffers = true;
+}
+
+void VulkanRenderer::OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
+{
+	shouldRecreateCommandBuffers = true;
 }
 
 bool VulkanRenderer::OnRenderFrame()
@@ -711,12 +721,13 @@ void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 {
 	Objects::Camera* pCamera = pApplication->GetActiveCamera();
 	if (pCamera)
-	{
-		// Upload camera matrices
+		if (pCamera->IsEnabled())
+		{
+			// Upload camera matrices
 
-		cameraUniform.UpdateBuffer(pCamera->GetUniforms(), 
-			sizeof(Objects::Camera::CameraUniforms), imageIndex);
-	}
+			cameraUniform.UpdateBuffer(pCamera->GetUniforms(), 
+				sizeof(Objects::Camera::CameraUniforms), imageIndex);
+		}
 
 	std::vector<Objects::Object*>* defaultObjects = pApplication->GetDefaultScene()
 		->GetObjects();
@@ -744,6 +755,14 @@ bool VulkanRenderer::DrawFrame()
 	if (shouldRecreateSwapchain)
 		if (!RecreateSwapchain())
 			pApplication->Log("Failed to recreate swapchain!", LogType::ERROR);
+
+	if (shouldRecreateCommandBuffers)
+	{
+		if (!RecreateCommandBuffers())
+			pApplication->Log("Failed to recreate command buffers!", LogType::ERROR);
+
+		shouldRecreateCommandBuffers = false;
+	}
 
 	// in flight frame = a frame that is being rendered while still rendering 
 	// more frames
@@ -973,27 +992,38 @@ void VulkanRenderer::PopulateByScene(VkCommandBuffer buffer,
 	using namespace Objects;
 	using namespace Objects::Components;
 
-	std::vector<Object*>* activeObjects = pScene->GetObjects();
-	for (uint64_t i = 0; i < activeObjects->size(); i++)
-	{
-		Object* object = activeObjects->at(i);
-		ObjectNative* native = (ObjectNative*)object->GetNative();
+	static const std::string meshCompName = TypeTools::GetTypeName<MeshComponent>();
 
-		// The object must have a mesh component
-		MeshComponent* component = object->GetComponent<MeshComponent>();
-		if (!component)
+	auto* comps = pScene->GetObjectComponents();
+	if (comps->find(meshCompName) == comps->end())
+		return;
+
+	std::vector<Component*>* meshComps = &comps->at(meshCompName);
+
+	VkDescriptorSet sets[2] = {};
+	cameraUniform.GetDescriptorSet(&sets[1], commandBufferIndex);
+
+	for (uint64_t i = 0; i < meshComps->size(); i++)
+	{
+		MeshComponent* component = (MeshComponent*)meshComps->at(i);
+		Object* object = component->GetObject();
+
+		if (!object->IsEnabled())
 			continue;
 
 		LegendEngine::VertexBuffer* pVertexBuffer =
 			component->GetVertexBuffer();
 		VertexBufferNative* pVkVertexBuffer =
 			(VertexBufferNative*)pVertexBuffer->GetNative();
+		
+		ObjectNative* native = (ObjectNative*)object->GetNative();
+		native->GetUniform()->GetDescriptorSet(&sets[0], commandBufferIndex);
 
-		VkDescriptorSet objectSet;
-		native->GetUniform()->GetDescriptorSet(&objectSet, commandBufferIndex);
-
-		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-			shaderProgram.GetPipelineLayout(), 0, 1, &objectSet, 0, nullptr);
+		vkCmdBindDescriptorSets(
+			buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			shaderProgram.GetPipelineLayout(), 0, sizeof(sets) / sizeof(sets[0]), 
+			sets, 0, nullptr
+		);
 
 		VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
 		VkDeviceSize offsets[] = { 0 };

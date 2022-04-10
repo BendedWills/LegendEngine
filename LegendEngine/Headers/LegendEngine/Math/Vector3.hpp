@@ -45,11 +45,10 @@ namespace LegendEngine
 		T z = 0.0f;
 
 		static Vector3<T> Normalize(Vector3<T> v);
+		static Vector3<T> Cross(Vector3<T> v1, Vector3<T> v2);
 		static float Dot(Vector3<T> v1, Vector3<T> v2);
 		static float Length(Vector3<T> v);
 	};
-
-	typedef Vector3<float> Vector3f;
 }
 
 #include <LegendEngine/Math/Vector3.inl>

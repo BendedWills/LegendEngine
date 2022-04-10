@@ -1,5 +1,3 @@
-#include <LegendEngine/Math/Funcs.hpp>
-
 namespace LegendEngine
 {
 	template<typename T>
@@ -231,6 +229,16 @@ namespace LegendEngine
 		product += v1.y * v2.y;
 		product += v1.z * v2.z;
 		return product;
+	}
+
+	template<typename T>
+	Vector3<T> Vector3<T>::Cross(Vector3<T> v1, Vector3<T> v2)
+	{
+		return Vector3<T>(
+			v1.y * v2.z - v1.z * v2.y,
+			v1.z * v2.x - v1.x * v2.z,
+			v1.x * v2.y - v1.y * v2.x
+		);
 	}
 
 	template<typename T>

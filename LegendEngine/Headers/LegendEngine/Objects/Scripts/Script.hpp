@@ -23,7 +23,7 @@ namespace LegendEngine::Objects::Scripts
     public:
         Script()
         {}
-        ~Script()
+        virtual ~Script()
         {
             OnDispose();
         }

@@ -213,6 +213,9 @@ namespace LegendEngine
 			Objects::Components::Component* pComponent
 		);
 
+		void OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject);
+		void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject);
+
 		void SetScriptRecieveUpdates(
 			bool enabled, Objects::Scripts::Script* pScript
 		);
@@ -239,7 +242,7 @@ namespace LegendEngine
 	{
 		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
-		if (!std::is_base_of<T, Object>())
+		if (!std::is_base_of<Object, T>())
 		{
 			Log("In Application::CreateObject: T is not of base class Object!",
 				LogType::ERROR);

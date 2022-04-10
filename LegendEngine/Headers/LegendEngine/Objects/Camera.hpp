@@ -2,7 +2,6 @@
 #define _LEGENDENGINE_CAMERA_HPP
 
 #include <LegendEngine/Objects/Object.hpp>
-#include <LegendEngine/Math/Matrix4x4.hpp>
 
 namespace LegendEngine::Objects
 {
@@ -14,23 +13,28 @@ namespace LegendEngine::Objects
 
 		struct CameraUniforms
 		{
-            alignas(16) Matrix4x4f view;
-			alignas(16) Matrix4x4f projection;
+            Matrix4x4f view;
+            Matrix4x4f projection;
 		};
         
-        Camera() {}
+        Camera();
 
         Matrix4x4f& GetViewMatrix();
 		Matrix4x4f& GetProjectionMatrix();
         CameraUniforms* GetUniforms();
 	private:
-        void CalculateMatrices();
+        void CalculateViewMatrix();
+        void CalculateProjectionMatrix();
 
 		void OnPositionChange();
 		void OnRotationChange();
         void OnScaleChange();
 
         CameraUniforms ubo;
+
+		const Vector3f ORIGIN = Vector3f(0, 0, 0);
+		const Vector3f UP = Vector3f(0, 1, 0);
+		const Vector3f VIEW_DIR = Vector3f(0, 0, -1);
     };
 }
 

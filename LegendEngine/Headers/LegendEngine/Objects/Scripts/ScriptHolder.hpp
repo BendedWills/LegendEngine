@@ -14,6 +14,8 @@ namespace LegendEngine::Objects::Scripts
     class ScriptHolder
     {
     public:
+        using HolderType = std::unordered_map<std::string, Scope<Script>>;
+
         ScriptHolder() {}
         ScriptHolder(Object* pObject)
             :
@@ -59,7 +61,7 @@ namespace LegendEngine::Objects::Scripts
             return false;
         }
 
-        std::unordered_map<std::string, Ref<Script>>* GetScripts()
+        HolderType* GetScripts()
         {
             return &scripts;
         }
@@ -76,8 +78,8 @@ namespace LegendEngine::Objects::Scripts
             std::string id = TypeTools::GetTypeName<T>();
             if (scripts.count(id) == 0)
             {
-                Ref<Script> script = RefTools::Create<T>(args...);
-                scripts[id] = script;
+                scripts.emplace(id, std::make_unique<T>(args...));
+                Script* script = scripts[id].get();
 
                 script->pObject = pObject;
                 script->OnInit();
@@ -88,7 +90,7 @@ namespace LegendEngine::Objects::Scripts
             return false;
         }
 
-        std::unordered_map<std::string, Ref<Script>> scripts;
+        HolderType scripts;
     private:
         Objects::Object* pObject = nullptr;
     };

@@ -2,6 +2,9 @@
 #define _LEGENDENGINE_MATH_MATH_HPP
 
 #include <LegendEngine/Math/Funcs.hpp>
+
+#include <LegendEngine/Math/Types.hpp>
+
 #include <LegendEngine/Math/Matrix4x4.hpp>
 #include <LegendEngine/Math/Vector2.hpp>
 #include <LegendEngine/Math/Vector3.hpp>

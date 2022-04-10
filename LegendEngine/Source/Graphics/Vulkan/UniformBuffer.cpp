@@ -2,6 +2,7 @@
 
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
+#include <LegendEngine/Objects/Camera.hpp>
 #include <Tether/Common/Storage.hpp>
 
 using namespace LegendEngine::Vulkan;

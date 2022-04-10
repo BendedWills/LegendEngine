@@ -9,4 +9,8 @@
 #include <LegendEngine/Graphics/Shader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 
+#include <LegendEngine/Objects/Object.hpp>
+#include <LegendEngine/Objects/Camera.hpp>
+#include <LegendEngine/Objects/Components/MeshComponent.hpp>
+
 #endif //_LEGENDENGINE_LEGENDENGINE_HPP
