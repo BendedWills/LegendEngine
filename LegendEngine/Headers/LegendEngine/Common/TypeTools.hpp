@@ -2,6 +2,7 @@
 #define _LEGENDENGINE_TYPETOOLS_HPP
 
 #include <string>
+#include <string.h>
 
 #if defined(__clang__) || defined(__GNUC__)
 #define LEGENDENGINE_PRETTY_FUNCTION __PRETTY_FUNCTION__

@@ -1,3 +1,5 @@
+#include <string.h>
+
 namespace LegendEngine
 {
 	template<typename T>

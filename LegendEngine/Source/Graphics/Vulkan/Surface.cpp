@@ -10,7 +10,7 @@
 #include <vulkan/vulkan_win32.h>
 #endif
 
-#include <Tether/Common/Storage.hpp>
+#include <Tether/Native.hpp>
 
 using namespace LegendEngine::Vulkan;
 
@@ -31,8 +31,8 @@ bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
         &surface) != VK_SUCCESS)
         return false;
 #elif _WIN32
-    Tether::Storage::WindowsVarStorage* varStorage = 
-        ((Tether::Storage::WindowsVarStorage*)window->GetStorage());
+    Tether::Storage::VarStorage* varStorage = 
+        ((Tether::Storage::VarStorage*)window->GetStorage());
 
     VkWin32SurfaceCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;

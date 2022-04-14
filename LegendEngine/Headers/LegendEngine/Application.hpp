@@ -240,9 +240,9 @@ namespace LegendEngine
 	template<typename T>
 	Ref<T> Application::CreateObject()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
 
-		if (!std::is_base_of<Object, T>())
+		if (!std::is_base_of<Objects::Object, T>())
 		{
 			Log("In Application::CreateObject: T is not of base class Object!",
 				LogType::ERROR);

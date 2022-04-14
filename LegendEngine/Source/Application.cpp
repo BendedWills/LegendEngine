@@ -200,15 +200,22 @@ void Application::Log(const std::string& message, LogType type)
 		auto now = std::chrono::system_clock::now();
 		std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
 
+		std::tm* orgtimePtr;
+	#if defined(__linux__)
+		orgtimePtr = gmtime(&currentTime);
+	#elif defined(_WIN32)
 		std::tm organizedTime;
 		gmtime_s(&organizedTime, &currentTime);
 
-		time += std::to_string(organizedTime.tm_hour > 12 ? 
-			organizedTime.tm_hour - 12 : organizedTime.tm_hour);
+		orgtimePtr = &organizedTime;
+	#endif
+
+		time += std::to_string(orgtimePtr->tm_hour > 12 ? 
+			orgtimePtr->tm_hour - 12 : orgtimePtr->tm_hour);
 		time += ":";
-		time += std::to_string(organizedTime.tm_min);
+		time += std::to_string(orgtimePtr->tm_min);
 		time += ":";
-		time += std::to_string(organizedTime.tm_sec);
+		time += std::to_string(orgtimePtr->tm_sec);
 	}
 
 	std::cout 
