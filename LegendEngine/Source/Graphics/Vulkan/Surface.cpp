@@ -3,6 +3,8 @@
 #include <LegendEngine/Graphics/Vulkan/Surface.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 
+#include <Tether/Native.hpp>
+
 #ifdef __linux__
 #include <vulkan/vulkan_xlib.h>
 #elif _WIN32
@@ -10,9 +12,9 @@
 #include <vulkan/vulkan_win32.h>
 #endif
 
-#include <Tether/Native.hpp>
 
 using namespace LegendEngine::Vulkan;
+using namespace Tether;
 
 bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
 {
@@ -24,8 +26,8 @@ bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
 #ifdef __linux__
     VkXlibSurfaceCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-    createInfo.dpy = window->GetDisplay();
-    createInfo.window = window->GetHandle();
+    createInfo.dpy = Application::Get().GetStorage()->display;
+    createInfo.window = window->GetStorage()->window;
     
     if (vkCreateXlibSurfaceKHR(pInstance->Get(), &createInfo, nullptr,
         &surface) != VK_SUCCESS)

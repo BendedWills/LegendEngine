@@ -6,6 +6,8 @@
 #include <cstring>
 #include <set>
 
+#include <Tether/Native.hpp>
+
 #ifdef __linux__
 #include <vulkan/vulkan_xlib.h>
 #elif _WIN32
