@@ -6,6 +6,7 @@
 #include <LegendEngine/Math/Math.hpp>
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
+#include <LegendEngine/Common/IApplicationHolder.hpp>
 #include <LegendEngine/Common/Ref.hpp>
 #include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Objects/Components/ComponentHolder.hpp>
@@ -53,6 +54,7 @@ namespace LegendEngine::Objects
         public Components::ComponentHolder, 
         public Scripts::ScriptHolder, 
         public NativeHolder<IObjectNative>,
+        public IApplicationHolder,
         public IDisposable
     {
         friend Application;
@@ -79,8 +81,6 @@ namespace LegendEngine::Objects
         bool IsEnabled();
 
         Matrix4x4f& GetTransformationMatrix();
-
-        Application* GetApplication();
     protected:
         void AddToScene(Scene* pScene);
         void RemoveFromScene(Scene* pScene);
@@ -99,8 +99,6 @@ namespace LegendEngine::Objects
         bool enabled = true;
 
         bool updateUniforms = false;
-
-        Application* pApplication = nullptr;
     private:
         void OnDispose();
 

@@ -92,38 +92,41 @@ namespace LegendEngine
 	template<typename T>
 	Vector3<T> Vector3<T>::operator+(const T& value)
 	{
-		x += value;
-		y += value;
-		z += value;
-		return *this;
+		Vector3<T> product;
+		product.x = value;
+		product.y = value;
+		product.z = value;
+		return product;
 	}
 
 	template<typename T>
 	Vector3<T> Vector3<T>::operator-(const T& value)
 	{
-		x -= value;
-		y -= value;
-		z -= value;
-		return *this;
+		Vector3<T> product;
+		product.x = value;
+		product.y = value;
+		product.z = value;
+		return product;
 	}
 
 	template<typename T>
 	Vector3<T> Vector3<T>::operator*(const T& value)
 	{
 		Vector3<T> product;
-		product.x *= x * value;
-		product.y *= y * value;
-		product.z *= z * value;
+		product.x = x * value;
+		product.y = y * value;
+		product.z = z * value;
 		return product;
 	}
 
 	template<typename T>
 	Vector3<T> Vector3<T>::operator/(const T& value)
 	{
-		x /= value;
-		y /= value;
-		z /= value;
-		return *this;
+		Vector3<T> product;
+		product.x = value;
+		product.y = value;
+		product.z = value;
+		return product;
 	}
 
 	template<typename T>

@@ -20,6 +20,9 @@
 
 namespace LegendEngine
 {
+	namespace Input = Tether::Input;
+	namespace Utils = Tether;
+	
 	namespace Objects
 	{
 		class Object;
@@ -129,6 +132,9 @@ namespace LegendEngine
 		IRenderer* GetRenderer();
 		std::string GetName();
 		Tether::IWindow* GetWindow();
+
+		IRenderer *const renderer = nullptr;
+		Tether::IWindow *const pWindow = nullptr;
 	protected:
 		/**
 		 * @brief Called before the Init function is executed.
@@ -160,45 +166,6 @@ namespace LegendEngine
 		 * @brief Called after the application is disposed.
 		 */
 		virtual void OnDisposed() {}
-		
-		bool InitWindow(const std::string& title);
-
-		void UpdateWindow();
-		void Update(float delta, bool updateWindow = true);
-		void Render(float delta);
-
-		void DisposeGraphics();
-		
-		void OnDispose();
-
-		std::string applicationName = "";
-		bool logging = false;
-		bool debug = false;
-
-		Tether::SimpleWindow window;
-
-	#pragma region Graphics
-		Ref<IRenderer> pRenderer;
-
-	#ifdef VULKAN_API
-		bool vulkanInitialized = false;
-		bool InitVulkan();
-
-		class DebugCallback : public Vulkan::DebugCallback
-		{
-		public:
-			Application* pApplication = nullptr;
-
-			void OnDebugLog(
-				VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-				VkDebugUtilsMessageTypeFlagsEXT messageType,
-				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
-			);
-		};
-		DebugCallback callback;
-	#endif // VULKAN_API
-	
-	#pragma endregion Graphics
 
 		void OnSceneObjectAdd(Scene* pScene, Objects::Object* pObject);
 		void OnSceneObjectRemove(Scene* pScene, Objects::Object* pObject);
@@ -223,6 +190,16 @@ namespace LegendEngine
 			bool enabled, Objects::Scripts::Script* pScript
 		);
 	private:
+		bool InitWindow(const std::string& title);
+
+		void UpdateWindow();
+		void Update(float delta, bool updateWindow = true);
+		void Render(float delta);
+
+		void DisposeGraphics();
+
+		void OnDispose();
+
 		// Every application has a default scene. This scene contains objects
 		// that are always rendered, no matter what the current set scene is.
 		Scene defaultScene;
@@ -235,6 +212,35 @@ namespace LegendEngine
 		// This will be changed later since there will be multiple cameras that can
 		// be active at once
 		Objects::Camera* pActiveCamera = nullptr;
+
+		std::string applicationName = "";
+		bool logging = false;
+		bool debug = false;
+
+		Tether::SimpleWindow window;
+
+#pragma region Graphics
+		Ref<IRenderer> pRenderer;
+
+#ifdef VULKAN_API
+		bool vulkanInitialized = false;
+		bool InitVulkan();
+
+		class DebugCallback : public Vulkan::DebugCallback
+		{
+		public:
+			Application* pApplication = nullptr;
+
+			void OnDebugLog(
+				VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+				VkDebugUtilsMessageTypeFlagsEXT messageType,
+				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
+			);
+		};
+		DebugCallback callback;
+#endif // VULKAN_API
+
+#pragma endregion Graphics
 	};
 
 	template<typename T>

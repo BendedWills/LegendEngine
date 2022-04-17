@@ -2,6 +2,7 @@
 #define _LEGENDENGINE_SCRIPT_HPP
 
 #include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Common/IApplicationHolder.hpp>
 
 namespace LegendEngine
 {
@@ -16,7 +17,7 @@ namespace LegendEngine
 namespace LegendEngine::Objects::Scripts
 {
     class ScriptHolder;
-    class Script
+    class Script : public IApplicationHolder
     {
         friend ScriptHolder;
         friend Application;

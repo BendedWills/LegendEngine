@@ -41,7 +41,7 @@ namespace LegendEngine
          */
         void Dispose();
     protected:
-        // This is the fuction that should be overridden for object disposal.
+        // This is the function that should be overridden for object disposal.
         virtual void OnDispose() {}
 
         // This field must be set to true in order for OnDispose to be called.

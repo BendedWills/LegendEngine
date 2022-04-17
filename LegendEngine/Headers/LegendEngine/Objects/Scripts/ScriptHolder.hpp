@@ -82,6 +82,7 @@ namespace LegendEngine::Objects::Scripts
                 Script* script = scripts[id].get();
 
                 script->pObject = pObject;
+                script->pApplication = pObject->GetApplication();
                 script->OnInit();
 
                 return true;

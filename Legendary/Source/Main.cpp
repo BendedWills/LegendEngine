@@ -22,16 +22,16 @@ public:
 			float r = (float)rand() / RAND_MAX;
 			float g = (float)rand() / RAND_MAX;
 			float b = (float)rand() / RAND_MAX;
-
+			
 			VertexTypes::Vertex2 testVertices[] =
 			{
-				{   0.0f,   0.00f, r, g, b, },
-				{   0.0f,   0.05f, r, g, b, },
-				{   0.05f,  0.00f, r, g, b, },
+				{   -0.05f, -0.05f, r, g, b, },
+				{   -0.05f,  0.05f, r, g, b, },
+				{    0.05f, -0.05f, r, g, b, },
 
-				{   0.0f,   0.05f, r, g, b, },
-				{   0.05f,  0.05f, r, g, b, },
-				{   0.05f,  0.00f, r, g, b, }
+				{   -0.05f,  0.05f, r, g, b, },
+				{    0.05f,  0.05f, r, g, b, },
+				{    0.05f, -0.05f, r, g, b, }
 			};
 
 			pObject->AddComponent<Components::MeshComponent>()->Init(
@@ -45,16 +45,15 @@ public:
 		y *= 1.1f;
 
 		pObject->SetPosition(Vector3f(x, y, 0));
-		pObject->SetScale(Vector3f(2));
 	}
 
 	void OnUpdate(float delta)
 	{
-		pObject->AddRotation(Vector3f(0, 0, 0.1f * delta));
+		pObject->AddRotation(Vector3f(0, 0, 100.0f * delta));
 	}
 };
 
-class CameraScript : public Scripts::Script
+class CameraScript : public Scripts::Script, Input::InputListener
 {
 public:
 	CameraScript() {}
@@ -62,6 +61,8 @@ public:
 	void OnInit()
 	{
 		SetRecieveUpdates(true);
+		pApplication->pWindow->AddInputListener(this, Input::InputType::KEY);
+		pApplication->pWindow->AddInputListener(this, Input::InputType::RAW_MOUSE_MOVE);
 	}
 
 	void OnUpdate(float delta)
@@ -70,16 +71,52 @@ public:
 		float y = (float)rand() / RAND_MAX * 2 - 1;
 		float z = (float)rand() / RAND_MAX * 2 - 1;
 
-		float rad = Math::Radians(rot);
-
-		//pObject->AddRotation(Vector3f(0, 0, 0.1f * delta));
-		pObject->SetPosition(Vector3f(cos(rad) * dist, 0, -sin(rad) * dist));
-
-		rot += 0.05f * delta;
+		if (keys.w)
+			pObject->AddPosition(Vector3f(1, 0, 0) * delta);
+		if (keys.a)
+			pObject->AddPosition(Vector3f(0, 0, -1) * delta);
+		if (keys.s)
+			pObject->AddPosition(Vector3f(-1, 0, 0) * delta);
+		if (keys.d)
+			pObject->AddPosition(Vector3f(0, 0, 1) * delta);
+		
+		// Vertical movement
+		if (keys.space)
+			pObject->AddPosition(Vector3f(0, 1, 0) * delta);
+		if (keys.shift)
+			pObject->AddPosition(Vector3f(0, -1, 0) * delta);
 	}
 
-	float rot = 0.0f;
-	const float dist = 1.0f;
+	void OnKey(Input::KeyInfo& info)
+	{
+		bool pressed = info.IsPressed();
+		switch (info.GetKey())
+		{
+			case Utils::Keycodes::KEY_W: keys.w = pressed; break;
+			case Utils::Keycodes::KEY_A: keys.a = pressed; break;
+			case Utils::Keycodes::KEY_S: keys.s = pressed; break;
+			case Utils::Keycodes::KEY_D: keys.d = pressed; break;
+
+			case Utils::Keycodes::KEY_SPACE: keys.space = pressed; break;
+			case Utils::Keycodes::KEY_LEFT_SHIFT: keys.shift = pressed; break;
+		}
+	}
+
+	void OnRawMouseMove(Input::RawMouseMoveInfo& info)
+	{
+
+	}
+
+	struct Keys
+	{
+		bool w = false;
+		bool a = false;
+		bool s = false;
+		bool d = false;
+		bool space = false;
+		bool shift = false;
+	};
+	Keys keys;
 };
 
 class Triangle : public Application
@@ -87,6 +124,9 @@ class Triangle : public Application
 public:
 	bool OnInit()
 	{
+		pWindow->SetCursorMode(Utils::CursorMode::DISABLED);
+		pWindow->SetRawInputEnabled(true);
+
 		InitScene(testScene);
 
 		camera = CreateObject<Camera>();
@@ -120,7 +160,7 @@ public:
 		Log("Total time: " + std::to_string(allTime), LogType::INFO);
 
 		SetActiveScene(testScene);
-
+		
 		return true;
 	}
 
@@ -153,7 +193,7 @@ int main()
 		Stopwatch deltaTimer;
 		while (!triangle.IsCloseRequested())
 		{
-			float delta = deltaTimer.GetElapsedMillis();
+			float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
 			deltaTimer.Set();
 
 			triangle.RenderFrame(delta);

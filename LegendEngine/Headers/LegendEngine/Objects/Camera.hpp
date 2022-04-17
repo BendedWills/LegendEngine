@@ -22,6 +22,8 @@ namespace LegendEngine::Objects
         Matrix4x4f& GetViewMatrix();
 		Matrix4x4f& GetProjectionMatrix();
         CameraUniforms* GetUniforms();
+
+        const Vector3f UP = Vector3f(0, 1, 0);
 	private:
         void CalculateViewMatrix();
         void CalculateProjectionMatrix();
@@ -31,10 +33,6 @@ namespace LegendEngine::Objects
         void OnScaleChange();
 
         CameraUniforms ubo;
-
-		const Vector3f ORIGIN = Vector3f(0, 0, 0);
-		const Vector3f UP = Vector3f(0, 1, 0);
-		const Vector3f VIEW_DIR = Vector3f(0, 0, -1);
     };
 }
 

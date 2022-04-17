@@ -1,5 +1,4 @@
 #include <LegendEngine/Common/IDisposable.hpp>
-#include <iostream>
 
 using namespace LegendEngine;
 

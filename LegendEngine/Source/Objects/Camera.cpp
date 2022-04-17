@@ -32,7 +32,16 @@ Camera::CameraUniforms* Camera::GetUniforms()
 
 void Camera::CalculateViewMatrix()
 {
-	ubo.view = Matrix4x4f::LookAt(position, Vector3f(0, 0, 0), UP);
+	Vector3f rotation = GetRotation();
+	float yaw = rotation.x;
+	float pitch = rotation.y;
+
+	Vector3f forwardVec;
+	forwardVec.x = cos(Math::Radians(yaw)) * cos(Math::Radians(pitch));
+	forwardVec.y = sin(Math::Radians(pitch));
+	forwardVec.z = sin(Math::Radians(yaw)) * cos(Math::Radians(pitch));
+
+	ubo.view = Matrix4x4f::LookAt(position, position + forwardVec, UP);
 }
 
 void Camera::CalculateProjectionMatrix()

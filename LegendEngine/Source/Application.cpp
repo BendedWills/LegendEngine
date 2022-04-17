@@ -75,6 +75,14 @@ bool Application::Init(
 		break;
 	#endif // VULKAN_API
 	}
+	
+	// Okay, yes, this is kind of stupid, but I really didn't want to have to call
+	// GetRenderer all the time when I need the renderer. Even if I were to store the
+	// renderer from GetRenderer, it's still messy and it is much easier to do:
+	// application.renderer->DoAThing
+	*((IRenderer**)&renderer) = pRenderer.get();
+	// AAAAAAAnd same for the window
+	*((Tether::IWindow**)&pWindow) = &window;
 
 	InitScene(defaultScene);
 

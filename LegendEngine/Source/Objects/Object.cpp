@@ -108,11 +108,6 @@ Matrix4x4f& Object::GetTransformationMatrix()
     return transform;
 }
 
-Application* Object::GetApplication()
-{
-    return pApplication;
-}
-
 void Object::CalculateTransformMatrix()
 {
     if (!objCalculateMatrices)

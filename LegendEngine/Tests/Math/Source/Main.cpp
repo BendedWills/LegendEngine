@@ -2,10 +2,6 @@
 #include <chrono>
 #include <thread>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <LegendEngine/LegendEngine.hpp>
 
 using namespace LegendEngine;
@@ -143,39 +139,6 @@ int main()
 		PrintMat4x4(mat2);
 	}
 	std::cout << "\n" << std::endl;
-
-	glm::mat4 transform(1.0f);
-	transform = glm::rotate(transform, 0.0f, glm::vec3(1, 0, 0));
-	transform = glm::rotate(transform, 0.0f, glm::vec3(0, 1, 0));
-	transform = glm::rotate(transform, 0.0f, glm::vec3(0, 0, 1));
-	transform = glm::translate(transform, glm::vec3(0, 0, 0));
-	transform = glm::scale(transform, glm::vec3(1, 1, 1));
-
-	std::cout << "[" << transform[0].x << ", " << transform[1].x << ", " << transform[2].x
-		<< ", " << transform[3].x << "]" << std::endl;
-	std::cout << "[" << transform[0].y << ", " << transform[1].y << ", " << transform[2].y
-		<< ", " << transform[3].y << "]" << std::endl;
-	std::cout << "[" << transform[0].z << ", " << transform[1].z << ", " << transform[2].z
-		<< ", " << transform[3].z << "]" << std::endl;
-	std::cout << "[" << transform[0].w << ", " << transform[1].w << ", " << transform[2].w
-		<< ", " << transform[3].w << "]" << std::endl;
-
-	Matrix4x4f testMat = Matrix4x4f::MakeIdentity();
-	testMat = Matrix4x4f::Rotate(testMat, 0.0f, Vector3f(1, 0, 0));
-	testMat = Matrix4x4f::Rotate(testMat, 0.0f, Vector3f(0, 1, 0));
-	testMat = Matrix4x4f::Rotate(testMat, 0.0f, Vector3f(0, 0, 1));
-	testMat = Matrix4x4f::Translate(testMat, Vector3f(0, 0, 0));
-	testMat = Matrix4x4f::Scale(testMat, Vector3f(1, 1, 1));
-
-	std::cout << "Final:\n";
-	std::cout << "[" << testMat.c[0].x << ", " << testMat.c[1].x << ", " << testMat.c[2].x
-		<< ", " << testMat.c[3].x << "]" << std::endl;
-	std::cout << "[" << testMat.c[0].y << ", " << testMat.c[1].y << ", " << testMat.c[2].y
-		<< ", " << testMat.c[3].y << "]" << std::endl;
-	std::cout << "[" << testMat.c[0].z << ", " << testMat.c[1].z << ", " << testMat.c[2].z
-		<< ", " << testMat.c[3].z << "]" << std::endl;
-	std::cout << "[" << testMat.c[0].w << ", " << testMat.c[1].w << ", " << testMat.c[2].w
-		<< ", " << testMat.c[3].w << "]" << std::endl;
 
 	return EXIT_SUCCESS;
 }
