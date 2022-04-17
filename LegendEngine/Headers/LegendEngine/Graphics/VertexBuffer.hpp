@@ -12,11 +12,11 @@ namespace LegendEngine
 {
     namespace VertexTypes
     {
-        struct Vertex2
+        struct Vertex3c
         {
-            float position[2];
-            float color[3];
-        };
+            float position[3];
+			float color[3];
+		};
     }
 
 	class VertexBuffer;
@@ -30,7 +30,7 @@ namespace LegendEngine
             pVertexBuffer(pVertexBuffer)
 		{}
 
-		virtual bool OnCreate(VertexTypes::Vertex2* pVertices,
+		virtual bool OnCreate(VertexTypes::Vertex3c* pVertices,
 			uint64_t vertexCount) { return false; }
 		virtual void OnDispose() {}
 	private:
@@ -57,7 +57,7 @@ namespace LegendEngine
          * @returns True if the vertex buffer was successfully initialized;
          *  otherwise, false.
          */
-        bool Init(VertexTypes::Vertex2* pVertices, uint64_t vertexCount);
+        bool Init(VertexTypes::Vertex3c* pVertices, uint64_t vertexCount);
     private:
         void OnDispose();
 

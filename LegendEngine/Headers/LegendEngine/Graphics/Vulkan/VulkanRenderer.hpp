@@ -35,10 +35,7 @@ namespace LegendEngine::Vulkan
 		friend ShaderNative;
 		friend ObjectNative;
 	public:
-		VulkanRenderer() 
-			:
-			eventHandler(this)
-		{}
+		VulkanRenderer() {}
 		
 		VulkanRenderer(const VulkanRenderer&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
@@ -46,7 +43,7 @@ namespace LegendEngine::Vulkan
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 		
 		void SetVSyncEnabled(bool vsync);
-		bool CreateShaderNative(Shader* shader);
+		bool CreateShaderNative(Resources::Shader* shader);
 
 		/**
 		 * @brief Reloads the renderer. Required after a settings change.
@@ -93,16 +90,6 @@ namespace LegendEngine::Vulkan
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 		uint64_t currentFrame = 0;
 
-		class EventHandler : public Tether::Events::EventHandler
-		{
-		public:
-			EventHandler(VulkanRenderer* pRenderer);
-			void OnWindowResize(Tether::Events::WindowResizeEvent event);
-		private:
-			VulkanRenderer* pRenderer;
-		};
-		EventHandler eventHandler;
-
 		const std::vector<const char*> deviceExtensions = 
 		{
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -112,7 +99,6 @@ namespace LegendEngine::Vulkan
 		Vulkan::Instance* pInstance;
 
 		Stopwatch timer;
-
 	private:
 		bool CreateObjectNative(Objects::Object* pObject);
 		bool CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer);
@@ -145,6 +131,8 @@ namespace LegendEngine::Vulkan
 			const std::string& typeName,
 			Objects::Components::Component* pComponent
 		);
+
+		void OnWindowResize();
 
 		void OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject);
 		void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject);

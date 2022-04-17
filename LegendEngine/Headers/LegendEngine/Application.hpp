@@ -50,6 +50,8 @@ namespace LegendEngine
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
 
 		Application() 
+			:
+			eventHandler(this)
 		{}
 
 		/**
@@ -167,6 +169,14 @@ namespace LegendEngine
 		 */
 		virtual void OnDisposed() {}
 
+		/**
+		 * @brief Called when the window is resized.
+		 */
+		virtual void OnResize(uint64_t width, uint64_t height)
+		{}
+
+		void RecieveResize(uint64_t width, uint64_t height);
+
 		void OnSceneObjectAdd(Scene* pScene, Objects::Object* pObject);
 		void OnSceneObjectRemove(Scene* pScene, Objects::Object* pObject);
 		void OnSceneObjectComponentAdd(
@@ -199,6 +209,16 @@ namespace LegendEngine
 		void DisposeGraphics();
 
 		void OnDispose();
+
+		class EventHandler : public Utils::Events::EventHandler
+		{
+		public:
+			EventHandler(Application* pApplication);
+			void OnWindowResize(Utils::Events::WindowResizeEvent event);
+		private:
+			Application* pApplication;
+		};
+		EventHandler eventHandler;
 
 		// Every application has a default scene. This scene contains objects
 		// that are always rendered, no matter what the current set scene is.

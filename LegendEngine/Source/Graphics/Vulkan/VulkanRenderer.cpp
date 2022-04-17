@@ -20,18 +20,6 @@
 
 using namespace LegendEngine::Vulkan;
 
-VulkanRenderer::EventHandler::EventHandler(VulkanRenderer* pRenderer)
-{
-	this->pRenderer = pRenderer;
-}
-
-void VulkanRenderer::EventHandler::OnWindowResize(
-	Tether::Events::WindowResizeEvent event
-)
-{
-	this->pRenderer->shouldRecreateSwapchain = true;
-}
-
 void VulkanRenderer::SetVSyncEnabled(bool vsync)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED();
@@ -41,7 +29,7 @@ void VulkanRenderer::SetVSyncEnabled(bool vsync)
 	Reload();
 }
 
-bool VulkanRenderer::CreateShaderNative(Shader* shader)
+bool VulkanRenderer::CreateShaderNative(Resources::Shader* shader)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
@@ -78,10 +66,7 @@ bool VulkanRenderer::OnRendererInit()
 		return false;
 	}
 
-	pApplication->GetWindow()->AddEventHandler(&eventHandler, 
-		Tether::Events::EventType::WINDOW_RESIZE);
-
-	if (!surface.Init(pInstance, GetApplication()->GetWindow()))
+	if (!surface.Init(pInstance, pApplication->pWindow))
 		return false;
 	
 	if (!PickDevice(&physicalDevice, &surface))
@@ -102,8 +87,8 @@ bool VulkanRenderer::OnRendererInit()
 	}
 
 	if (!InitSwapchain(
-		pApplication->GetWindow()->GetWidth(), 
-		pApplication->GetWindow()->GetHeight()
+		pApplication->pWindow->GetWidth(), 
+		pApplication->pWindow->GetHeight()
 	))
 	{
 		pApplication->Log("Failed to initialize swapchain!", LogType::ERROR);
@@ -236,10 +221,10 @@ void VulkanRenderer::OnRendererDispose()
 
 	// Shaders are removed as they are disposed, so an original copy is
 	// required.
-	std::vector<LegendEngine::Shader*> shadersOriginal(shaders);
+	std::vector<Resources::Shader*> shadersOriginal(shaders);
 	for (uint64_t i2 = 0; i2 < shadersOriginal.size(); i2++)
 	{
-		LegendEngine::Shader* shader = shadersOriginal[i2];
+		Resources::Shader* shader = shadersOriginal[i2];
 		shader->Dispose();
 	}
 	
@@ -276,8 +261,11 @@ void VulkanRenderer::OnRendererDispose()
 
 	device.Dispose();
 	surface.Dispose();
+}
 
-	pApplication->GetWindow()->RemoveEventHandler(&eventHandler);
+void VulkanRenderer::OnWindowResize()
+{
+	shouldRecreateSwapchain = true;
 }
 
 bool VulkanRenderer::PickDevice(VkPhysicalDevice* pDevice,

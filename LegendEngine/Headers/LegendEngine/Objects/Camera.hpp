@@ -19,12 +19,23 @@ namespace LegendEngine::Objects
         
         Camera();
 
+		// This function is automatically called on window resize
+		void SetAspectRatio(float aspect);
+
+        void SetFov(float fov);
+        void SetNearZ(float nearZ);
+        void SetFarZ(float farZ);
+
+        Vector3f GetForwardVector();
+        Vector3f GetForwardVectorPitch();
+        Vector3f GetRightVector();
+
         Matrix4x4f& GetViewMatrix();
 		Matrix4x4f& GetProjectionMatrix();
         CameraUniforms* GetUniforms();
 
         const Vector3f UP = Vector3f(0, 1, 0);
-	private:
+    private:
         void CalculateViewMatrix();
         void CalculateProjectionMatrix();
 
@@ -32,7 +43,15 @@ namespace LegendEngine::Objects
 		void OnRotationChange();
         void OnScaleChange();
 
+        float fov = 90.0f;
+        float aspect = 1920.0f / 1080.0f;
+        float nearZ = 0.1f;
+        float farZ = 1000.0f;
+
         CameraUniforms ubo;
+        Vector3f forwardVector;
+        Vector3f forwardVectorPitch;
+        Vector3f rightVector;
     };
 }
 

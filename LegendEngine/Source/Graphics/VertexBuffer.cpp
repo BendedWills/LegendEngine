@@ -6,7 +6,7 @@
 
 using namespace LegendEngine;
 
-bool VertexBuffer::Init(VertexTypes::Vertex2* pVertices, 
+bool VertexBuffer::Init(VertexTypes::Vertex3c* pVertices,
     uint64_t vertexCount)
 {
     if (initialized)

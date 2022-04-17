@@ -186,6 +186,9 @@ namespace LegendEngine
 		// Normalizing a vector is simply dividing it by its length so that
 		// its length is one.
 		float length = Length(v);
+		if (length == 0)
+			return v;
+
 		return Vector2<T>(
 			v.x / length,
 			v.y / length

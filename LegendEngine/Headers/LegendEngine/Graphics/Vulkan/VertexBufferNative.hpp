@@ -33,7 +33,7 @@ namespace LegendEngine::Vulkan
         
         VulkanRenderer* pVulkanRenderer = nullptr;
     private:
-		bool OnCreate(VertexTypes::Vertex2* pVertices,
+		bool OnCreate(VertexTypes::Vertex3c* pVertices,
 			uint64_t vertexCount);
 		void OnDispose();
 

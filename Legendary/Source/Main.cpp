@@ -15,41 +15,61 @@ public:
 
 	void OnInit()
 	{
-		SetRecieveUpdates(true);
-
 		// Add the mesh component
 		{
 			float r = (float)rand() / RAND_MAX;
 			float g = (float)rand() / RAND_MAX;
 			float b = (float)rand() / RAND_MAX;
 			
-			VertexTypes::Vertex2 testVertices[] =
+			VertexTypes::Vertex3c testVertices[] =
 			{
-				{   -0.05f, -0.05f, r, g, b, },
-				{   -0.05f,  0.05f, r, g, b, },
-				{    0.05f, -0.05f, r, g, b, },
+				{ -0.5f, -0.5f, -0.5f, r, g, b },
+				{  0.5f, -0.5f, -0.5f, r, g, b },
+				{  0.5f,  0.5f, -0.5f, r, g, b },
+				{  0.5f,  0.5f, -0.5f, r, g, b },
+				{ -0.5f,  0.5f, -0.5f, r, g, b },
+				{ -0.5f, -0.5f, -0.5f, r, g, b },
 
-				{   -0.05f,  0.05f, r, g, b, },
-				{    0.05f,  0.05f, r, g, b, },
-				{    0.05f, -0.05f, r, g, b, }
+				{ -0.5f, -0.5f,  0.5f, r, g, b },
+				{  0.5f, -0.5f,  0.5f, r, g, b },
+				{  0.5f,  0.5f,  0.5f, r, g, b },
+				{  0.5f,  0.5f,  0.5f, r, g, b },
+				{ -0.5f,  0.5f,  0.5f, r, g, b },
+				{ -0.5f, -0.5f,  0.5f, r, g, b },
+
+				{ -0.5f,  0.5f,  0.5f, r, g, b },
+				{ -0.5f,  0.5f, -0.5f, r, g, b },
+				{ -0.5f, -0.5f, -0.5f, r, g, b },
+				{ -0.5f, -0.5f, -0.5f, r, g, b },
+				{ -0.5f, -0.5f,  0.5f, r, g, b },
+				{ -0.5f,  0.5f,  0.5f, r, g, b },
+
+				{  0.5f,  0.5f,  0.5f, r, g, b },
+				{  0.5f,  0.5f, -0.5f, r, g, b },
+				{  0.5f, -0.5f, -0.5f, r, g, b },
+				{  0.5f, -0.5f, -0.5f, r, g, b },
+				{  0.5f, -0.5f,  0.5f, r, g, b },
+				{  0.5f,  0.5f,  0.5f, r, g, b },
+
+				{ -0.5f, -0.5f, -0.5f, r, g, b },
+				{  0.5f, -0.5f, -0.5f, r, g, b },
+				{  0.5f, -0.5f,  0.5f, r, g, b },
+				{  0.5f, -0.5f,  0.5f, r, g, b },
+				{ -0.5f, -0.5f,  0.5f, r, g, b },
+				{ -0.5f, -0.5f, -0.5f, r, g, b },
+
+				{ -0.5f,  0.5f, -0.5f, r, g, b },
+				{  0.5f,  0.5f, -0.5f, r, g, b },
+				{  0.5f,  0.5f,  0.5f, r, g, b },
+				{  0.5f,  0.5f,  0.5f, r, g, b },
+				{ -0.5f,  0.5f,  0.5f, r, g, b },
+				{ -0.5f,  0.5f, -0.5f, r, g, b }
 			};
 
 			pObject->AddComponent<Components::MeshComponent>()->Init(
-				testVertices, 6
+				testVertices, 36
 			);
 		}
-
-		float x = (float)rand() / RAND_MAX * 2 - 1;
-		float y = (float)rand() / RAND_MAX * 2 - 1;
-		x *= 1.1f;
-		y *= 1.1f;
-
-		pObject->SetPosition(Vector3f(x, y, 0));
-	}
-
-	void OnUpdate(float delta)
-	{
-		pObject->AddRotation(Vector3f(0, 0, 100.0f * delta));
 	}
 };
 
@@ -71,15 +91,23 @@ public:
 		float y = (float)rand() / RAND_MAX * 2 - 1;
 		float z = (float)rand() / RAND_MAX * 2 - 1;
 
+		Vector2f moveDir;
 		if (keys.w)
-			pObject->AddPosition(Vector3f(1, 0, 0) * delta);
+			moveDir += Vector2f(1, 0);
 		if (keys.a)
-			pObject->AddPosition(Vector3f(0, 0, -1) * delta);
+			moveDir += Vector2f(0, -1);
 		if (keys.s)
-			pObject->AddPosition(Vector3f(-1, 0, 0) * delta);
+			moveDir += Vector2f(-1, 0);
 		if (keys.d)
-			pObject->AddPosition(Vector3f(0, 0, 1) * delta);
-		
+			moveDir += Vector2f(0, 1);
+
+		Vector2f normMoveDir = Vector2f::Normalize(moveDir);
+		if (keys.ctrl)
+			normMoveDir *= 3.0f;
+
+		pObject->AddPosition(pCamera->GetForwardVector() * normMoveDir.x * delta);
+		pObject->AddPosition(pCamera->GetRightVector() * normMoveDir.y * delta);
+
 		// Vertical movement
 		if (keys.space)
 			pObject->AddPosition(Vector3f(0, 1, 0) * delta);
@@ -99,12 +127,27 @@ public:
 
 			case Utils::Keycodes::KEY_SPACE: keys.space = pressed; break;
 			case Utils::Keycodes::KEY_LEFT_SHIFT: keys.shift = pressed; break;
+			case Utils::Keycodes::KEY_LEFT_CONTROL: keys.ctrl = pressed; break;
 		}
 	}
 
+	const float sense = 0.06f;
 	void OnRawMouseMove(Input::RawMouseMoveInfo& info)
 	{
+		Vector3f rotation = pObject->GetRotation();
 
+		rotation += Vector3f(
+			 info.GetRawX() * sense,
+			-info.GetRawY() * sense,
+			0
+		);
+
+		if (rotation.y > 89.9f)
+			rotation.y = 89.9f;
+		if (rotation.y < -89.9f)
+			rotation.y = -89.9f;
+
+		pObject->SetRotation(rotation);
 	}
 
 	struct Keys
@@ -115,8 +158,11 @@ public:
 		bool d = false;
 		bool space = false;
 		bool shift = false;
+		bool ctrl = false;
 	};
 	Keys keys;
+
+	Camera* pCamera;
 };
 
 class Triangle : public Application
@@ -130,34 +176,21 @@ public:
 		InitScene(testScene);
 
 		camera = CreateObject<Camera>();
-		camera->AddScript<CameraScript>();
+
+		CameraScript* script = camera->AddScript<CameraScript>();
+		script->pCamera = camera.get();
 
 		SetActiveCamera(camera.get());
 
-		float allTime = 0.0f;
-		float time = 1.6f;
-		Stopwatch timer;
-		for (uint64_t i = 0; i < 100; i++)
-		{
-			Ref<Object> object = CreateObject<Object>();
+		cube1 = CreateObject<Object>();
+		cube1->AddScript<TestScript>();
 
-			object->AddScript<TestScript>();
+		cube2 = CreateObject<Object>();
+		cube2->AddScript<TestScript>();
+		cube2->SetPosition(Vector3f(3, 0, 0));
 
-			objects.push_back(object);
-			testScene.AddObject(object.get());
-
-			float elapsed = timer.GetElapsedMillis();
-
-			allTime += elapsed;
-			time += elapsed;
-			time /= 2;
-
-			timer.Set();
-		}
-
-		Log("Average time: " + std::to_string(time), LogType::INFO);
-		Log("Average time 2: " + std::to_string(allTime / 100.0f), LogType::INFO);
-		Log("Total time: " + std::to_string(allTime), LogType::INFO);
+		testScene.AddObject(cube1.get());
+		testScene.AddObject(cube2.get());
 
 		SetActiveScene(testScene);
 		
@@ -167,13 +200,13 @@ public:
 	void OnStop()
 	{
 		testScene.ClearObjects();
-		objects.clear();
 	}
 private:
 	Scene testScene;
 
 	Ref<Camera> camera;
-	std::vector<Ref<Object>> objects;
+	Ref<Object> cube1;
+	Ref<Object> cube2;
 };
 
 #if defined(_WIN32) && !defined(_DEBUG)
@@ -187,8 +220,13 @@ int main()
 	Context::InitAPI(RenderingAPI::VULKAN, true);
 	{
 		Triangle triangle;
+#if defined(_DEBUG)
 		if (!triangle.Init("Legendary", true, true))
 			return EXIT_FAILURE;
+#else
+		if (!triangle.Init("Legendary", false, false))
+			return EXIT_FAILURE;
+#endif
 
 		Stopwatch deltaTimer;
 		while (!triangle.IsCloseRequested())

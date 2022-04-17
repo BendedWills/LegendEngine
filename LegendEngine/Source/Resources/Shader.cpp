@@ -1,10 +1,11 @@
-#include <LegendEngine/Graphics/Shader.hpp>
+#include <LegendEngine/Resources/Shader.hpp>
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Common/Defs.hpp>
 
 #include <Tether/Common/VectorUtils.hpp>
 
 using namespace LegendEngine;
+using namespace LegendEngine::Resources;
 
 bool Shader::Init(ShaderStage* pStages, uint64_t stageCount)
 {
@@ -25,7 +26,7 @@ RenderingAPI Shader::GetType()
     return type;
 }
 
-void Shader::OnDispose()
+void Shader::OnResourceDispose()
 {
     if (nativeSet)
         native->OnDispose();

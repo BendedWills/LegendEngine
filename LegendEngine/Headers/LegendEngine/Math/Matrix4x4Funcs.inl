@@ -102,7 +102,7 @@ namespace LegendEngine
 
 		const T tanHalfFov = tan(fov / static_cast<T>(2));
 
-		Matrix4x4<T> product = Matrix4x4<T>::MakeIdentity();
+		Matrix4x4<T> product;
 		product[0][0] = T(1) / (aspect * tanHalfFov);
 		product[1][1] = T(1) / (tanHalfFov);
 		product[2][2] = farZ / (nearZ - farZ);
@@ -120,7 +120,7 @@ namespace LegendEngine
 
 		const T tanHalfFov = tan(fov / static_cast<T>(2));
 
-		Matrix4x4<T> product = Matrix4x4<T>::MakeIdentity();
+		Matrix4x4<T> product;
 		product[0][0] = T(1) / (aspect * tanHalfFov);
 		product[1][1] = T(1) / (tanHalfFov);
 		product[2][2] = -(farZ + nearZ) / (farZ - nearZ);

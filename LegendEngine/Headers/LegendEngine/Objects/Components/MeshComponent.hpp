@@ -16,7 +16,7 @@ namespace LegendEngine::Objects::Components
 
         MeshComponent() {}
 
-        bool Init(VertexTypes::Vertex2* pVertices, uint32_t vertexCount);
+        bool Init(VertexTypes::Vertex3c* pVertices, uint32_t vertexCount);
 
         VertexBuffer* GetVertexBuffer();
         uint32_t GetVertexCount();

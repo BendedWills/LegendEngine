@@ -13,7 +13,7 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool ShaderNative::OnCreate(ShaderStage* pStages, uint64_t stageCount)
+bool ShaderNative::OnCreate(Resources::ShaderStage* pStages, uint64_t stageCount)
 {
     // TODO
     LEGENDENGINE_OBJECT_LOG(

@@ -5,10 +5,12 @@
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/NativeHolder.hpp>
+#include <LegendEngine/Resources/IResource.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
+
 #include <stdint.h>
 
-namespace LegendEngine
+namespace LegendEngine::Resources
 {
     struct ShaderStage
     {
@@ -37,7 +39,9 @@ namespace LegendEngine
 		Shader* pShader = nullptr;
 	};
 
-    class Shader : public IDisposable, public NativeHolder<IShaderNative>
+    class Shader : 
+        public NativeHolder<IShaderNative>,
+        public IResource
     {
         friend IShaderNative;
     public:
@@ -67,7 +71,7 @@ namespace LegendEngine
         IRenderer* pRenderer = nullptr;
         RenderingAPI type;
     private:
-        void OnDispose();
+        void OnResourceDispose();
     };
 }
 

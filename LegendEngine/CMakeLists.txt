@@ -176,11 +176,13 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Collect all sources
 file(GLOB_RECURSE SOURCES 
+    "Vendor/stb_image/*.cpp" 
     "Source/*.cpp" 
     "Source/*.c" 
     "Headers/*.hpp" 
     "Headers/*.h" 
     "Assets/Compiled/*.h" 
+    "Vendor/stb_image/*.h" 
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
@@ -202,9 +204,11 @@ PUBLIC
     "${ASSETS_BIN_DIR}"
     "Vendor/Tether/Headers"
     "Vendor/VMA/include"
+    "Vendor/stb_image/include"
 PRIVATE
     ${VK_INCLUDES}
 )
+
 target_link_libraries(${PROJECT_NAME} 
     tether
     ${VK_LIBS}

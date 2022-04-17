@@ -15,6 +15,45 @@ Camera::Camera()
 	CalculateProjectionMatrix();
 }
 
+void Camera::SetAspectRatio(float aspect)
+{
+	this->aspect = aspect;
+	CalculateProjectionMatrix();
+}
+
+void Camera::SetFov(float fov)
+{
+	this->fov = fov;
+	CalculateProjectionMatrix();
+}
+
+void Camera::SetNearZ(float nearZ)
+{
+	this->nearZ = nearZ;
+	CalculateProjectionMatrix();
+}
+
+void Camera::SetFarZ(float farZ)
+{
+	this->farZ = farZ;
+	CalculateProjectionMatrix();
+}
+
+Vector3f Camera::GetForwardVector()
+{
+	return forwardVector;
+}
+
+Vector3f Camera::GetForwardVectorPitch()
+{
+	return forwardVectorPitch;
+}
+
+Vector3f Camera::GetRightVector()
+{
+	return rightVector;
+}
+
 Matrix4x4f& Camera::GetViewMatrix()
 {
 	return ubo.view;
@@ -35,19 +74,25 @@ void Camera::CalculateViewMatrix()
 	Vector3f rotation = GetRotation();
 	float yaw = rotation.x;
 	float pitch = rotation.y;
+	
+	forwardVector.x = cos(Math::Radians(yaw));
+	forwardVector.z = sin(Math::Radians(yaw));
 
-	Vector3f forwardVec;
-	forwardVec.x = cos(Math::Radians(yaw)) * cos(Math::Radians(pitch));
-	forwardVec.y = sin(Math::Radians(pitch));
-	forwardVec.z = sin(Math::Radians(yaw)) * cos(Math::Radians(pitch));
+	forwardVectorPitch.x = cos(Math::Radians(yaw)) * cos(Math::Radians(pitch));
+	forwardVectorPitch.y = sin(Math::Radians(pitch));
+	forwardVectorPitch.z = sin(Math::Radians(yaw)) * cos(Math::Radians(pitch));
+	
+	rightVector.x = cos(Math::Radians(yaw + 90.0f));
+	rightVector.z = sin(Math::Radians(yaw + 90.0f));
 
-	ubo.view = Matrix4x4f::LookAt(position, position + forwardVec, UP);
+	ubo.view = Matrix4x4f::LookAt(position, position + forwardVectorPitch, UP);
 }
 
 void Camera::CalculateProjectionMatrix()
 {
-	ubo.projection = Matrix4x4f::PerspectiveRH_ZO(Math::Radians(90.0f),
-		1280.0f / 720.0f, 0.01f, 1000.0f);
+	ubo.projection = Matrix4x4f::PerspectiveRH_NO(Math::Radians(fov),
+		aspect, nearZ, farZ);
+	ubo.projection[1][1] *= -1;
 }
 
 void Camera::OnPositionChange()

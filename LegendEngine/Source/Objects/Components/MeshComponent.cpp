@@ -7,7 +7,7 @@
 
 using namespace LegendEngine::Objects::Components;
 
-bool MeshComponent::Init(VertexTypes::Vertex2* pVertices, uint32_t vertexCount)
+bool MeshComponent::Init(VertexTypes::Vertex3c* pVertices, uint32_t vertexCount)
 {
     if (initialized)
         return false;

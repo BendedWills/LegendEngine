@@ -12,7 +12,7 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool VertexBufferNative::OnCreate(VertexTypes::Vertex2* pVertices,
+bool VertexBufferNative::OnCreate(VertexTypes::Vertex3c* pVertices,
     uint64_t vertexCount)
 {
     if (!pVertices || vertexCount == 0)

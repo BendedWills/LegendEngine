@@ -6,8 +6,9 @@
 #include <LegendEngine/Context.hpp>
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
-#include <LegendEngine/Graphics/Shader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
+
+#include <LegendEngine/Resources/Shader.hpp>
 
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Objects/Camera.hpp>

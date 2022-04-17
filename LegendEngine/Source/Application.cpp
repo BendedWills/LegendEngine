@@ -16,6 +16,18 @@ using namespace LegendEngine;
 	if (!pRenderer) \
 		return;
 
+Application::EventHandler::EventHandler(Application* pApplication)
+{
+	this->pApplication = pApplication;
+}
+
+void Application::EventHandler::OnWindowResize(
+	Tether::Events::WindowResizeEvent event
+)
+{
+	this->pApplication->RecieveResize(event.GetNewWidth(), event.GetNewHeight());
+}
+
 void Application::DebugCallback::OnDebugLog(
 	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -61,6 +73,8 @@ bool Application::Init(
 
 	initialized = true;
 
+	*((Tether::IWindow**)(&pWindow)) = &window;
+
 	if (!Context::InitAPI(api, debug))
 		return false;
 
@@ -75,14 +89,12 @@ bool Application::Init(
 		break;
 	#endif // VULKAN_API
 	}
-	
+
 	// Okay, yes, this is kind of stupid, but I really didn't want to have to call
 	// GetRenderer all the time when I need the renderer. Even if I were to store the
 	// renderer from GetRenderer, it's still messy and it is much easier to do:
 	// application.renderer->DoAThing
 	*((IRenderer**)&renderer) = pRenderer.get();
-	// AAAAAAAnd same for the window
-	*((Tether::IWindow**)&pWindow) = &window;
 
 	InitScene(defaultScene);
 
@@ -90,6 +102,8 @@ bool Application::Init(
 		return false;
 	
 	Log("Initialized application", LogType::INFO);
+
+	window.AddEventHandler(&eventHandler, Utils::Events::EventType::WINDOW_RESIZE);
 
 	// Show the window AFTER initialization
 	window.SetVisible(true);
@@ -293,6 +307,12 @@ void Application::RenderFrame(float delta)
 
 void Application::SetActiveCamera(Objects::Camera* pCamera)
 {
+	if (pCamera)
+	{
+		float aspect = (float)window.GetWidth() / (float)window.GetHeight();
+		pCamera->SetAspectRatio(aspect);
+	}
+
 	pActiveCamera = pCamera;
 }
 
@@ -407,7 +427,20 @@ void Application::OnDispose()
 	updateScripts.clear();
 	renderUpdateScripts.clear();
 
+	window.RemoveEventHandler(eventHandler);
+
 	OnDisposed();
+}
+
+void Application::RecieveResize(uint64_t width, uint64_t height)
+{
+	pRenderer->OnWindowResize();
+
+	float aspect = (float)width / (float)height;
+	if (pActiveCamera)
+		pActiveCamera->SetAspectRatio(aspect);
+
+	OnResize(width, height);
 }
 
 void Application::OnSceneObjectAdd(Scene* pScene,

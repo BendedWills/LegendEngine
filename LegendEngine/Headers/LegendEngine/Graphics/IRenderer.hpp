@@ -20,16 +20,20 @@ namespace LegendEngine
 		}
 	}
 
+    namespace Resources
+    {
+        class Shader;
+    }
+
     class VertexBuffer;
-    class Shader;
     class Application;
     class Scene;
 
     class IRenderer : public IDisposable
     {
         friend Application;
-        friend LegendEngine::VertexBuffer;
-        friend LegendEngine::Shader;
+		friend VertexBuffer;
+		friend Resources::Shader;
         friend Objects::IObjectNative;
     public:
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(IRenderer);
@@ -51,7 +55,7 @@ namespace LegendEngine
         bool Init(Application* pApplication);
 
         virtual void SetVSyncEnabled(bool vsync) {}
-        virtual bool CreateShader(Ref<Shader>* shader)
+        virtual bool CreateShader(Ref<Resources::Shader>* shader)
         { return false; }
 
         /**
@@ -147,20 +151,23 @@ namespace LegendEngine
         virtual void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
         {}
 
+		virtual void OnWindowResize()
+		{}
+
         /**
          * @brief Called when the renderer is disposed.
          */
         virtual void OnRendererDispose() {}
 
         /**
-         * @brief CAn object's native is a class that has
+         * @brief An object's native is a class that has
          *  specific utilities native to the Application's graphics API.
          *  It's called a native because I have literally no clue what else to call it.
          */
         virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
 
         std::vector<VertexBuffer*> vertexBuffers;
-        std::vector<Shader*> shaders;
+        std::vector<Resources::Shader*> shaders;
     private:
         void OnDispose();
 
