@@ -9,6 +9,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 
 #include <LegendEngine/Resources/Shader.hpp>
+#include <LegendEngine/Resources/Texture2D.hpp>
 
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Objects/Camera.hpp>

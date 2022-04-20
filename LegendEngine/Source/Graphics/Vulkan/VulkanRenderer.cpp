@@ -46,10 +46,198 @@ bool VulkanRenderer::CreateShaderNative(Resources::Shader* shader)
 	return true;
 }
 
+bool VulkanRenderer::CreateTexture2DNative(Resources::Texture2D* texture)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!texture)
+	{
+		pApplication->Log(
+			"Creating texture native: Texture is nullptr. Returning.",
+			LogType::WARN);
+		return false;
+	}
+
+	texture->SetNative(RefTools::Create<Texture2DNative>(this, texture));
+
+	return true;
+}
+
 bool VulkanRenderer::Reload()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 	return RecreateSwapchain();
+}
+
+bool VulkanRenderer::CreateImageView(VkImageView* pImageView, VkImage image,
+	VkFormat format, VkImageViewType viewType)
+{
+	VkImageViewCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	createInfo.image = image;
+	createInfo.format = format;
+	createInfo.viewType = viewType;
+	createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	createInfo.subresourceRange.baseMipLevel = 0;
+	createInfo.subresourceRange.levelCount = 1;
+	createInfo.subresourceRange.baseArrayLayer = 0;
+	createInfo.subresourceRange.layerCount = 1;
+
+	return vkCreateImageView(device.Get(), &createInfo, nullptr, pImageView) 
+		== VK_SUCCESS;
+}
+
+bool VulkanRenderer::BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer)
+{
+	VkCommandBufferAllocateInfo cmdAllocInfo{};
+	cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cmdAllocInfo.commandPool = commandPool;
+	cmdAllocInfo.commandBufferCount = 1;
+
+	if (vkAllocateCommandBuffers(device.Get(), &cmdAllocInfo,
+		pCommandBuffer) != VK_SUCCESS)
+		return false;
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	// +1 good practice points
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(*pCommandBuffer, &beginInfo);
+	
+	return true;
+}
+
+bool VulkanRenderer::EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer)
+{
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo,
+		VK_NULL_HANDLE) != VK_SUCCESS)
+	{
+		vkFreeCommandBuffers(device.Get(), commandPool, 1, &commandBuffer);
+		return false;
+	}
+
+	// Wait for the data to finish uploading
+	vkQueueWaitIdle(graphicsQueue);
+
+	// Free the command buffer
+	vkFreeCommandBuffers(device.Get(), commandPool, 1, &commandBuffer);
+
+	return true;
+}
+
+bool VulkanRenderer::CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
+	VmaAllocationInfo* pAllocInfo, uint64_t size)
+{
+	VkBufferCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	createInfo.size = size;
+	createInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+	VmaAllocationCreateInfo allocInfo{};
+	allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+	allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	// Create the staging buffer
+	return vmaCreateBuffer(allocator, &createInfo,
+		&allocInfo, pBuffer, pAllocation, pAllocInfo) == VK_SUCCESS;
+}
+
+bool VulkanRenderer::ChangeImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+	VkCommandBuffer commandBuffer;
+	if (!BeginSingleUseCommandBuffer(&commandBuffer))
+		return false;
+	
+	VkImageMemoryBarrier memoryBarrier{};
+	memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	memoryBarrier.oldLayout = oldLayout;
+	memoryBarrier.newLayout = newLayout;
+	memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	memoryBarrier.image = image;
+	memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	memoryBarrier.subresourceRange.baseMipLevel = 0;
+	memoryBarrier.subresourceRange.levelCount = 1;
+	memoryBarrier.subresourceRange.baseArrayLayer = 0;
+	memoryBarrier.subresourceRange.layerCount = 1;
+	memoryBarrier.srcAccessMask = 0;
+	memoryBarrier.dstAccessMask = 0;
+
+	VkPipelineStageFlags sourceStage;
+	VkPipelineStageFlags destinationStage;
+
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED 
+		&& newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) 
+	{
+		memoryBarrier.srcAccessMask = 0;
+		memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL 
+		&& newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
+	{
+		memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else
+		return false;
+
+	vkCmdPipelineBarrier(
+		commandBuffer,
+		sourceStage, destinationStage,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &memoryBarrier
+	);
+
+	return EndSingleUseCommandBuffer(commandBuffer);
+}
+
+bool VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
+	uint64_t height)
+{
+	VkCommandBuffer commandBuffer;
+	if (!BeginSingleUseCommandBuffer(&commandBuffer))
+		return false;
+
+	VkBufferImageCopy imageCopy{};
+	imageCopy.bufferOffset = 0;
+	imageCopy.bufferRowLength = 0;
+	imageCopy.bufferImageHeight = 0;
+	imageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	imageCopy.imageSubresource.mipLevel = 0;
+	imageCopy.imageSubresource.baseArrayLayer = 0;
+	imageCopy.imageSubresource.layerCount = 1;
+	imageCopy.imageOffset = { 0, 0, 0 };
+	imageCopy.imageExtent.width = static_cast<uint32_t>(width);
+	imageCopy.imageExtent.height = static_cast<uint32_t>(height);
+	imageCopy.imageExtent.depth = 1;
+
+	vkCmdCopyBufferToImage(
+		commandBuffer,
+		buffer,
+		image,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1,
+		&imageCopy
+	);
+
+	return EndSingleUseCommandBuffer(commandBuffer);
 }
 
 bool VulkanRenderer::OnRendererInit()
@@ -218,15 +406,6 @@ bool VulkanRenderer::OnRenderFrame()
 void VulkanRenderer::OnRendererDispose()
 {
 	device.WaitIdle();
-
-	// Shaders are removed as they are disposed, so an original copy is
-	// required.
-	std::vector<Resources::Shader*> shadersOriginal(shaders);
-	for (uint64_t i2 = 0; i2 < shadersOriginal.size(); i2++)
-	{
-		Resources::Shader* shader = shadersOriginal[i2];
-		shader->Dispose();
-	}
 	
 	DisposeSwapchain();
 
@@ -234,6 +413,7 @@ void VulkanRenderer::OnRendererDispose()
 
 	vkDestroyDescriptorSetLayout(device.Get(), objectLayout, nullptr);
 	vkDestroyDescriptorSetLayout(device.Get(), cameraLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device.Get(), materialLayout, nullptr);
 	cameraUniform.Dispose();
 	cameraManager.Dispose();
 
@@ -247,15 +427,6 @@ void VulkanRenderer::OnRendererDispose()
 	}
 
 	vkDestroyCommandPool(device.Get(), commandPool, nullptr);
-
-	// Vertex Buffers are removed as they are disposed, so an original copy is
-	// required.
-	std::vector<LegendEngine::VertexBuffer*> vertexBuffersOriginal(vertexBuffers);
-	for (uint64_t i2 = 0; i2 < vertexBuffersOriginal.size(); i2++)
-	{
-		LegendEngine::VertexBuffer* buffer = vertexBuffersOriginal[i2];
-		buffer->Dispose();
-	}
 
 	vmaDestroyAllocator(allocator);
 
@@ -527,35 +698,59 @@ bool VulkanRenderer::InitUniforms()
 {
 	uint32_t swapchainImages = swapchain.GetImageCount();
 
-	VkDescriptorSetLayoutBinding objectSetBinding{};
-	objectSetBinding.binding = 0;
-	objectSetBinding.descriptorCount = 1;
-	objectSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	objectSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	// Object set
+	{
+		VkDescriptorSetLayoutBinding binding{};
+		binding.binding = 0;
+		binding.descriptorCount = 1;
+		binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-	VkDescriptorSetLayoutCreateInfo objectSetInfo{};
-	objectSetInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	objectSetInfo.bindingCount = 1;
-	objectSetInfo.pBindings = &objectSetBinding;
+		VkDescriptorSetLayoutCreateInfo setInfo{};
+		setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		setInfo.bindingCount = 1;
+		setInfo.pBindings = &binding;
 
-	if (vkCreateDescriptorSetLayout(device.Get(),
-		&objectSetInfo, nullptr, &objectLayout) != VK_SUCCESS)
-		return false;
+		if (vkCreateDescriptorSetLayout(device.Get(),
+			&setInfo, nullptr, &objectLayout) != VK_SUCCESS)
+			return false;
+	}
 
-	VkDescriptorSetLayoutBinding cameraSetBinding{};
-	cameraSetBinding.binding = 0;
-	cameraSetBinding.descriptorCount = 1;
-	cameraSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	cameraSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	// Camera set
+	{
+		VkDescriptorSetLayoutBinding cameraSetBinding{};
+		cameraSetBinding.binding = 0;
+		cameraSetBinding.descriptorCount = 1;
+		cameraSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		cameraSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-	VkDescriptorSetLayoutCreateInfo cameraSetInfo{};
-	cameraSetInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	cameraSetInfo.bindingCount = 1;
-	cameraSetInfo.pBindings = &cameraSetBinding;
+		VkDescriptorSetLayoutCreateInfo setInfo{};
+		setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		setInfo.bindingCount = 1;
+		setInfo.pBindings = &cameraSetBinding;
 
-	if (vkCreateDescriptorSetLayout(device.Get(),
-		&cameraSetInfo, nullptr, &cameraLayout) != VK_SUCCESS)
-		return false;
+		if (vkCreateDescriptorSetLayout(device.Get(),
+			&setInfo, nullptr, &cameraLayout) != VK_SUCCESS)
+			return false;
+	}
+
+	// Material set
+	{
+		VkDescriptorSetLayoutBinding samplerBinding{};
+		samplerBinding.binding = 1;
+		samplerBinding.descriptorCount = 1;
+		samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		VkDescriptorSetLayoutCreateInfo setInfo{};
+		setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		setInfo.bindingCount = 1;
+		setInfo.pBindings = &samplerBinding;
+
+		if (vkCreateDescriptorSetLayout(device.Get(),
+			&setInfo, nullptr, &materialLayout) != VK_SUCCESS)
+			return false;
+	}
 
 	if (!cameraManager.Init(&device, 1, swapchainImages))
 		return false;
@@ -597,7 +792,8 @@ bool VulkanRenderer::InitPipeline()
 	VkDescriptorSetLayout sets[] =
 	{
 		objectLayout,
-		cameraLayout
+		cameraLayout,
+		materialLayout
 	};
 
 	PipelineInfo pipelineInfo{};

@@ -5,5 +5,9 @@ layout(location = 0) out vec4 fragColor;
 
 void main() 
 {
-    fragColor = vec4(inColor.xyz, 1.0);
+    vec3 finalColor = inColor.xyz;
+    if (!gl_FrontFacing)
+        finalColor /= 2;
+
+    fragColor = vec4(finalColor.xyz, 1.0);
 }

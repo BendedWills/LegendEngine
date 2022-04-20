@@ -12,7 +12,7 @@ bool VertexBuffer::Init(VertexTypes::Vertex3c* pVertices,
     if (initialized)
         return false;
     
-    pRenderer->vertexBuffers.push_back(this);
+    pApplication->vertexBuffers.push_back(this);
     if (nativeSet)
         if (!native->OnCreate(pVertices, vertexCount))
             return false;
@@ -26,10 +26,10 @@ void VertexBuffer::OnDispose()
     if (nativeSet)
         native->OnDispose();
 
-    Tether::VectorUtils::EraseAll(pRenderer->vertexBuffers, this);
+    Tether::VectorUtils::EraseAll(pApplication->vertexBuffers, this);
 
     LEGENDENGINE_OBJECT_LOG(
-        pRenderer->GetApplication(), "VertexBuffer", 
+        pApplication, "VertexBuffer", 
         "Disposed vertex buffer", 
         LogType::DEBUG
     );

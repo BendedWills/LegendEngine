@@ -22,6 +22,7 @@
 #include <LegendEngine/Graphics/Vulkan/VertexBufferNative.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderNative.hpp>
 #include <LegendEngine/Graphics/Vulkan/ObjectNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/Texture2DNative.hpp>
 
 #include <Tether/Tether.hpp>
 
@@ -31,9 +32,18 @@ namespace LegendEngine::Vulkan
 {
 	class VulkanRenderer : public IRenderer
 	{
+		// Why
 		friend VertexBufferNative;
+		// Are
 		friend ShaderNative;
+		// There
 		friend ObjectNative;
+		// So
+		friend Texture2DNative;
+		// Many
+		friend Pipeline;
+		// Friend classes
+		friend UniformBuffer;
 	public:
 		VulkanRenderer() {}
 		
@@ -44,6 +54,7 @@ namespace LegendEngine::Vulkan
 		
 		void SetVSyncEnabled(bool vsync);
 		bool CreateShaderNative(Resources::Shader* shader);
+		bool CreateTexture2DNative(Resources::Texture2D* texture);
 
 		/**
 		 * @brief Reloads the renderer. Required after a settings change.
@@ -51,16 +62,31 @@ namespace LegendEngine::Vulkan
 		 * @returns True if the reload was successful; otherwise, false.
 		 */
 		bool Reload();
-		
+	protected:
+		bool BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer);
+		bool EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer);
+
+		bool CreateImageView(VkImageView* pImageView, VkImage image, 
+			VkFormat format, VkImageViewType viewType);
+
+		bool CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
+			VmaAllocationInfo* pAllocInfo, uint64_t size);
+
+		bool ChangeImageLayout(VkImage image, VkFormat format, 
+			VkImageLayout oldLayout, VkImageLayout newLayout);
+		bool CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
+			uint64_t height);
+
 		Vulkan::Surface surface;
 		Vulkan::Device device;
 		Vulkan::Swapchain swapchain;
 
 		VkDescriptorSetLayout objectLayout;
 		VkDescriptorSetLayout cameraLayout;
+		VkDescriptorSetLayout materialLayout;
 		Vulkan::UniformManager cameraManager;
 		Vulkan::UniformBuffer cameraUniform;
-		
+
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 
@@ -90,11 +116,11 @@ namespace LegendEngine::Vulkan
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 		uint64_t currentFrame = 0;
 
-		const std::vector<const char*> deviceExtensions = 
+		const std::vector<const char*> deviceExtensions =
 		{
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
-		
+
 		Application* pApplication = nullptr;
 		Vulkan::Instance* pInstance;
 
@@ -162,6 +188,8 @@ namespace LegendEngine::Vulkan
 		bool DrawFrame();
 
 		void DisposeSwapchain();
+
+
 
 		bool shouldRecreateSwapchain = false;
 		bool shouldRecreateCommandBuffers = false;

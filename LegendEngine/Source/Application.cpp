@@ -257,6 +257,22 @@ void Application::Log(const std::string& message, LogType type)
 	<< std::endl;
 }
 
+Ref<VertexBuffer> Application::CreateVertexBuffer()
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
+
+	Ref<VertexBuffer> vbuffer = RefTools::Create<VertexBuffer>();
+	vbuffer->pApplication = this;
+
+	if (!pRenderer->CreateVertexBufferNative(vbuffer.get()))
+	{
+		Log("Failed to create vertex buffer!", LogType::ERROR);
+		return false;
+	}
+
+	return vbuffer;
+}
+
 bool Application::InitScene(Scene& scene)
 {
 	return InitScene(&scene);
@@ -413,16 +429,32 @@ void Application::OnDispose()
 
 	window.Dispose();
 
-	std::vector<Objects::Object*> oldObjects(objects);
-	for (uint64_t i = 0; i < oldObjects.size(); i++)
+	// Dispose everything
 	{
-		oldObjects[i]->Dispose();
+		// Objects are removed as they are disposed, so an original copy is required.
+		std::vector<Objects::Object*> oldObjects(objects);
+		for (uint64_t i = 0; i < oldObjects.size(); i++)
+			oldObjects[i]->Dispose();
+
+		// Same for shaders
+		std::vector<Resources::Shader*> oldShaders(shaders);
+		for (uint64_t i = 0; i < oldShaders.size(); i++)
+			oldShaders[i]->Dispose();
+
+		// And same for textures
+		std::vector<Resources::Texture2D*> oldTexture2Ds(texture2Ds);
+		for (uint64_t i = 0; i < oldTexture2Ds.size(); i++)
+			oldTexture2Ds[i]->Dispose();
+
+		// You get the idea
+		std::vector<VertexBuffer*> oldVertexBuffers(vertexBuffers);
+		for (uint64_t i = 0; i < oldVertexBuffers.size(); i++)
+			oldVertexBuffers[i]->Dispose();
 	}
 	
 	DisposeGraphics();
 
 	defaultScene.ClearObjects();
-
 	objects.clear();
 	updateScripts.clear();
 	renderUpdateScripts.clear();

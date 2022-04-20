@@ -53,8 +53,6 @@ namespace LegendEngine::Vulkan
 		
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
-		
-		bool dynamicStates = false;
 	};
 }
 

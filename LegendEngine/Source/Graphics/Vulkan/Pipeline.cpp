@@ -17,8 +17,7 @@ bool Pipeline::Init(
 		return false;
 
 	this->pRenderer = pRenderer;
-	this->dynamicStates = dynamicStates;
-
+	
 	if (!InitPipeline(pPipelineInfo))
 		return false;
 
@@ -183,8 +182,6 @@ void Pipeline::OnDispose()
 {
 	vkDestroyPipeline(pRenderer->device.Get(), pipeline, nullptr);
 	vkDestroyPipelineLayout(pRenderer->device.Get(), pipelineLayout, nullptr);
-
-	dynamicStates = false;
 }
 
 #endif // VULKAN_API

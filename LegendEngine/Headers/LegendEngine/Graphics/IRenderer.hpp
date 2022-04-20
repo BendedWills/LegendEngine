@@ -23,6 +23,7 @@ namespace LegendEngine
     namespace Resources
     {
         class Shader;
+        class Texture2D;
     }
 
     class VertexBuffer;
@@ -32,8 +33,6 @@ namespace LegendEngine
     class IRenderer : public IDisposable
     {
         friend Application;
-		friend VertexBuffer;
-		friend Resources::Shader;
         friend Objects::IObjectNative;
     public:
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(IRenderer);
@@ -55,8 +54,10 @@ namespace LegendEngine
         bool Init(Application* pApplication);
 
         virtual void SetVSyncEnabled(bool vsync) {}
-        virtual bool CreateShader(Ref<Resources::Shader>* shader)
-        { return false; }
+        virtual bool CreateShaderNative(Resources::Shader* shader) 
+        { return false;  }
+		virtual bool CreateTexture2DNative(Resources::Texture2D* texture)
+		{ return false; }
 
         /**
          * @brief An VertexBuffer's native is a class that has
@@ -165,9 +166,6 @@ namespace LegendEngine
          *  It's called a native because I have literally no clue what else to call it.
          */
         virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
-
-        std::vector<VertexBuffer*> vertexBuffers;
-        std::vector<Resources::Shader*> shaders;
     private:
         void OnDispose();
 

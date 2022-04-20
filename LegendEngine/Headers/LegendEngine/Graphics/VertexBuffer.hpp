@@ -5,6 +5,7 @@
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/NativeHolder.hpp>
+#include <LegendEngine/Common/IApplicationHolder.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <stdint.h>
 
@@ -37,16 +38,16 @@ namespace LegendEngine
         VertexBuffer* pVertexBuffer = nullptr;
 	};
 
-    class VertexBuffer : public IDisposable, public NativeHolder<IVertexBufferNative>
+    class VertexBuffer : 
+        public IDisposable, 
+        public NativeHolder<IVertexBufferNative>,
+        public IApplicationHolder
     {
     public:
         LEGENDENGINE_NO_COPY(VertexBuffer);
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(VertexBuffer);
 
-        VertexBuffer(IRenderer* pRenderer)
-            :
-			pRenderer(pRenderer)
-		{}
+        VertexBuffer() = default;
         
         /**
          * @brief Initializes the vertex buffer.
@@ -60,8 +61,6 @@ namespace LegendEngine
         bool Init(VertexTypes::Vertex3c* pVertices, uint64_t vertexCount);
     private:
         void OnDispose();
-
-        IRenderer* pRenderer = nullptr;
     };
 }
 

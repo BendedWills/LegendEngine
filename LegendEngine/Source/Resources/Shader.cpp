@@ -12,7 +12,7 @@ bool Shader::Init(ShaderStage* pStages, uint64_t stageCount)
     if (initialized || !pStages || stageCount == 0)
         return false;
     
-    pRenderer->shaders.push_back(this);
+    pApplication->shaders.push_back(this);
     if (nativeSet)
         if (!native->OnCreate(pStages, stageCount))
             return false;
@@ -31,7 +31,7 @@ void Shader::OnResourceDispose()
     if (nativeSet)
         native->OnDispose();
 
-    Tether::VectorUtils::EraseAll(pRenderer->shaders, this);
+    Tether::VectorUtils::EraseAll(pApplication->shaders, this);
 
     LEGENDENGINE_OBJECT_LOG(
         pRenderer->GetApplication(), "Shader", 

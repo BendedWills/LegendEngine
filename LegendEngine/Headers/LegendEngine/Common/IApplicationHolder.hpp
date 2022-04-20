@@ -13,6 +13,7 @@ namespace LegendEngine
     class Application;
     class IApplicationHolder
     {
+        friend Application;
     public:
         Application* GetApplication();
     protected:

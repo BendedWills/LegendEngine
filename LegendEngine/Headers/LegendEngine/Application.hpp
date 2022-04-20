@@ -13,6 +13,7 @@
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Stopwatch.hpp>
+#include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 #include <LegendEngine/Scene.hpp>
 
@@ -45,6 +46,9 @@ namespace LegendEngine
 		friend Scene;
 		friend Objects::Object;
 		friend Objects::Scripts::Script;
+		friend VertexBuffer;
+		friend Resources::Shader;
+		friend Resources::Texture2D;
 	public:
 		LEGENDENGINE_NO_COPY(Application);
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
@@ -85,6 +89,15 @@ namespace LegendEngine
 		 */
 		template<typename T>
 		Ref<T> CreateObject();
+
+		/**
+		 * @brief Same as CreateObject but creates a resource instead.
+		 */
+		template<typename T, typename... Args>
+		Ref<T> CreateResource(Args... args);
+
+		Ref<VertexBuffer> CreateVertexBuffer();
+
 		/**
 		 * @brief Initializes a scene to this application.
 		 *
@@ -199,6 +212,10 @@ namespace LegendEngine
 		void SetScriptRecieveRenderUpdates(
 			bool enabled, Objects::Scripts::Script* pScript
 		);
+
+		std::vector<VertexBuffer*> vertexBuffers;
+		std::vector<Resources::Shader*> shaders;
+		std::vector<Resources::Texture2D*> texture2Ds;
 	private:
 		bool InitWindow(const std::string& title);
 
@@ -289,6 +306,35 @@ namespace LegendEngine
 		Log(str.str(), LogType::DEBUG);
 
 		return object;
+	}
+
+	template<typename T, typename... Args>
+	Ref<T> Application::CreateResource(Args... args)
+	{
+		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
+
+		if (!std::is_base_of<Resources::IResource, T>())
+		{
+			Log("In Application::CreateResource: T is not of base class IResource!",
+				LogType::ERROR);
+			return nullptr;
+		}
+
+		Ref<T> resource = RefTools::Create<T>(args...);
+		resource->pApplication = this;
+
+		if (std::is_same<Resources::Shader, T>())
+			pRenderer->CreateShaderNative((Resources::Shader*)resource.get());
+		else if (std::is_same<Resources::Texture2D, T>())
+			pRenderer->CreateTexture2DNative((Resources::Texture2D*)resource.get());
+
+		std::stringstream str;
+		str << "Created Resource (" << (uint64_t)resource.get() << ")";
+		str << " (" << (uint64_t)this << ")";
+
+		Log(str.str(), LogType::DEBUG);
+
+		return resource;
 	}
 }
 

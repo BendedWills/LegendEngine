@@ -1,5 +1,5 @@
-#ifndef _LEGENDENGINE_SHADER_HPP
-#define _LEGENDENGINE_SHADER_HPP
+#ifndef _LEGENDENGINE_RESOURCES_SHADER_HPP
+#define _LEGENDENGINE_RESOURCES_SHADER_HPP
 
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/Defs.hpp>
@@ -75,4 +75,4 @@ namespace LegendEngine::Resources
     };
 }
 
-#endif //_LEGENDENGINE_SHADER_HPP
+#endif //_LEGENDENGINE_RESOURCES_SHADER_HPP

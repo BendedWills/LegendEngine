@@ -6,6 +6,8 @@
 
 using namespace LegendEngine;
 using namespace LegendEngine::Objects;
+using namespace LegendEngine::Resources;
+
 using namespace std::literals::chrono_literals;
 
 class TestScript : public Scripts::Script
@@ -15,6 +17,8 @@ public:
 
 	void OnInit()
 	{
+		SetRecieveUpdates(true);
+
 		// Add the mesh component
 		{
 			float r = (float)rand() / RAND_MAX;
@@ -70,6 +74,11 @@ public:
 				testVertices, 36
 			);
 		}
+	}
+
+	void OnUpdate(float delta)
+	{
+		//pObject->AddRotation(Vector3f(100 * delta));
 	}
 };
 
@@ -182,6 +191,9 @@ public:
 
 		SetActiveCamera(camera.get());
 
+		texture = CreateResource<Texture2D>();
+		texture->Init("Assets/l.png");
+
 		cube1 = CreateObject<Object>();
 		cube1->AddScript<TestScript>();
 
@@ -197,16 +209,29 @@ public:
 		return true;
 	}
 
+	void OnUpdate(float delta)
+	{
+		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
+		{
+			Log("FPS: " + std::to_string(1.0f / delta), LogType::INFO);
+			fpsTimer.Set();
+		}
+	}
+
 	void OnStop()
 	{
 		testScene.ClearObjects();
 	}
 private:
+	Stopwatch fpsTimer;
+
 	Scene testScene;
 
 	Ref<Camera> camera;
 	Ref<Object> cube1;
 	Ref<Object> cube2;
+
+	Ref<Texture2D> texture;
 };
 
 #if defined(_WIN32) && !defined(_DEBUG)

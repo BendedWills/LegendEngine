@@ -1,6 +1,10 @@
 #include <LegendEngine/Graphics/IRenderer.hpp>
+#include <LegendEngine/Graphics/VertexBuffer.hpp>
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Objects/Object.hpp>
+
+#include <LegendEngine/Resources/Shader.hpp>
+#include <LegendEngine/Resources/Texture2D.hpp>
 
 using namespace LegendEngine;
 

@@ -33,7 +33,7 @@ bool ShaderNative::OnCreate(Resources::ShaderStage* pStages, uint64_t stageCount
 
 void ShaderNative::OnDispose()
 {
-    
+    pVulkanRenderer->device.WaitIdle();
 }
 
 #endif // VULKAN_API
