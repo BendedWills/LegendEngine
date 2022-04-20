@@ -23,6 +23,7 @@
 #include <LegendEngine/Graphics/Vulkan/ShaderNative.hpp>
 #include <LegendEngine/Graphics/Vulkan/ObjectNative.hpp>
 #include <LegendEngine/Graphics/Vulkan/Texture2DNative.hpp>
+#include <LegendEngine/Graphics/Vulkan/MaterialNative.hpp>
 
 #include <Tether/Tether.hpp>
 
@@ -41,8 +42,10 @@ namespace LegendEngine::Vulkan
 		// So
 		friend Texture2DNative;
 		// Many
+		friend MaterialNative;
+		// Friend
 		friend Pipeline;
-		// Friend classes
+		// Classes
 		friend UniformBuffer;
 	public:
 		VulkanRenderer() {}
@@ -53,8 +56,9 @@ namespace LegendEngine::Vulkan
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 		
 		void SetVSyncEnabled(bool vsync);
-		bool CreateShaderNative(Resources::Shader* shader);
-		bool CreateTexture2DNative(Resources::Texture2D* texture);
+		bool CreateShaderNative(Resources::Shader* pShader);
+		bool CreateTexture2DNative(Resources::Texture2D* pTexture);
+		bool CreateMaterialNative(Resources::Material* pMaterial);
 
 		/**
 		 * @brief Reloads the renderer. Required after a settings change.

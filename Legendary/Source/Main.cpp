@@ -13,7 +13,10 @@ using namespace std::literals::chrono_literals;
 class TestScript : public Scripts::Script
 {
 public:
-	TestScript() {}
+	TestScript(Material* pMaterial) 
+		:
+		pMaterial(pMaterial)
+	{}
 
 	void OnInit()
 	{
@@ -80,12 +83,17 @@ public:
 	{
 		//pObject->AddRotation(Vector3f(100 * delta));
 	}
+private:
+	Material* pMaterial = nullptr;
 };
 
 class CameraScript : public Scripts::Script, Input::InputListener
 {
 public:
-	CameraScript() {}
+	CameraScript(Camera* pCamera) 
+		:
+		pCamera(pCamera)
+	{}
 
 	void OnInit()
 	{
@@ -170,40 +178,53 @@ public:
 		bool ctrl = false;
 	};
 	Keys keys;
-
+private:
 	Camera* pCamera;
 };
 
 class Triangle : public Application
 {
 public:
-	bool OnInit()
+	bool OnPreInit()
 	{
 		pWindow->SetCursorMode(Utils::CursorMode::DISABLED);
 		pWindow->SetRawInputEnabled(true);
 
 		InitScene(testScene);
 
+		// Create the camera
 		camera = CreateObject<Camera>();
-
-		CameraScript* script = camera->AddScript<CameraScript>();
-		script->pCamera = camera.get();
-
+		camera->AddScript<CameraScript>(camera.get());
 		SetActiveCamera(camera.get());
 
-		texture = CreateResource<Texture2D>();
-		texture->Init("Assets/l.png");
+		// Create the material
+		material = CreateResource<Material>();
+		material->Init();
+		{
+			texture = CreateResource<Texture2D>();
+			texture->Init("Assets/l.png");
 
-		cube1 = CreateObject<Object>();
-		cube1->AddScript<TestScript>();
+			material->SetTexture(texture.get());
+		}
 
-		cube2 = CreateObject<Object>();
-		cube2->AddScript<TestScript>();
-		cube2->SetPosition(Vector3f(3, 0, 0));
+		// Create the objects
+		{
+			cube1 = CreateObject<Object>();
+			cube1->AddScript<TestScript>(material.get());
 
-		testScene.AddObject(cube1.get());
-		testScene.AddObject(cube2.get());
+			cube2 = CreateObject<Object>();
+			cube2->AddScript<TestScript>(material.get());
+			cube2->SetPosition(Vector3f(3, 0, 0));
 
+			// Add the objects to the scene
+			testScene.AddObject(cube1.get());
+			testScene.AddObject(cube2.get());
+		}
+
+		// Lastly, set the active scene.
+		// Setting the active scene once everything is initialized gains some
+		// performance since objects notify the scene when they are added for misc
+		// init tasks.
 		SetActiveScene(testScene);
 		
 		return true;
@@ -221,6 +242,13 @@ public:
 	void OnStop()
 	{
 		testScene.ClearObjects();
+
+		camera->Dispose();
+		cube1->Dispose();
+		cube2->Dispose();
+
+		material->Dispose();
+		texture->Dispose();
 	}
 private:
 	Stopwatch fpsTimer;
@@ -231,6 +259,7 @@ private:
 	Ref<Object> cube1;
 	Ref<Object> cube2;
 
+	Ref<Material> material;
 	Ref<Texture2D> texture;
 };
 
@@ -253,14 +282,8 @@ int main()
 			return EXIT_FAILURE;
 #endif
 
-		Stopwatch deltaTimer;
-		while (!triangle.IsCloseRequested())
-		{
-			float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
-			deltaTimer.Set();
-
-			triangle.RenderFrame(delta);
-		}
+		if (!triangle.Run())
+			return EXIT_FAILURE;
 
 		triangle.Dispose();
 	}

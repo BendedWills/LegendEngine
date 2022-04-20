@@ -17,6 +17,7 @@ bool Texture2D::Init(const std::string& path)
 {
 	if (initialized)
 		return false;
+	OnInit();
 
 	int width, height, channels;
 	uint8_t* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
@@ -48,7 +49,6 @@ bool Texture2D::Init(uint64_t width, uint64_t height, uint32_t channels,
 	this->height = height;
 	this->channels = channels;
 
-	pApplication->texture2Ds.push_back(this);
 	if (nativeSet)
 		if (!native->OnCreate(width, height, channels, data))
 		{
@@ -77,7 +77,5 @@ uint32_t Texture2D::GetChannels()
 
 void Texture2D::OnResourceDispose()
 {
-	Utils::VectorUtils::EraseAll(pApplication->texture2Ds, this);
-
 	native->OnDispose();
 }

@@ -6,7 +6,6 @@
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Resources/IResource.hpp>
-#include <LegendEngine/Graphics/IRenderer.hpp>
 
 #include <stdint.h>
 
@@ -48,11 +47,7 @@ namespace LegendEngine::Resources
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(Shader);
         LEGENDENGINE_NO_COPY(Shader);
 
-        Shader(IRenderer* pRenderer, RenderingAPI type)
-            :
-            pRenderer(pRenderer),
-            type(type)
-        {}
+        Shader() = default;
         
         /**
          * @brief Initializes the shader.
@@ -65,11 +60,6 @@ namespace LegendEngine::Resources
          *  otherwise, false.
          */
         bool Init(ShaderStage* pStages, uint64_t stageCount);
-
-        RenderingAPI GetType();
-    protected:
-        IRenderer* pRenderer = nullptr;
-        RenderingAPI type;
     private:
         void OnResourceDispose();
     };

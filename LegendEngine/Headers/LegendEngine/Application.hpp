@@ -47,8 +47,7 @@ namespace LegendEngine
 		friend Objects::Object;
 		friend Objects::Scripts::Script;
 		friend VertexBuffer;
-		friend Resources::Shader;
-		friend Resources::Texture2D;
+		friend Resources::IResource;
 	public:
 		LEGENDENGINE_NO_COPY(Application);
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
@@ -75,6 +74,14 @@ namespace LegendEngine
 			bool debug = false,
 			RenderingAPI api = RenderingAPI::VULKAN
 		);
+
+		/**
+		 * @brief Runs the application with a non-blocking render loop.
+		 *	The delta time in this loop is in seconds.
+		 *
+		 * @returns True if the application finished successfully; otherwise, false.
+		 */
+		bool Run();
 		
 		/**
 		 * @param message The message to log
@@ -152,16 +159,16 @@ namespace LegendEngine
 		Tether::IWindow *const pWindow = nullptr;
 	protected:
 		/**
-		 * @brief Called before the Init function is executed.
+		 * @brief Called before the window is shown, before OnInit.
 		 * 
-		 * @return Should return true if starting was successful;
+		 * @return Should return true if pre-init was successful;
 		 *  otherwise, false.
 		 */
 		virtual bool OnPreInit() { return true; }
 		/**
 		 * @brief Called after the Init function is called.
 		 * 
-		 * @return Should return true if starting was successful;
+		 * @return Should return true if initialization was successful;
 		 *  otherwise, false.
 		 */
 		virtual bool OnInit() { return true; }
@@ -214,8 +221,7 @@ namespace LegendEngine
 		);
 
 		std::vector<VertexBuffer*> vertexBuffers;
-		std::vector<Resources::Shader*> shaders;
-		std::vector<Resources::Texture2D*> texture2Ds;
+		std::vector<Resources::IResource*> resources;
 	private:
 		bool InitWindow(const std::string& title);
 
@@ -327,6 +333,8 @@ namespace LegendEngine
 			pRenderer->CreateShaderNative((Resources::Shader*)resource.get());
 		else if (std::is_same<Resources::Texture2D, T>())
 			pRenderer->CreateTexture2DNative((Resources::Texture2D*)resource.get());
+		else if (std::is_same<Resources::Material, T>())
+			pRenderer->CreateMaterialNative((Resources::Material*)resource.get());
 
 		std::stringstream str;
 		str << "Created Resource (" << (uint64_t)resource.get() << ")";

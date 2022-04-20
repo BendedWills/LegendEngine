@@ -63,6 +63,23 @@ bool VulkanRenderer::CreateTexture2DNative(Resources::Texture2D* texture)
 	return true;
 }
 
+bool VulkanRenderer::CreateMaterialNative(Resources::Material* pMaterial)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!pMaterial)
+	{
+		pApplication->Log(
+			"Creating material native: Material is nullptr. Returning.",
+			LogType::WARN);
+		return false;
+	}
+
+	pMaterial->SetNative(RefTools::Create<MaterialNative>(this, pMaterial));
+
+	return true;
+}
+
 bool VulkanRenderer::Reload()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
@@ -487,6 +504,7 @@ bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device,
 	return 
 		deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
 		&& deviceFeatures.geometryShader
+		&& deviceFeatures.samplerAnisotropy
 		&& families.hasGraphicsFamily
 		&& families.hasPresentFamily
 		&& swapChainGood

@@ -12,10 +12,12 @@ namespace LegendEngine::Resources
 		public IApplicationHolder
 	{
 	public:
-		IResource() = default;
+		IResource();
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(IResource);
 		LEGENDENGINE_NO_COPY(IResource);
 	protected:
+		void OnInit();
+
 		void OnDispose();
 
 		// Called when the resource's Dispose function is called.

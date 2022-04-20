@@ -14,10 +14,11 @@ bool IDisposable::IsInitialized() const
 
 void IDisposable::Dispose()
 {
-    if (!initialized)
+    if (!initialized || (singleDispose && disposed))
         return;
 
     OnDispose();
 
     initialized = false;
+    disposed = false;
 }

@@ -10,6 +10,7 @@
 
 #include <LegendEngine/Resources/Shader.hpp>
 #include <LegendEngine/Resources/Texture2D.hpp>
+#include <LegendEngine/Resources/Material.hpp>
 
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Objects/Camera.hpp>

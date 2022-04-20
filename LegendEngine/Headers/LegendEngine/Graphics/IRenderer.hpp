@@ -4,6 +4,10 @@
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Ref.hpp>
 
+#include <LegendEngine/Resources/Shader.hpp>
+#include <LegendEngine/Resources/Texture2D.hpp>
+#include <LegendEngine/Resources/Material.hpp>
+
 #include <vector>
 #include <string>
 
@@ -19,12 +23,6 @@ namespace LegendEngine
 			class Component;
 		}
 	}
-
-    namespace Resources
-    {
-        class Shader;
-        class Texture2D;
-    }
 
     class VertexBuffer;
     class Application;
@@ -54,9 +52,11 @@ namespace LegendEngine
         bool Init(Application* pApplication);
 
         virtual void SetVSyncEnabled(bool vsync) {}
-        virtual bool CreateShaderNative(Resources::Shader* shader) 
+        virtual bool CreateShaderNative(Resources::Shader* pShader) 
         { return false;  }
-		virtual bool CreateTexture2DNative(Resources::Texture2D* texture)
+		virtual bool CreateTexture2DNative(Resources::Texture2D* pTexture)
+		{ return false; }
+		virtual bool CreateMaterialNative(Resources::Material* pMaterial)
 		{ return false; }
 
         /**

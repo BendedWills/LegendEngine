@@ -47,6 +47,12 @@ namespace LegendEngine
         // This field must be set to true in order for OnDispose to be called.
         // After dispose is called, this field will automatically be set to false.
         bool initialized = false;
+
+        // This variable is set by the derived class if the class should only be
+        // disposed once.
+        bool singleDispose = false;
+    private:
+        bool disposed = false;
     };
 }
 

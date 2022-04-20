@@ -60,9 +60,6 @@ bool Application::Init(
 	this->applicationName = applicationName;
 	this->logging = logging;
 	this->debug = debug;
-
-	if (!OnPreInit())
-		return false;
 	
 	Log("Initializing window", LogType::DEBUG);
 	if (!InitWindow(applicationName))
@@ -98,15 +95,31 @@ bool Application::Init(
 
 	InitScene(defaultScene);
 
-	if (!OnInit())
+	if (!OnPreInit())
 		return false;
-	
-	Log("Initialized application", LogType::INFO);
 
+	// Show the window AFTER pre-initialization
+	window.SetVisible(true);
 	window.AddEventHandler(&eventHandler, Utils::Events::EventType::WINDOW_RESIZE);
 
-	// Show the window AFTER initialization
-	window.SetVisible(true);
+	if (!OnInit())
+		return false;
+
+	Log("Initialized application", LogType::INFO);
+
+	return true;
+}
+
+bool Application::Run()
+{
+	Stopwatch deltaTimer;
+	while (!IsCloseRequested())
+	{
+		float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
+		deltaTimer.Set();
+
+		RenderFrame(delta);
+	}
 
 	return true;
 }
@@ -436,15 +449,10 @@ void Application::OnDispose()
 		for (uint64_t i = 0; i < oldObjects.size(); i++)
 			oldObjects[i]->Dispose();
 
-		// Same for shaders
-		std::vector<Resources::Shader*> oldShaders(shaders);
-		for (uint64_t i = 0; i < oldShaders.size(); i++)
-			oldShaders[i]->Dispose();
-
-		// And same for textures
-		std::vector<Resources::Texture2D*> oldTexture2Ds(texture2Ds);
-		for (uint64_t i = 0; i < oldTexture2Ds.size(); i++)
-			oldTexture2Ds[i]->Dispose();
+		// And same for resources
+		std::vector<Resources::IResource*> oldResources(resources);
+		for (uint64_t i = 0; i < oldResources.size(); i++)
+			oldResources[i]->Dispose();
 
 		// You get the idea
 		std::vector<VertexBuffer*> oldVertexBuffers(vertexBuffers);
