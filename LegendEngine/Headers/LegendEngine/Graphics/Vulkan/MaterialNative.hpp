@@ -4,6 +4,7 @@
 #include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
+#include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Resources/Material.hpp>
 
@@ -25,13 +26,19 @@ namespace LegendEngine::Vulkan
             Resources::IMaterialNative(pMaterial)
         {}
     protected:
-        VkSampler sampler;
+        Vulkan::UniformBuffer uniform;
+        VkDescriptorPool pool;
 
+        uint32_t images = 0;
+        
         VulkanRenderer* pVulkanRenderer = nullptr;
     private:
 		bool OnCreate();
 		void OnUpdate();
+		void OnUpdateUniforms();
 		void OnDispose();
+
+        void UpdateDescriptorSets();
     };
 }
 

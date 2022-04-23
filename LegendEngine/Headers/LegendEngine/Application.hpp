@@ -124,6 +124,7 @@ namespace LegendEngine
 		 */
 		bool InitScene(Scene* pScene);
 
+		// Must be called on the main thread
 		void RenderFrame(float delta = 1.0f);
 
 		void SetActiveCamera(Objects::Camera* pCamera);
@@ -196,23 +197,9 @@ namespace LegendEngine
 		{}
 
 		void RecieveResize(uint64_t width, uint64_t height);
-
-		void OnSceneObjectAdd(Scene* pScene, Objects::Object* pObject);
-		void OnSceneObjectRemove(Scene* pScene, Objects::Object* pObject);
-		void OnSceneObjectComponentAdd(
-			Scene* pScene, Objects::Object* pObject,
-			const std::string& typeName,
-			Objects::Components::Component* pComponent
-		);
-		void OnSceneObjectComponentRemove(
-			Scene* pScene, Objects::Object* pObject,
-			const std::string& typeName, 
-			Objects::Components::Component* pComponent
-		);
-
-		void OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject);
-		void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject);
-
+		
+		// Receiver functions (later will be used for synchronization)
+		void _OnObjectDispose(Objects::Object* pObject);
 		void SetScriptRecieveUpdates(
 			bool enabled, Objects::Scripts::Script* pScript
 		);

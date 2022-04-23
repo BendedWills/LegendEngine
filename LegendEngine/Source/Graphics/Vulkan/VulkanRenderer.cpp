@@ -29,6 +29,39 @@ void VulkanRenderer::SetVSyncEnabled(bool vsync)
 	Reload();
 }
 
+bool VulkanRenderer::CreateObjectNative(Objects::Object* pObject)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!pObject)
+	{
+		pApplication->Log(
+			"Creating object native: Object is nullptr. Returning.",
+			LogType::WARN);
+		return false;
+	}
+
+	pObject->SetNative(RefTools::Create<ObjectNative>(this, pObject));
+	return true;
+}
+
+bool VulkanRenderer::CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
+
+	if (!buffer)
+	{
+		pApplication->Log(
+			"Creating vertex buffer native: Buffer is nullptr. Returning.",
+			LogType::WARN);
+		return false;
+	}
+
+	buffer->SetNative(RefTools::Create<VertexBufferNative>(this, buffer));
+
+	return true;
+}
+
 bool VulkanRenderer::CreateShaderNative(Resources::Shader* shader)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
@@ -86,24 +119,6 @@ bool VulkanRenderer::Reload()
 	return RecreateSwapchain();
 }
 
-bool VulkanRenderer::CreateImageView(VkImageView* pImageView, VkImage image,
-	VkFormat format, VkImageViewType viewType)
-{
-	VkImageViewCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	createInfo.image = image;
-	createInfo.format = format;
-	createInfo.viewType = viewType;
-	createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	createInfo.subresourceRange.baseMipLevel = 0;
-	createInfo.subresourceRange.levelCount = 1;
-	createInfo.subresourceRange.baseArrayLayer = 0;
-	createInfo.subresourceRange.layerCount = 1;
-
-	return vkCreateImageView(device.Get(), &createInfo, nullptr, pImageView) 
-		== VK_SUCCESS;
-}
-
 bool VulkanRenderer::BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer)
 {
 	VkCommandBufferAllocateInfo cmdAllocInfo{};
@@ -122,7 +137,7 @@ bool VulkanRenderer::BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
 	vkBeginCommandBuffer(*pCommandBuffer, &beginInfo);
-	
+
 	return true;
 }
 
@@ -149,6 +164,24 @@ bool VulkanRenderer::EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer)
 	vkFreeCommandBuffers(device.Get(), commandPool, 1, &commandBuffer);
 
 	return true;
+}
+
+bool VulkanRenderer::CreateImageView(VkImageView* pImageView, VkImage image,
+	VkFormat format, VkImageViewType viewType)
+{
+	VkImageViewCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	createInfo.image = image;
+	createInfo.format = format;
+	createInfo.viewType = viewType;
+	createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	createInfo.subresourceRange.baseMipLevel = 0;
+	createInfo.subresourceRange.levelCount = 1;
+	createInfo.subresourceRange.baseArrayLayer = 0;
+	createInfo.subresourceRange.layerCount = 1;
+
+	return vkCreateImageView(device.Get(), &createInfo, nullptr, pImageView) 
+		== VK_SUCCESS;
 }
 
 bool VulkanRenderer::CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
@@ -257,6 +290,193 @@ bool VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t 
 	return EndSingleUseCommandBuffer(commandBuffer);
 }
 
+bool VulkanRenderer::RecreateSwapchain()
+{
+	LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer",
+		"Recreating swapchain (Window resize)",
+		LogType::DEBUG);
+
+	// The device might still have work. Wait for it to finish before 
+	// recreating the swapchain.
+	device.WaitIdle();
+
+	Tether::IWindow* pWindow = pApplication->GetWindow();
+
+	DisposeSwapchain();
+	if (!InitSwapchain(
+		pWindow->GetWidth(),
+		pWindow->GetHeight()
+	)
+		|| !InitFramebuffers()
+		|| !InitCommandBuffers())
+		return false;
+
+	imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
+
+	shouldRecreateSwapchain = false;
+	return true;
+}
+
+bool VulkanRenderer::RecreateCommandBuffers()
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
+
+	for (uint64_t i = 0; i < commandBuffers.size(); i++)
+	{
+		// Wait for all frames to finish rendering.
+		// Command buffers cannot be reset during frame rendering.
+		for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
+			vkWaitForFences(device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
+
+		vkResetCommandBuffer(commandBuffers[i], 0);
+		if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i))
+			return false;
+	}
+
+	return true;
+}
+
+bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
+	VkFramebuffer framebuffer, uint64_t commandBufferIndex)
+{
+	LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
+		return false;
+
+	VkExtent2D swapchainExtent = swapchain.GetExtent();
+
+	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = renderPass;
+	renderPassInfo.framebuffer = framebuffer;
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = swapchainExtent;
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &clearColor;
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)swapchainExtent.width;
+	viewport.height = (float)swapchainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	VkRect2D scissor{};
+	scissor.offset.x = 0;
+	scissor.offset.y = 0;
+	scissor.extent.width = swapchainExtent.width;
+	scissor.extent.height = swapchainExtent.height;
+
+	vkCmdBeginRenderPass(buffer, &renderPassInfo,
+		VK_SUBPASS_CONTENTS_INLINE);
+	{
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			shaderProgram.GetPipeline());
+
+		vkCmdSetViewport(buffer, 0, 1, &viewport);
+		vkCmdSetScissor(buffer, 0, 1, &scissor);
+
+		cameraUniform.GetDescriptorSet(&sets[0], commandBufferIndex);
+
+		// This will probably be changed later on
+		// Eventually, objects will have to be rendered in order of distance
+		// from the camera.
+
+		// Default scene
+		Scene* pDefault = pApplication->GetDefaultScene();
+		PopulateByScene(buffer, framebuffer, commandBufferIndex, pDefault);
+
+		// ActiveScene
+		Scene* pActive = pApplication->GetActiveScene();
+		PopulateByScene(buffer, framebuffer, commandBufferIndex, pActive);
+	}
+	vkCmdEndRenderPass(buffer);
+
+	if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
+		return false;
+
+	return true;
+}
+
+void VulkanRenderer::PopulateByScene(VkCommandBuffer buffer,
+	VkFramebuffer framebuffer, uint64_t commandBufferIndex, Scene* pScene)
+{
+	if (!pScene)
+		return;
+
+	using namespace Objects;
+	using namespace Objects::Components;
+
+	static const std::string meshCompName = TypeTools::GetTypeName<MeshComponent>();
+
+	auto* comps = pScene->GetObjectComponents();
+	if (comps->find(meshCompName) == comps->end())
+		return;
+	std::vector<Component*>* meshComps = &comps->at(meshCompName);
+
+	Resources::Material* lastMaterial = nullptr;
+	for (uint64_t i = 0; i < meshComps->size(); i++)
+	{
+		MeshComponent* component = (MeshComponent*)meshComps->at(i);
+		Object* object = component->GetObject();
+
+		if (!object->IsEnabled())
+			continue;
+
+		LegendEngine::VertexBuffer* pVertexBuffer =
+			component->GetVertexBuffer();
+		VertexBufferNative* pVkVertexBuffer =
+			(VertexBufferNative*)pVertexBuffer->GetNative();
+
+		ObjectNative* native = (ObjectNative*)object->GetNative();
+		native->GetUniform()->GetDescriptorSet(&sets[2], commandBufferIndex);
+
+		Resources::Material* pMaterial = component->GetMaterial();
+		if (pMaterial)
+		{
+			if (pMaterial != lastMaterial)
+			{
+				MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
+				matNative->uniform.GetDescriptorSet(&sets[1], commandBufferIndex);
+
+				lastMaterial = pMaterial;
+			}
+		}
+		else
+		{
+			MaterialNative* matNative = (MaterialNative*)defaultMaterial->GetNative();
+			matNative->uniform.GetDescriptorSet(&sets[1], commandBufferIndex);
+		}
+
+		vkCmdBindDescriptorSets(
+			buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			shaderProgram.GetPipelineLayout(),
+			0, sizeof(sets) / sizeof(sets[0]),
+			sets,
+			0, nullptr
+		);
+
+		VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
+
+		vkCmdBindIndexBuffer(
+			buffer, 
+			pVkVertexBuffer->indexBuffer,
+			0,
+			VK_INDEX_TYPE_UINT32
+		);
+
+		vkCmdDrawIndexed(buffer, component->GetVertexCount(), 1, 0, 0, 0);
+	}
+}
+
 bool VulkanRenderer::OnRendererInit()
 {
 	timer.Set();
@@ -351,66 +571,17 @@ bool VulkanRenderer::OnRendererInit()
 	return true;
 }
 
-void VulkanRenderer::OnSceneChange(Scene* pScene)
+void VulkanRenderer::OnObjectChange(Objects::Object* pObject)
 {
 	shouldRecreateCommandBuffers = true;
 }
 
-void VulkanRenderer::OnSceneObjectAdd(Scene* pScene, 
-	Objects::Object* pObject)
+void VulkanRenderer::OnSceneChange(Scene* pScene, Objects::Object* pObject)
 {
 	shouldRecreateCommandBuffers = true;
 }
 
-void VulkanRenderer::OnSceneObjectRemove(Scene* pScene, 
-	Objects::Object* pObject)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnSceneRemove(Scene* pScene)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnDefaultObjectAdd(Scene* pScene, 
-	Objects::Object* pObject)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnDefaultObjectRemove(Scene* pScene, 
-	Objects::Object* pObject)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnSceneObjectComponentAdd(
-	Scene* pScene,
-	Objects::Object* pObject,
-	const std::string& typeName,
-	Objects::Components::Component* pComponent
-)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnSceneObjectComponentRemove(
-	Scene* pScene,
-	Objects::Object* pObject,
-	const std::string& typeName,
-	Objects::Components::Component* pComponent
-)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject)
-{
-	shouldRecreateCommandBuffers = true;
-}
-
-void VulkanRenderer::OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
+void VulkanRenderer::OnResourceChange(Resources::IResource* pResource)
 {
 	shouldRecreateCommandBuffers = true;
 }
@@ -451,11 +622,6 @@ void VulkanRenderer::OnRendererDispose()
 	surface.Dispose();
 }
 
-void VulkanRenderer::OnWindowResize()
-{
-	shouldRecreateSwapchain = true;
-}
-
 bool VulkanRenderer::PickDevice(VkPhysicalDevice* pDevice,
 	Vulkan::Surface* pSurface)
 {
@@ -478,7 +644,7 @@ bool VulkanRenderer::PickDevice(VkPhysicalDevice* pDevice,
 	return false;
 }
 
-bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device, 
+bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device,
 	Vulkan::Surface* pSurface)
 {
 	VkPhysicalDeviceProperties deviceProperties;
@@ -486,7 +652,7 @@ bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device,
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
 	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-	Vulkan::QueueFamilyIndices families = 
+	Vulkan::QueueFamilyIndices families =
 		pInstance->FindQueueFamilies(device, pSurface);
 
 	bool extentionsSupported = pInstance->CheckDeviceExtentionSupport(device,
@@ -495,13 +661,13 @@ bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device,
 	bool swapChainGood = false;
 	if (extentionsSupported)
 	{
-		Vulkan::SwapchainDetails details = pInstance->QuerySwapchainSupport(device, 
+		Vulkan::SwapchainDetails details = pInstance->QuerySwapchainSupport(device,
 			pSurface);
-		swapChainGood = !details.formats.empty() 
+		swapChainGood = !details.formats.empty()
 			&& !details.presentModes.empty();
 	}
 
-	return 
+	return
 		deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
 		&& deviceFeatures.geometryShader
 		&& deviceFeatures.samplerAnisotropy
@@ -509,6 +675,11 @@ bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device,
 		&& families.hasPresentFamily
 		&& swapChainGood
 		&& extentionsSupported;
+}
+
+void VulkanRenderer::OnWindowResize()
+{
+	shouldRecreateSwapchain = true;
 }
 
 bool VulkanRenderer::InitDevice()
@@ -716,24 +887,6 @@ bool VulkanRenderer::InitUniforms()
 {
 	uint32_t swapchainImages = swapchain.GetImageCount();
 
-	// Object set
-	{
-		VkDescriptorSetLayoutBinding binding{};
-		binding.binding = 0;
-		binding.descriptorCount = 1;
-		binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-		VkDescriptorSetLayoutCreateInfo setInfo{};
-		setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		setInfo.bindingCount = 1;
-		setInfo.pBindings = &binding;
-
-		if (vkCreateDescriptorSetLayout(device.Get(),
-			&setInfo, nullptr, &objectLayout) != VK_SUCCESS)
-			return false;
-	}
-
 	// Camera set
 	{
 		VkDescriptorSetLayoutBinding cameraSetBinding{};
@@ -754,19 +907,49 @@ bool VulkanRenderer::InitUniforms()
 
 	// Material set
 	{
+		VkDescriptorSetLayoutBinding uniformBinding{};
+		uniformBinding.binding = 0;
+		uniformBinding.descriptorCount = 1;
+		uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
 		VkDescriptorSetLayoutBinding samplerBinding{};
 		samplerBinding.binding = 1;
 		samplerBinding.descriptorCount = 1;
 		samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+		VkDescriptorSetLayoutBinding bindings[] =
+		{
+			uniformBinding,
+			samplerBinding
+		};
+
 		VkDescriptorSetLayoutCreateInfo setInfo{};
 		setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		setInfo.bindingCount = 1;
-		setInfo.pBindings = &samplerBinding;
+		setInfo.bindingCount = sizeof(bindings) / sizeof(bindings[0]);
+		setInfo.pBindings = bindings;
 
 		if (vkCreateDescriptorSetLayout(device.Get(),
 			&setInfo, nullptr, &materialLayout) != VK_SUCCESS)
+			return false;
+	}
+
+	// Object set
+	{
+		VkDescriptorSetLayoutBinding binding{};
+		binding.binding = 0;
+		binding.descriptorCount = 1;
+		binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		VkDescriptorSetLayoutCreateInfo setInfo{};
+		setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		setInfo.bindingCount = 1;
+		setInfo.pBindings = &binding;
+
+		if (vkCreateDescriptorSetLayout(device.Get(),
+			&setInfo, nullptr, &objectLayout) != VK_SUCCESS)
 			return false;
 	}
 
@@ -809,9 +992,9 @@ bool VulkanRenderer::InitPipeline()
 
 	VkDescriptorSetLayout sets[] =
 	{
-		objectLayout,
 		cameraLayout,
-		materialLayout
+		materialLayout,
+		objectLayout
 	};
 
 	PipelineInfo pipelineInfo{};
@@ -921,6 +1104,8 @@ bool VulkanRenderer::InitSyncObjects()
 
 void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 {
+	defaultMaterial->Update();
+
 	Objects::Camera* pCamera = pApplication->GetActiveCamera();
 	if (pCamera)
 		if (pCamera->IsEnabled())
@@ -931,24 +1116,40 @@ void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 				sizeof(Objects::Camera::CameraUniforms), imageIndex);
 		}
 
-	std::vector<Objects::Object*>* defaultObjects = pApplication->GetDefaultScene()
-		->GetObjects();
-	for (uint64_t i = 0; i < defaultObjects->size(); i++)
-	{
-		ObjectNative* vkNative = (ObjectNative*)defaultObjects->at(i)->GetNative();
+	UpdateSceneUniforms(imageIndex, pApplication->GetDefaultScene());
+	UpdateSceneUniforms(imageIndex, pApplication->GetActiveScene());
+}
 
+void VulkanRenderer::UpdateSceneUniforms(uint64_t imageIndex, Scene* pScene)
+{
+	using namespace Objects;
+	using namespace Objects::Components;
+	using namespace LegendEngine::Resources;
+
+	static const std::string meshCompName = TypeTools::GetTypeName<MeshComponent>();
+
+	auto* comps = pScene->GetObjectComponents();
+	if (comps->find(meshCompName) == comps->end())
+		return;
+	std::vector<Component*>* meshComps = &comps->at(meshCompName);
+
+	for (uint64_t i = 0; i < meshComps->size(); i++)
+	{
+		MeshComponent* component = (MeshComponent*)meshComps->at(i);
+		Object* object = component->GetObject();
+
+		if (!object->IsEnabled())
+			continue;
+
+		ObjectNative* vkNative = (ObjectNative*)object->GetNative();
 		vkNative->SetCurrentImage(imageIndex);
 		vkNative->OnUniformsUpdate();
-	}
 
-	std::vector<Objects::Object*>* activeObjects = pApplication->GetActiveScene()
-		->GetObjects();
-	for (uint64_t i = 0; i < activeObjects->size(); i++)
-	{
-		ObjectNative* vkNative = (ObjectNative*)activeObjects->at(i)->GetNative();
-
-		vkNative->SetCurrentImage(imageIndex);
-		vkNative->OnUniformsUpdate();
+		Material* material = component->GetMaterial();
+		if (!material)
+			continue;
+		
+		material->Update();
 	}
 }
 
@@ -957,14 +1158,6 @@ bool VulkanRenderer::DrawFrame()
 	if (shouldRecreateSwapchain)
 		if (!RecreateSwapchain())
 			pApplication->Log("Failed to recreate swapchain!", LogType::ERROR);
-
-	if (shouldRecreateCommandBuffers)
-	{
-		if (!RecreateCommandBuffers())
-			pApplication->Log("Failed to recreate command buffers!", LogType::ERROR);
-
-		shouldRecreateCommandBuffers = false;
-	}
 
 	// in flight frame = a frame that is being rendered while still rendering 
 	// more frames
@@ -988,6 +1181,14 @@ bool VulkanRenderer::DrawFrame()
 			|| result == VK_ERROR_OUT_OF_DATE_KHR;
 
 	UpdateUniforms(imageIndex);
+
+	if (shouldRecreateCommandBuffers)
+	{
+		if (!RecreateCommandBuffers())
+			pApplication->Log("Failed to recreate command buffers!", LogType::ERROR);
+
+		shouldRecreateCommandBuffers = false;
+	}
 	
 	// If images are acquired out of order, or MAX_FRAMES_IN_FLIGHT is higher
 	// than the number of swapchain images, we may start rendering to an
@@ -1014,7 +1215,7 @@ bool VulkanRenderer::DrawFrame()
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 	
-	// The in flight fence for this frame must be reset before rendering.
+	// The in flight fence for this frame must be reset.
 	vkResetFences(device.Get(), 1, &inFlightFences[currentFrame]);
 	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, 
 		inFlightFences[currentFrame]) != VK_SUCCESS)
@@ -1038,201 +1239,6 @@ bool VulkanRenderer::DrawFrame()
 	// Increment the frame.
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	return true;
-}
-
-bool VulkanRenderer::CreateObjectNative(Objects::Object* pObject)
-{
-	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
-	if (!pObject)
-	{
-		pApplication->Log(
-			"Creating object native: Object is nullptr. Returning.",
-			LogType::WARN);
-		return false;
-	}
-
-	pObject->SetNative(RefTools::Create<ObjectNative>(this, pObject));
-	return true;
-}
-
-bool VulkanRenderer::CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer)
-{
-	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
-	if (!buffer)
-	{
-		pApplication->Log(
-			"Creating vertex buffer native: Buffer is nullptr. Returning.",
-			LogType::WARN);
-		return false;
-	}
-
-	buffer->SetNative(RefTools::Create<VertexBufferNative>(this, buffer));
-
-	return true;
-}
-
-bool VulkanRenderer::RecreateSwapchain()
-{
-	LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer", 
-		"Recreating swapchain (Window resize)", 
-		LogType::DEBUG);
-	
-	// The device might still have work. Wait for it to finish before 
-	// recreating the swapchain.
-	device.WaitIdle();
-
-	Tether::IWindow* pWindow = pApplication->GetWindow();
-
-	DisposeSwapchain();
-	if (!InitSwapchain(
-			pWindow->GetWidth(),
-			pWindow->GetHeight()
-		)
-		|| !InitFramebuffers()
-		|| !InitCommandBuffers())
-		return false;
-	
-	imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
-
-	shouldRecreateSwapchain = false;
-	return true;
-}
-
-bool VulkanRenderer::RecreateCommandBuffers()
-{
-	LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
-
-	for (uint64_t i = 0; i < commandBuffers.size(); i++)
-	{
-		// Wait for all frames to finish rendering.
-		// Command buffers cannot be reset during frame rendering.
-		for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
-			vkWaitForFences(device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
-
-		vkResetCommandBuffer(commandBuffers[i], 0);
-		if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i))
-			return false;
-	}
-
-	return true;
-}
-
-bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
-	VkFramebuffer framebuffer, uint64_t commandBufferIndex)
-{
-	LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
-
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-	if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
-		return false;
-
-	VkExtent2D swapchainExtent = swapchain.GetExtent();
-	
-	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = framebuffer;
-	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = swapchainExtent;
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)swapchainExtent.width;
-	viewport.height = (float)swapchainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-
-	VkRect2D scissor{};
-	scissor.offset.x = 0;
-	scissor.offset.y = 0;
-	scissor.extent.width = swapchainExtent.width;
-	scissor.extent.height = swapchainExtent.height;
-
-	vkCmdBeginRenderPass(buffer, &renderPassInfo,
-		VK_SUBPASS_CONTENTS_INLINE);
-	{
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
-			shaderProgram.GetPipeline());
-
-		vkCmdSetViewport(buffer, 0, 1, &viewport);
-		vkCmdSetScissor(buffer, 0, 1, &scissor);
-
-		// This will probably be changed later on
-		// Eventually, objects will have to be rendered in order of distance
-		// from the camera.
-
-		// Default scene
-		Scene* pDefault = pApplication->GetDefaultScene();
-		PopulateByScene(buffer, framebuffer, commandBufferIndex, pDefault);
-
-		// ActiveScene
-		Scene* pActive = pApplication->GetActiveScene();
-		PopulateByScene(buffer, framebuffer, commandBufferIndex, pActive);
-	}
-	vkCmdEndRenderPass(buffer);
-	
-	if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
-		return false;
-
-	return true;
-}
-
-void VulkanRenderer::PopulateByScene(VkCommandBuffer buffer, 
-	VkFramebuffer framebuffer, uint64_t commandBufferIndex, Scene* pScene)
-{
-	if (!pScene)
-		return;
-
-	using namespace Objects;
-	using namespace Objects::Components;
-
-	static const std::string meshCompName = TypeTools::GetTypeName<MeshComponent>();
-
-	auto* comps = pScene->GetObjectComponents();
-	if (comps->find(meshCompName) == comps->end())
-		return;
-
-	std::vector<Component*>* meshComps = &comps->at(meshCompName);
-
-	VkDescriptorSet sets[2] = {};
-	cameraUniform.GetDescriptorSet(&sets[1], commandBufferIndex);
-
-	for (uint64_t i = 0; i < meshComps->size(); i++)
-	{
-		MeshComponent* component = (MeshComponent*)meshComps->at(i);
-		Object* object = component->GetObject();
-
-		if (!object->IsEnabled())
-			continue;
-
-		LegendEngine::VertexBuffer* pVertexBuffer =
-			component->GetVertexBuffer();
-		VertexBufferNative* pVkVertexBuffer =
-			(VertexBufferNative*)pVertexBuffer->GetNative();
-		
-		ObjectNative* native = (ObjectNative*)object->GetNative();
-		native->GetUniform()->GetDescriptorSet(&sets[0], commandBufferIndex);
-
-		vkCmdBindDescriptorSets(
-			buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-			shaderProgram.GetPipelineLayout(), 0, sizeof(sets) / sizeof(sets[0]), 
-			sets, 0, nullptr
-		);
-
-		VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
-
-		vkCmdDraw(buffer, component->GetVertexCount(), 1, 0, 0);
-	}
 }
 
 void VulkanRenderer::DisposeSwapchain()

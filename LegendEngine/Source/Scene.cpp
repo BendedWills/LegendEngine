@@ -3,11 +3,11 @@
 
 using namespace LegendEngine;
 
-#define LEGENDENGINE_ASSERT_APP_NULL() \
+#define LGENG_RETURN_IF_APP_NULL() \
     if (pApplication == nullptr) \
         return;
 
-#define LEGENDENGINE_ASSERT_APP_NULL_RET(returnValue) \
+#define LGENG_RETURN_IF_APP_NULL_RETVAL(returnValue) \
     if (pApplication == nullptr) \
         return returnValue;
 
@@ -23,7 +23,7 @@ void Scene::AddObject(Objects::Object& object)
 
 void Scene::AddObject(Objects::Object* pObject)
 {
-    LEGENDENGINE_ASSERT_APP_NULL();
+    LGENG_RETURN_IF_APP_NULL();
 
     if (!pObject)
     {
@@ -51,24 +51,24 @@ void Scene::AddObject(Objects::Object* pObject)
 
     AddObjectComponents(pObject);
 
-    pApplication->OnSceneObjectAdd(this, pObject);
+    pApplication->pRenderer->OnSceneChange(this, pObject);
 }
 
 bool Scene::HasObject(Ref<Objects::Object>& object)
 {
-	LEGENDENGINE_ASSERT_APP_NULL_RET(false);
+    LGENG_RETURN_IF_APP_NULL_RETVAL(false);
 	return HasObject(object.get());
 }
 
 bool Scene::HasObject(Objects::Object& object)
 {
-    LEGENDENGINE_ASSERT_APP_NULL_RET(false);
+    LGENG_RETURN_IF_APP_NULL_RETVAL(false);
     return HasObject(&object);
 }
 
 bool Scene::HasObject(Objects::Object* pObject)
 {
-    LEGENDENGINE_ASSERT_APP_NULL_RET(false);
+    LGENG_RETURN_IF_APP_NULL_RETVAL(false);
     return std::count(objects.begin(), objects.end(), pObject);
 }
 
@@ -84,7 +84,7 @@ bool Scene::RemoveObject(Objects::Object& object)
 
 bool Scene::RemoveObject(Objects::Object* pObject)
 {
-    LEGENDENGINE_ASSERT_APP_NULL_RET(false);
+    LGENG_RETURN_IF_APP_NULL_RETVAL(false);
 
     if (!pObject)
     {
@@ -102,7 +102,7 @@ bool Scene::RemoveObject(Objects::Object* pObject)
             objects[i]->RemoveFromScene(this);
 
             RemoveObjectComponents(pObject);
-            pApplication->OnSceneObjectRemove(this, pObject);
+            pApplication->pRenderer->OnSceneChange(this, pObject);
 
             objects.erase(objects.begin() + i);
         }
@@ -123,33 +123,49 @@ std::vector<Objects::Object*>* Scene::GetObjects()
 void Scene::OnObjectComponentAdd(Objects::Object* pObject, std::string typeName,
     Objects::Components::Component* pComponent)
 {
-    LEGENDENGINE_ASSERT_APP_NULL();
+    LGENG_RETURN_IF_APP_NULL();
 
-    pApplication->OnSceneObjectComponentAdd(this, pObject, typeName, 
-        pComponent);
+    auto& vecref = components[typeName];
+
+    // This should never happen, but I just want to make sure it never does.
+    if (std::find(vecref.begin(), vecref.end(), pComponent) != vecref.end())
+        return;
+
+    // Add the component to the list
+    vecref.push_back(pComponent);
+
+    pApplication->pRenderer->OnSceneChange(this, pObject);
 }
 
 void Scene::OnObjectComponentRemove(Objects::Object* pObject, std::string typeName,
     Objects::Components::Component* pComponent)
 {
-    LEGENDENGINE_ASSERT_APP_NULL();
+    LGENG_RETURN_IF_APP_NULL();
 
-    pApplication->OnSceneObjectComponentRemove(this, pObject, typeName, 
-        pComponent);
+    auto& vecref = components[typeName];
+
+    // Erase the first occurrence of pComponent in the vector.
+    // Since there will never be a duplicate component, this is fine to do.
+    for (uint64_t i = 0; i < vecref.size(); i++)
+        if (vecref[i] == pComponent)
+        {
+            vecref.erase(vecref.begin() + i);
+            break;
+        }
+
+    pApplication->pRenderer->OnSceneChange(this, pObject);
 }
 
 void Scene::OnObjectEnable(Objects::Object* pObject)
 {
-    LEGENDENGINE_ASSERT_APP_NULL();
-
-	pApplication->OnSceneObjectEnable(this, pObject);
+    LGENG_RETURN_IF_APP_NULL();
+    pApplication->pRenderer->OnSceneChange(this, pObject);
 }
 
 void Scene::OnObjectDisable(Objects::Object* pObject)
 {
-    LEGENDENGINE_ASSERT_APP_NULL();
-    
-    pApplication->OnSceneObjectDisable(this, pObject);
+    LGENG_RETURN_IF_APP_NULL();
+    pApplication->pRenderer->OnSceneChange(this, pObject);
 }
 
 void Scene::AddObjectComponents(Objects::Object* pObject)

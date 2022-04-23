@@ -2,15 +2,14 @@
 #define _LEGENDENGINE_SCENE3D_HPP
 
 #include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Common/IApplicationHolder.hpp>
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Objects/Components/MeshComponent.hpp>
 
 namespace LegendEngine
 {
-    class Application;
-    class Scene
+    class Scene : public IApplicationHolder
     {
-        friend Application;
         friend Objects::Object;
     public:
         LEGENDENGINE_NO_COPY(Scene);
@@ -89,8 +88,6 @@ namespace LegendEngine
             Objects::Components::Component* pComponent);
 		void OnObjectEnable(Objects::Object* pObject);
 		void OnObjectDisable(Objects::Object* pObject);
-
-        Application* pApplication = nullptr;
     private:
         void AddObjectComponents(Objects::Object* pObject);
         void RemoveObjectComponents(Objects::Object* pObject);

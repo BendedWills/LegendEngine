@@ -13,10 +13,10 @@ namespace LegendEngine
 {
     namespace VertexTypes
     {
-        struct Vertex3c
+        struct Vertex3
         {
             float position[3];
-			float color[3];
+			float texcoord[3];
 		};
     }
 
@@ -31,8 +31,10 @@ namespace LegendEngine
             pVertexBuffer(pVertexBuffer)
 		{}
 
-		virtual bool OnCreate(VertexTypes::Vertex3c* pVertices,
-			uint64_t vertexCount) { return false; }
+		virtual bool OnCreate(
+			VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
+            uint32_t* pIndices, uint64_t indexCount
+        ) { return false; }
 		virtual void OnDispose() {}
 	private:
         VertexBuffer* pVertexBuffer = nullptr;
@@ -54,11 +56,16 @@ namespace LegendEngine
          * 
          * @param pVertices An array of vertices.
          * @param vertexCount The amount of vertices in pVertices.
+		 * @param pIndices An array of indices.
+		 * @param vertexCount The amount of indices in pIndices.
          * 
          * @returns True if the vertex buffer was successfully initialized;
          *  otherwise, false.
          */
-        bool Init(VertexTypes::Vertex3c* pVertices, uint64_t vertexCount);
+        bool Init(
+            VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
+            uint32_t* pIndices, uint64_t indexCount
+        );
     private:
         void OnDispose();
     };

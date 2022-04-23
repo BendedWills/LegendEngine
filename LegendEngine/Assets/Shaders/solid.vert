@@ -1,24 +1,23 @@
 #version 450
 
 layout(location = 0) in vec3 pos;
-layout(location = 1) in vec3 color;
+layout(location = 1) in vec2 texcoord;
 
-layout(location = 0) out vec3 outColor;
+layout(location = 0) out vec2 fragCoord;
 
-layout(set = 0, binding = 0) uniform ObjectBuffer
-{
-    mat4 transform;
-};
-
-layout(set = 1, binding = 0) uniform CameraBuffer
+layout(set = 0, binding = 0) uniform Camera
 {
     mat4 view;
     mat4 projection;
-};
+} cam;
+
+layout(set = 2, binding = 0) uniform Object
+{
+    mat4 transform;
+} obj;
 
 void main() 
 {
-    outColor = color;
-
-    gl_Position = projection * view * transform * vec4(pos.xyz, 1);
+    fragCoord = texcoord;
+    gl_Position = cam.projection * cam.view * obj.transform * vec4(pos.xyz, 1);
 }

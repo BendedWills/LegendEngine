@@ -12,33 +12,60 @@
 
 using namespace LegendEngine::Vulkan;
 
-bool VertexBufferNative::OnCreate(VertexTypes::Vertex3c* pVertices,
-    uint64_t vertexCount)
+bool VertexBufferNative::OnCreate(
+	VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
+	uint32_t* pIndices, uint64_t indexCount
+)
 {
-    if (!pVertices || vertexCount == 0)
+    if (!pVertices || vertexCount == 0 || !pIndices || indexCount == 0)
         return false;
     
-    verticesSize = sizeof(pVertices[0]) * vertexCount;
+	// Create vertex buffer
+	uint64_t verticesSize = sizeof(pVertices[0]) * vertexCount;
+	{
+		VkBufferCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		createInfo.size = verticesSize;
+		createInfo.usage =
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+			| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-    VkBufferCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    createInfo.size = verticesSize;
-    createInfo.usage = 
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-        | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    
-    VmaAllocationCreateInfo allocInfo{};
-    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-        VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
-        VMA_ALLOCATION_CREATE_MAPPED_BIT;
+		VmaAllocationCreateInfo allocInfo{};
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-    if (vmaCreateBuffer(pVulkanRenderer->allocator, &createInfo, 
-        &allocInfo, &vertexBuffer, &allocation, nullptr) != VK_SUCCESS)
+		if (vmaCreateBuffer(pVulkanRenderer->allocator, &createInfo,
+			&allocInfo, &vertexBuffer, &allocation, nullptr) != VK_SUCCESS)
+			return false;
+	}
+
+    // Create index buffer
+	uint64_t indicesSize = sizeof(pIndices[0]) * indexCount;
+    {
+		VkBufferCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		createInfo.size = indicesSize;
+		createInfo.usage =
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+			| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+		VmaAllocationCreateInfo allocInfo{};
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		if (vmaCreateBuffer(pVulkanRenderer->allocator, &createInfo,
+			&allocInfo, &indexBuffer, &indexAlloc, nullptr) != VK_SUCCESS)
+			return false;
+    }
+
+    if (!UploadData(pVertices, verticesSize, vertexBuffer))
         return false;
-
-    if (!UploadVertexData(pVertices))
-        return false;
+	if (!UploadData(pIndices, indicesSize, indexBuffer))
+		return false;
 
     LEGENDENGINE_OBJECT_LOG(
         pVulkanRenderer->GetApplication(),"Vulkan::VertexBuffer", 
@@ -54,9 +81,10 @@ void VertexBufferNative::OnDispose()
     pVulkanRenderer->device.WaitIdle();
 
     vmaDestroyBuffer(pVulkanRenderer->allocator, vertexBuffer, allocation);
+    vmaDestroyBuffer(pVulkanRenderer->allocator, indexBuffer, indexAlloc);
 }
 
-bool VertexBufferNative::UploadVertexData(void* pVertices)
+bool VertexBufferNative::UploadData(void* data, uint64_t dataBytes, VkBuffer buffer)
 {
     LEGENDENGINE_OBJECT_LOG(
         pVulkanRenderer->GetApplication(), "Vulkan::VertexBuffer",
@@ -68,11 +96,11 @@ bool VertexBufferNative::UploadVertexData(void* pVertices)
     VmaAllocation stagingAlloc;
     VmaAllocationInfo stagingAllocInfo;
 	if (!pVulkanRenderer->CreateStagingBuffer(&stagingBuffer, &stagingAlloc,
-		&stagingAllocInfo, verticesSize))
+		&stagingAllocInfo, dataBytes))
 		return false;
 
     // Map the data to the staging buffer
-    memcpy(stagingAllocInfo.pMappedData, pVertices, verticesSize);
+    memcpy(stagingAllocInfo.pMappedData, data, dataBytes);
 
     // Create a command buffer and copy the data
     // Eventually, maybe use a queue specifically for transferring.
@@ -84,9 +112,9 @@ bool VertexBufferNative::UploadVertexData(void* pVertices)
 	}
     {
 		VkBufferCopy bufferCopy{};
-		bufferCopy.size = verticesSize;
+		bufferCopy.size = dataBytes;
 
-		vkCmdCopyBuffer(commandBuffer, stagingBuffer, vertexBuffer, 1, &bufferCopy);
+		vkCmdCopyBuffer(commandBuffer, stagingBuffer, buffer, 1, &bufferCopy);
     }
 	if (!pVulkanRenderer->EndSingleUseCommandBuffer(commandBuffer))
 	{

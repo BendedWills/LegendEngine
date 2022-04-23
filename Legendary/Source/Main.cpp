@@ -7,6 +7,7 @@
 using namespace LegendEngine;
 using namespace LegendEngine::Objects;
 using namespace LegendEngine::Resources;
+using namespace LegendEngine::Objects::Components;
 
 using namespace std::literals::chrono_literals;
 
@@ -28,60 +29,29 @@ public:
 			float g = (float)rand() / RAND_MAX;
 			float b = (float)rand() / RAND_MAX;
 			
-			VertexTypes::Vertex3c testVertices[] =
+			VertexTypes::Vertex3 testVertices[] =
 			{
-				{ -0.5f, -0.5f, -0.5f, r, g, b },
-				{  0.5f, -0.5f, -0.5f, r, g, b },
-				{  0.5f,  0.5f, -0.5f, r, g, b },
-				{  0.5f,  0.5f, -0.5f, r, g, b },
-				{ -0.5f,  0.5f, -0.5f, r, g, b },
-				{ -0.5f, -0.5f, -0.5f, r, g, b },
-
-				{ -0.5f, -0.5f,  0.5f, r, g, b },
-				{  0.5f, -0.5f,  0.5f, r, g, b },
-				{  0.5f,  0.5f,  0.5f, r, g, b },
-				{  0.5f,  0.5f,  0.5f, r, g, b },
-				{ -0.5f,  0.5f,  0.5f, r, g, b },
-				{ -0.5f, -0.5f,  0.5f, r, g, b },
-
-				{ -0.5f,  0.5f,  0.5f, r, g, b },
-				{ -0.5f,  0.5f, -0.5f, r, g, b },
-				{ -0.5f, -0.5f, -0.5f, r, g, b },
-				{ -0.5f, -0.5f, -0.5f, r, g, b },
-				{ -0.5f, -0.5f,  0.5f, r, g, b },
-				{ -0.5f,  0.5f,  0.5f, r, g, b },
-
-				{  0.5f,  0.5f,  0.5f, r, g, b },
-				{  0.5f,  0.5f, -0.5f, r, g, b },
-				{  0.5f, -0.5f, -0.5f, r, g, b },
-				{  0.5f, -0.5f, -0.5f, r, g, b },
-				{  0.5f, -0.5f,  0.5f, r, g, b },
-				{  0.5f,  0.5f,  0.5f, r, g, b },
-
-				{ -0.5f, -0.5f, -0.5f, r, g, b },
-				{  0.5f, -0.5f, -0.5f, r, g, b },
-				{  0.5f, -0.5f,  0.5f, r, g, b },
-				{  0.5f, -0.5f,  0.5f, r, g, b },
-				{ -0.5f, -0.5f,  0.5f, r, g, b },
-				{ -0.5f, -0.5f, -0.5f, r, g, b },
-
-				{ -0.5f,  0.5f, -0.5f, r, g, b },
-				{  0.5f,  0.5f, -0.5f, r, g, b },
-				{  0.5f,  0.5f,  0.5f, r, g, b },
-				{  0.5f,  0.5f,  0.5f, r, g, b },
-				{ -0.5f,  0.5f,  0.5f, r, g, b },
-				{ -0.5f,  0.5f, -0.5f, r, g, b }
+				{  0.5f,  0.5f, 0.0f,  1.0f, 1.0f },
+				{  0.5f, -0.5f, 0.0f,  1.0f, 0.0f },
+				{ -0.5f, -0.5f, 0.0f,  0.0f, 0.0f },
+				{ -0.5f,  0.5f, 0.0f,  0.0f, 1.0f }
 			};
 
-			pObject->AddComponent<Components::MeshComponent>()->Init(
-				testVertices, 36
-			);
+			uint32_t indices[] =
+			{
+				0, 1, 3,
+				1, 2, 3
+			};
+
+			MeshComponent* mesh = pObject->AddComponent<Components::MeshComponent>();
+			mesh->Init(testVertices, 4, indices, 6);
+			mesh->SetMaterial(pMaterial);
 		}
 	}
 
 	void OnUpdate(float delta)
 	{
-		//pObject->AddRotation(Vector3f(100 * delta));
+		pObject->AddRotation(Vector3f(100 * delta));
 	}
 private:
 	Material* pMaterial = nullptr;
@@ -148,7 +118,7 @@ public:
 		}
 	}
 
-	const float sense = 0.06f;
+	const float sense = 0.04f;
 	void OnRawMouseMove(Input::RawMouseMoveInfo& info)
 	{
 		Vector3f rotation = pObject->GetRotation();
@@ -203,7 +173,7 @@ public:
 		{
 			texture = CreateResource<Texture2D>();
 			texture->Init("Assets/l.png");
-
+			
 			material->SetTexture(texture.get());
 		}
 
@@ -211,11 +181,11 @@ public:
 		{
 			cube1 = CreateObject<Object>();
 			cube1->AddScript<TestScript>(material.get());
-
+			
 			cube2 = CreateObject<Object>();
 			cube2->AddScript<TestScript>(material.get());
 			cube2->SetPosition(Vector3f(3, 0, 0));
-
+			
 			// Add the objects to the scene
 			testScene.AddObject(cube1.get());
 			testScene.AddObject(cube2.get());
@@ -252,6 +222,7 @@ public:
 	}
 private:
 	Stopwatch fpsTimer;
+	Stopwatch timer;
 
 	Scene testScene;
 
@@ -262,6 +233,8 @@ private:
 	Ref<Material> material;
 	Ref<Texture2D> texture;
 };
+
+#include <direct.h>
 
 #if defined(_WIN32) && !defined(_DEBUG)
 #include <Windows.h>

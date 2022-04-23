@@ -22,16 +22,25 @@ bool Texture2D::Init(const std::string& path)
 	int width, height, channels;
 	uint8_t* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 	if (!data)
+	{
+		pApplication->Log("Failed to load texture (path = \"" + path + "\")", 
+			LogType::ERROR);
 		return false;
+	}
 
-	if (nativeSet)
-		if (Init(static_cast<uint64_t>(width), static_cast<uint64_t>(height), 
-			static_cast<uint32_t>(channels),
-			data))
-		{
-			stbi_image_free(data);
-			return false;
-		}
+	if (!Init(static_cast<uint64_t>(width), static_cast<uint64_t>(height),
+		static_cast<uint32_t>(channels),
+		data))
+	{
+		pApplication->Log(
+			"Failed to load texture. Native returned false. (path = \"" + path
+			+ "\")",
+			LogType::ERROR
+		);
+
+		stbi_image_free(data);
+		return false;
+	}
 
 	stbi_image_free(data);
 

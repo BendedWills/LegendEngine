@@ -28,16 +28,18 @@ namespace LegendEngine::Vulkan
     protected:
         VkBuffer vertexBuffer;
         VmaAllocation allocation;
+		VkBuffer indexBuffer;
+		VmaAllocation indexAlloc;
 
-        uint64_t verticesSize = 0;
-        
         VulkanRenderer* pVulkanRenderer = nullptr;
     private:
-		bool OnCreate(VertexTypes::Vertex3c* pVertices,
-			uint64_t vertexCount);
+		bool OnCreate(
+			VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
+			uint32_t* pIndices, uint64_t indexCount
+        );
 		void OnDispose();
 
-		bool UploadVertexData(void* pVertices);
+		bool UploadData(void* data, uint64_t dataBytes, VkBuffer buffer);
     };
 }
 

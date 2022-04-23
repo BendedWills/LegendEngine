@@ -26,9 +26,13 @@ bool IRenderer::Init(Application* pApplication)
         return false;
     }
 
+    initialized = true;
+
+	defaultMaterial = pApplication->CreateResource<Resources::Material>();
+	defaultMaterial->Init();
+
     pApplication->Log("Initialized renderer", LogType::DEBUG);
 
-    initialized = true;
     return true;
 }
 
@@ -40,6 +44,9 @@ Application* IRenderer::GetApplication()
 void IRenderer::OnDispose()
 {
     pApplication->Log("Disposing renderer", LogType::DEBUG);
-    OnRendererDispose();
+    {
+        defaultMaterial->Dispose();
+        OnRendererDispose();
+    }
     pApplication->Log("Disposed renderer", LogType::DEBUG);
 }

@@ -33,6 +33,7 @@ namespace LegendEngine::Vulkan
 		bool Init(VulkanRenderer* pRenderer, uint64_t size, uint32_t images);
 
 		bool BindToSet(UniformManager* manager, VkDescriptorSetLayout layout);
+		bool BindToSet(VkDescriptorPool* pool, VkDescriptorSetLayout layout);
 		bool Bind(uint32_t binding);
 
 		/**
@@ -42,6 +43,7 @@ namespace LegendEngine::Vulkan
 		 */
 		bool UpdateBuffer(void* newData, uint64_t size, uint64_t currentImage);
 
+		bool GetBuffer(VkBuffer* pBuffer, uint64_t index);
 		bool GetDescriptorSet(VkDescriptorSet* pSet, uint64_t index);
 	private:
 		void FreeSet();

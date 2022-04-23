@@ -44,11 +44,16 @@ bool UniformBuffer::Init(VulkanRenderer* pRenderer, uint64_t size, uint32_t imag
 
 bool UniformBuffer::BindToSet(UniformManager* manager, VkDescriptorSetLayout layout)
 {
+	return BindToSet(manager->GetPool(), layout);
+}
+
+bool UniformBuffer::BindToSet(VkDescriptorPool* pPool, VkDescriptorSetLayout layout)
+{
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 
 	FreeSet();
 
-	this->pDescriptorPool = manager->GetPool();
+	this->pDescriptorPool = pPool;
 
 	std::vector<VkDescriptorSetLayout> layouts(images, layout);
 
@@ -60,11 +65,7 @@ bool UniformBuffer::BindToSet(UniformManager* manager, VkDescriptorSetLayout lay
 
 	if (vkAllocateDescriptorSets(pRenderer->device.Get(), &allocInfo,
 		descriptorSets.data()) != VK_SUCCESS)
-	{
-		vkDestroyDescriptorSetLayout(pRenderer->device.Get(),
-			layout, nullptr);
 		return false;
-	}
 
 	boundToSet = true;
 	return true;
@@ -111,6 +112,16 @@ bool UniformBuffer::UpdateBuffer(void* newData, uint64_t size,
     memcpy(allocInfos[currentImage].pMappedData, newData, size);
     
     return true;
+}
+
+bool UniformBuffer::GetBuffer(VkBuffer* pBuffer, uint64_t index)
+{
+	if (index >= uniformBuffers.size())
+		return false;
+
+	*pBuffer = uniformBuffers[index];
+
+	return true;
 }
 
 bool UniformBuffer::GetDescriptorSet(VkDescriptorSet* pSet, uint64_t index)

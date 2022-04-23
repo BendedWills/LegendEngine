@@ -13,6 +13,7 @@
 
 namespace LegendEngine
 {
+    class Scene;
 	namespace Objects
 	{
 		class Object;
@@ -31,7 +32,9 @@ namespace LegendEngine
     class IRenderer : public IDisposable
     {
         friend Application;
+        friend Scene;
         friend Objects::IObjectNative;
+        friend Resources::Material;
     public:
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(IRenderer);
         
@@ -52,6 +55,16 @@ namespace LegendEngine
         bool Init(Application* pApplication);
 
         virtual void SetVSyncEnabled(bool vsync) {}
+
+        /**
+         * @brief
+         * An object's native is a class that has
+         * specific utilities native to the Application's graphics API.
+         * It's called a native because I have literally no clue what else
+         * to call it.
+         *
+         */
+        virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
         virtual bool CreateShaderNative(Resources::Shader* pShader) 
         { return false;  }
 		virtual bool CreateTexture2DNative(Resources::Texture2D* pTexture)
@@ -87,85 +100,44 @@ namespace LegendEngine
          */
         virtual bool OnRendererInit() { return true; }
 
-        /**
-         * @brief Called when the application's active scene is changed.
-         */
-        virtual void OnSceneChange(Scene* pScene) {}
-        /**
-         * @brief Called when the application's active scene gains and object.
-         */
-        virtual void OnSceneObjectAdd(Scene* pScene, 
-            Objects::Object* pObject) {}
-        /**
-         * @brief Called when the application's active scene loses and object.
-         */
-        virtual void OnSceneObjectRemove(Scene* pScene, 
-            Objects::Object* pObject) {}
-        /**
-         * @brief Called when the application's active scene is removed.
-         */
-        virtual void OnSceneRemove(Scene* pScene) {}
+        virtual void OnWindowResize(uint64_t width, uint64_t height) {}
 
         /**
-         * @brief Called when the application's default scene gains and object.
-         */
-        virtual void OnDefaultObjectAdd(Scene* pScene, 
-            Objects::Object* pObject) {}
-        /**
-         * @brief Called when the application's default scene loses and object.
-         */
-        virtual void OnDefaultObjectRemove(Scene* pScene, 
-            Objects::Object* pObject) {}
-        /**
-         * @brief Called when an object that is in either the Application's 
-         *  active scene or default scene has a component added to it.
+         * @brief 
+         * Called when an object that is in the active scene or the default
+         * scene changes in any way. 
          * 
-         * @param pScene The scene of the object
-         * @param pObject The object.
-         * @param typeName The component type name.
-         * @param pComponent The component.
-         */
-        virtual void OnSceneObjectComponentAdd(
-            Scene* pScene,
-            Objects::Object* pObject, 
-            const std::string& typeName, 
-            Objects::Components::Component* pComponent) 
-        {}
-        /**
-         * @brief Called when an object that is in either the Application's 
-         *  active scene or default scene has a component removed from it.
+         * This function is called when:
+		 * - The object's material changes (or when the texture changes)
+		 * - A component is added to the object
+		 * - A component is removed from the object
          * 
-         * @param pScene The scene of the object
-         * @param pObject The object.
-         * @param typeName The component type name.
-         * @param pComponent The component.
+         * @param pObject A pointer to the object that has changed.
          */
-        virtual void OnSceneObjectComponentRemove(
-            Scene* pScene,
-            Objects::Object* pObject,
-            const std::string& typeName, 
-            Objects::Components::Component* pComponent) 
-        {}
-
-		virtual void OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject) 
-        {}
-        virtual void OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
-        {}
-
-		virtual void OnWindowResize()
-		{}
-
+        virtual void OnObjectChange(Objects::Object* pObject) {}
         /**
-         * @brief Called when the renderer is disposed.
+         * @brief
+         * Called when the default or active scene changes in any way.
+         * 
+         * This function is called when:
+         * - An object is added to the scene
+         * - An object is removed
+         * - A new active scene is set
+         * 
+         * @param pScene The scene that has changed.
+         * @param pObject The object that has changed. This parameter is only
+         *  present when an object is added or removed from the scene
          */
+        virtual void OnSceneChange(Scene* pScene, Objects::Object* pObject) {}
+        /**
+         * @brief
+         * Called when a resource changes in any way
+         */
+        virtual void OnResourceChange(Resources::IResource* pResource) {}
+
         virtual void OnRendererDispose() {}
 
-        /**
-         * @brief An object's native is a class that has
-         *  specific utilities native to the Application's graphics API.
-         *  It's called a native because I have literally no clue what else to call it.
-         */
-        virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
+        Ref<Resources::Material> defaultMaterial;
     private:
         void OnDispose();
 

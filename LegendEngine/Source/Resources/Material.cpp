@@ -28,14 +28,35 @@ bool Material::Init()
 void Material::SetTexture(Texture2D* pTexture)
 {
 	this->pTexture = pTexture;
+	shouldUpdateUniforms = true;
+}
 
-	if (nativeSet)
-		native->OnUpdate();
+void Material::SetBrightness(float brightness)
+{
+	uniforms.brightness = brightness;
+	shouldUpdateUniforms = true;
 }
 
 Texture2D* Material::GetTexture()
 {
 	return pTexture;
+}
+
+Material::MaterialUniforms* Material::GetUniforms()
+{
+	return &uniforms;
+}
+
+void Material::Update()
+{
+	if (!shouldUpdateUniforms)
+		return;
+
+	if (nativeSet)
+		native->OnUpdate();
+	pApplication->renderer->OnResourceChange(this);
+	
+	shouldUpdateUniforms = false;
 }
 
 void Material::OnResourceDispose()

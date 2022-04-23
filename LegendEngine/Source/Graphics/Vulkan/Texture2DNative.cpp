@@ -20,6 +20,7 @@ bool Texture2DNative::OnCreate(uint64_t width, uint64_t height, uint32_t channel
 
     this->width = width;
     this->height = height;
+    this->channels = channels;
 
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -62,6 +63,37 @@ bool Texture2DNative::OnCreate(uint64_t width, uint64_t height, uint32_t channel
         return false;
     }
 
+	VkSamplerCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	createInfo.minFilter = VK_FILTER_LINEAR;
+	createInfo.magFilter = VK_FILTER_LINEAR;
+	createInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	createInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	createInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	createInfo.anisotropyEnable = false;
+
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(pVulkanRenderer->physicalDevice, &properties);
+
+	createInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+	createInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	createInfo.unnormalizedCoordinates = false;
+	createInfo.compareEnable = false;
+	createInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	createInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	createInfo.mipLodBias = 0.0f;
+	createInfo.minLod = 0.0f;
+	createInfo.maxLod = 0.0f;
+
+	if (vkCreateSampler(pVulkanRenderer->device.Get(), &createInfo, nullptr, &sampler)
+		!= VK_SUCCESS)
+	{
+		pVulkanRenderer->device.WaitIdle();
+		vmaDestroyImage(pVulkanRenderer->allocator, image, imageAllocation);
+        vkDestroyImageView(pVulkanRenderer->device.Get(), imageView, nullptr);
+		return false;
+	}
+
     StageImageData(data);
     
     LEGENDENGINE_OBJECT_LOG(
@@ -84,6 +116,7 @@ void Texture2DNative::OnDispose()
     pVulkanRenderer->device.WaitIdle();
 
     vkDestroyImageView(pVulkanRenderer->device.Get(), imageView, nullptr);
+    vkDestroySampler(pVulkanRenderer->device.Get(), sampler, nullptr);
     vmaDestroyImage(pVulkanRenderer->allocator, image, imageAllocation);
 }
 

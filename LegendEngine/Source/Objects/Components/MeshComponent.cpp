@@ -5,9 +5,13 @@
 
 #include <sstream>
 
+using namespace LegendEngine;
 using namespace LegendEngine::Objects::Components;
 
-bool MeshComponent::Init(VertexTypes::Vertex3c* pVertices, uint32_t vertexCount)
+bool MeshComponent::Init(
+	VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
+	uint32_t* pIndices, uint64_t indexCount
+)
 {
     if (initialized)
         return false;
@@ -32,7 +36,7 @@ bool MeshComponent::Init(VertexTypes::Vertex3c* pVertices, uint32_t vertexCount)
     }
 
     vertexBuffer = pApplication->CreateVertexBuffer();
-    if (!vertexBuffer->Init(pVertices, vertexCount))
+    if (!vertexBuffer->Init(pVertices, vertexCount, pIndices, indexCount))
     {
         LEGENDENGINE_OBJECT_LOG(
             pApplication, "MeshComponent",
@@ -49,10 +53,20 @@ bool MeshComponent::Init(VertexTypes::Vertex3c* pVertices, uint32_t vertexCount)
         LogType::DEBUG
     );
 
-    this->vertexCount = vertexCount;
+    this->vertexCount = indexCount;
 
     initialized = true;
     return true;
+}
+
+void MeshComponent::SetMaterial(Resources::Material* pMaterial)
+{
+    this->pMaterial = pMaterial;
+}
+
+Resources::Material* MeshComponent::GetMaterial()
+{
+    return pMaterial;
 }
 
 LegendEngine::VertexBuffer* MeshComponent::GetVertexBuffer()

@@ -33,6 +33,11 @@ namespace LegendEngine::Resources
 		public NativeHolder<IMaterialNative>
 	{
 	public:
+		struct MaterialUniforms
+		{
+			float brightness = 1.0f;
+		};
+
 		Material() = default;
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Material);
 		LEGENDENGINE_NO_COPY(Material);
@@ -40,9 +45,17 @@ namespace LegendEngine::Resources
 		bool Init();
 
 		void SetTexture(Texture2D* pTexture);
+		void SetBrightness(float brightness);
 		Texture2D* GetTexture();
+
+		MaterialUniforms* GetUniforms();
+
+		void Update();
 	private:
-		Texture2D* pTexture;
+		Texture2D* pTexture = nullptr;
+		MaterialUniforms uniforms;
+
+		bool shouldUpdateUniforms = false;
 
 		void OnResourceDispose();
 	};

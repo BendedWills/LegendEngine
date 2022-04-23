@@ -26,6 +26,7 @@ Object::Object()
 
     CalculateTransformMatrix();
 	initialized = true;
+    singleDispose = true;
 }
 
 void Object::AddPosition(Vector3f position)
@@ -160,5 +161,5 @@ void Object::OnDispose()
     ClearComponents();
     ClearScripts();
     
-    Tether::VectorUtils::EraseAll(pApplication->objects, this);
+    pApplication->_OnObjectDispose(this);
 }

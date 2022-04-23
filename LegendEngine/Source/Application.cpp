@@ -359,8 +359,6 @@ Scene* Application::GetDefaultScene()
 
 void Application::SetActiveScene(Scene& scene)
 {
-	LEGENDENGINE_ASSERT_INITIALIZED();
-
 	SetActiveScene(&scene);
 }
 
@@ -368,13 +366,12 @@ void Application::SetActiveScene(Scene* pScene)
 {
 	LEGENDENGINE_ASSERT_INITIALIZED();
 
-	if (!pScene && pRenderer)
-		pRenderer->OnSceneRemove(pScene);
+	if (pScene)
+		if (pScene->pApplication != this)
+			return;
 
+	pRenderer->OnSceneChange(pScene, nullptr);
 	this->activeScene = pScene;
-
-	if (pRenderer)
-		pRenderer->OnSceneChange(pScene);
 }
 
 void Application::RemoveActiveScene()
@@ -474,7 +471,7 @@ void Application::OnDispose()
 
 void Application::RecieveResize(uint64_t width, uint64_t height)
 {
-	pRenderer->OnWindowResize();
+	pRenderer->OnWindowResize(width, height);
 
 	float aspect = (float)width / (float)height;
 	if (pActiveCamera)
@@ -483,76 +480,16 @@ void Application::RecieveResize(uint64_t width, uint64_t height)
 	OnResize(width, height);
 }
 
-void Application::OnSceneObjectAdd(Scene* pScene,
-	Objects::Object* pObject)
+void Application::_OnObjectDispose(Objects::Object* pObject)
 {
-	LEGENDENGINE_ASSERT_RENDERER_NULL();
-	
-	if (activeScene != pScene || !pRenderer)
-		return;
+	LEGENDENGINE_ASSERT_INITIALIZED();
 
-	if (pScene == &defaultScene)
-		pRenderer->OnDefaultObjectAdd(pScene, pObject);
-	else
-		pRenderer->OnSceneObjectAdd(pScene, pObject);
-}
-
-void Application::OnSceneObjectRemove(Scene* pScene,
-	Objects::Object* pObject)
-{
-	LEGENDENGINE_ASSERT_RENDERER_NULL();
-
-	if (activeScene != pScene)
-		return;
-
-	if (pScene == &defaultScene)
-		pRenderer->OnDefaultObjectRemove(pScene, pObject);
-	else
-		pRenderer->OnSceneObjectRemove(pScene, pObject);
-}
-
-void Application::OnSceneObjectComponentAdd(Scene* pScene, 
-	Objects::Object* pObject, const std::string& typeName, 
-	Objects::Components::Component* pComponent)
-{
-	LEGENDENGINE_ASSERT_RENDERER_NULL();
-
-	if (pScene != activeScene && pScene != &defaultScene)
-		return;
-
-	pRenderer->OnSceneObjectComponentAdd(pScene, pObject, typeName, pComponent);
-}
-
-void Application::OnSceneObjectComponentRemove(Scene* pScene, 
-	Objects::Object* pObject, const std::string& typeName, 
-	Objects::Components::Component* pComponent)
-{
-	LEGENDENGINE_ASSERT_RENDERER_NULL();
-
-	if (pScene != activeScene && pScene != &defaultScene)
-		return;
-
-	pRenderer->OnSceneObjectComponentRemove(pScene, pObject, typeName, pComponent);
-}
-
-void Application::OnSceneObjectEnable(Scene* pScene, Objects::Object* pObject)
-{
-	LEGENDENGINE_ASSERT_RENDERER_NULL();
-
-	if (pScene != activeScene && pScene != &defaultScene)
-		return;
-
-	pRenderer->OnSceneObjectEnable(pScene, pObject);
-}
-
-void Application::OnSceneObjectDisable(Scene* pScene, Objects::Object* pObject)
-{
-	LEGENDENGINE_ASSERT_RENDERER_NULL();
-
-	if (pScene != activeScene && pScene != &defaultScene)
-		return;
-
-	pRenderer->OnSceneObjectDisable(pScene, pObject);
+	for (uint64_t i = 0; i < objects.size(); i++)
+		if (objects[i] == pObject)
+		{
+			objects.erase(objects.begin() + i);
+			break;
+		}
 }
 
 void Application::SetScriptRecieveUpdates(

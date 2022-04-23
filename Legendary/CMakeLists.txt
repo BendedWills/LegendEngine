@@ -10,11 +10,20 @@ file(GLOB_RECURSE SOURCES
     "Headers/*.hpp" "Headers/*.h"
 )
 
+set(WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 if (WIN32 AND ("${CMAKE_BUILD_TYPE}" MATCHES "Release"))
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
+    add_executable(
+        ${PROJECT_NAME} 
+        WIN32 
+        ${SOURCES} 
+    )
 else()
-    add_executable(${PROJECT_NAME} ${SOURCES})
+    add_executable(
+        ${PROJECT_NAME} 
+        ${SOURCES} 
+    )
 endif()
 add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether)
 

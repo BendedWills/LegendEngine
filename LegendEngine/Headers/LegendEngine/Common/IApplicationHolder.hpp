@@ -17,7 +17,7 @@ namespace LegendEngine
     public:
         Application* GetApplication();
     protected:
-        Application* pApplication;
+        Application* pApplication = nullptr;
     };
 }
 

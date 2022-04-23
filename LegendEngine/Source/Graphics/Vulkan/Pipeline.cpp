@@ -55,19 +55,19 @@ bool Pipeline::InitPipeline(
 	{
 		VkVertexInputBindingDescription bindingDescription{};
 		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(VertexTypes::Vertex3c);
+		bindingDescription.stride = sizeof(VertexTypes::Vertex3);
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 		VkVertexInputAttributeDescription position;
 		position.location = 0;
 		position.binding = 0;
 		position.format = VK_FORMAT_R32G32B32_SFLOAT;
-		position.offset = offsetof(VertexTypes::Vertex3c, position);
+		position.offset = offsetof(VertexTypes::Vertex3, position);
 		VkVertexInputAttributeDescription color;
 		color.location = 1;
 		color.binding = 0;
 		color.format = VK_FORMAT_R32G32B32_SFLOAT;
-		color.offset = offsetof(VertexTypes::Vertex3c, color);
+		color.offset = offsetof(VertexTypes::Vertex3, texcoord);
 
 		bindingDescs.push_back(bindingDescription);
 		attribDescs.push_back(position);

@@ -6,15 +6,17 @@
 
 using namespace LegendEngine;
 
-bool VertexBuffer::Init(VertexTypes::Vertex3c* pVertices,
-    uint64_t vertexCount)
+bool VertexBuffer::Init(
+	VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
+    uint32_t* pIndices, uint64_t indexCount
+)
 {
     if (initialized)
         return false;
     
     pApplication->vertexBuffers.push_back(this);
     if (nativeSet)
-        if (!native->OnCreate(pVertices, vertexCount))
+        if (!native->OnCreate(pVertices, vertexCount, pIndices, indexCount))
             return false;
     
     initialized = true;

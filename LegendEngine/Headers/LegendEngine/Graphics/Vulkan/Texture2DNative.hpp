@@ -13,9 +13,11 @@
 namespace LegendEngine::Vulkan
 {
     class VulkanRenderer;
+    class MaterialNative;
     class Texture2DNative : public Resources::ITexture2DNative
     {
         friend VulkanRenderer;
+        friend MaterialNative;
     public:
         LEGENDENGINE_NO_COPY(Texture2DNative);
         
@@ -25,6 +27,8 @@ namespace LegendEngine::Vulkan
             Resources::ITexture2DNative(pTexture)
         {}
     protected:
+        VkSampler sampler;
+
         VkImage image;
         VmaAllocation imageAllocation;
 
