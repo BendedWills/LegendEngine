@@ -1177,8 +1177,11 @@ bool VulkanRenderer::DrawFrame()
 	// If it does throw an error, simply return true if it is suboptimal or
 	// out of date.
 	if (result != VK_SUCCESS)
+	{
+		shouldRecreateSwapchain = true;
 		return result == VK_SUBOPTIMAL_KHR 
 			|| result == VK_ERROR_OUT_OF_DATE_KHR;
+	}
 
 	UpdateUniforms(imageIndex);
 

@@ -20,13 +20,15 @@ bool Texture2D::Init(const std::string& path)
 	OnInit();
 
 	int width, height, channels;
-	uint8_t* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+	uint8_t* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	if (!data)
 	{
 		pApplication->Log("Failed to load texture (path = \"" + path + "\")", 
 			LogType::ERROR);
 		return false;
 	}
+	
+	channels = 4;
 
 	if (!Init(static_cast<uint64_t>(width), static_cast<uint64_t>(height),
 		static_cast<uint32_t>(channels),

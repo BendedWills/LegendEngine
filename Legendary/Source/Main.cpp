@@ -21,7 +21,7 @@ public:
 
 	void OnInit()
 	{
-		SetRecieveUpdates(true);
+		//SetRecieveUpdates(true);
 
 		// Add the mesh component
 		{
@@ -47,11 +47,8 @@ public:
 			mesh->Init(testVertices, 4, indices, 6);
 			mesh->SetMaterial(pMaterial);
 		}
-	}
 
-	void OnUpdate(float delta)
-	{
-		pObject->AddRotation(Vector3f(100 * delta));
+		pObject->AddRotation(Vector3f(0, 90, 0));
 	}
 private:
 	Material* pMaterial = nullptr;
@@ -165,6 +162,8 @@ public:
 		// Create the camera
 		camera = CreateObject<Camera>();
 		camera->AddScript<CameraScript>(camera.get());
+		camera->SetNearZ(0.01f);
+
 		SetActiveCamera(camera.get());
 
 		// Create the material
@@ -172,7 +171,7 @@ public:
 		material->Init();
 		{
 			texture = CreateResource<Texture2D>();
-			texture->Init("Assets/l.png");
+			texture->Init("Assets/planks.png");
 			
 			material->SetTexture(texture.get());
 		}
