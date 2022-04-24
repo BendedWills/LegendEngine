@@ -147,6 +147,18 @@ bool Pipeline::InitPipeline(
 	colorBlending.attachmentCount = 1;
 	colorBlending.pAttachments = &colorBlendAttachment;
 
+	VkPipelineDepthStencilStateCreateInfo depthStencil{};
+	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	depthStencil.depthTestEnable = VK_TRUE;
+	depthStencil.depthWriteEnable = VK_TRUE;
+	depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+	depthStencil.depthBoundsTestEnable = VK_FALSE;
+	depthStencil.minDepthBounds = 0.0f;
+	depthStencil.maxDepthBounds = 1.0f;
+	depthStencil.stencilTestEnable = VK_FALSE;
+	depthStencil.front = {};
+	depthStencil.back = {};
+
 	VkPipelineDynamicStateCreateInfo dynamicState{};
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicState.dynamicStateCount = pPipelineInfo->dynamicStateCount;
@@ -170,6 +182,7 @@ bool Pipeline::InitPipeline(
 	pipelineDesc.renderPass = pRenderer->renderPass;
 	pipelineDesc.subpass = 0;
 	pipelineDesc.basePipelineHandle = VK_NULL_HANDLE;
+	pipelineDesc.pDepthStencilState = &depthStencil;
 
 	if (pPipelineInfo->pDynamicStates && pPipelineInfo->dynamicStateCount > 0)
 		pipelineDesc.pDynamicState = &dynamicState;

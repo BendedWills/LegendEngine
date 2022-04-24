@@ -90,7 +90,7 @@ void Camera::CalculateViewMatrix()
 
 void Camera::CalculateProjectionMatrix()
 {
-	ubo.projection = Matrix4x4f::PerspectiveRH_NO(Math::Radians(fov),
+	ubo.projection = Matrix4x4f::PerspectiveRH_ZO(Math::Radians(fov),
 		aspect, nearZ, farZ);
 	ubo.projection[1][1] *= -1;
 }

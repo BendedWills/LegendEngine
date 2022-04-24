@@ -76,13 +76,16 @@ namespace LegendEngine::Vulkan
 		bool BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer);
 		bool EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer);
 		bool CreateImageView(VkImageView* pImageView, VkImage image, 
-			VkFormat format, VkImageViewType viewType);
+			VkFormat format, VkImageViewType viewType, VkImageAspectFlags aspflags);
 		bool CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
 			VmaAllocationInfo* pAllocInfo, uint64_t size);
 		bool ChangeImageLayout(VkImage image, VkFormat format, 
 			VkImageLayout oldLayout, VkImageLayout newLayout);
 		bool CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
 			uint64_t height);
+		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
+			VkImageTiling tiling, VkFormatFeatureFlags features);
+		VkFormat FindDepthFormat();
 
 		// Device stuff
 		Vulkan::Device device;
@@ -103,7 +106,6 @@ namespace LegendEngine::Vulkan
 		Vulkan::UniformManager cameraManager;
 		Vulkan::UniformBuffer cameraUniform;
 
-
 		VkRenderPass renderPass;
 		VkCommandPool commandPool;
 
@@ -114,11 +116,15 @@ namespace LegendEngine::Vulkan
 
 		VmaAllocator allocator;
 
+		VkImage depthImage;
+		VmaAllocation depthAlloc;
+		VkImageView depthImageView;
+
+		std::vector<VkFramebuffer> framebuffers;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
 		std::vector<VkFence> imagesInFlight;
-		std::vector<VkFramebuffer> framebuffers;
 		std::vector<VkImage> swapchainImages;
 		std::vector<VkImageView> swapchainImageViews;
 		std::vector<VkCommandBuffer> commandBuffers;
@@ -167,8 +173,9 @@ namespace LegendEngine::Vulkan
 		bool InitRenderPass();
 		bool InitUniforms();
 		bool InitPipeline();
-		bool InitFramebuffers();
 		bool InitCommandPool();
+		bool InitDepthImages();
+		bool InitFramebuffers();
 		bool InitCommandBuffers();
 		bool InitSyncObjects();
 

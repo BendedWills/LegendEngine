@@ -55,7 +55,7 @@ bool Texture2DNative::OnCreate(uint64_t width, uint64_t height, uint32_t channel
         return false;
 
     if (!pVulkanRenderer->CreateImageView(&imageView, image, imageFormat, 
-        VK_IMAGE_VIEW_TYPE_2D))
+        VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT))
     {
         pVulkanRenderer->device.WaitIdle();
         vmaDestroyImage(pVulkanRenderer->allocator, image, imageAllocation);

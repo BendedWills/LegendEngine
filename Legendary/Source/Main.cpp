@@ -233,8 +233,6 @@ private:
 	Ref<Texture2D> texture;
 };
 
-#include <unistd.h>
-
 #if defined(_WIN32) && !defined(_DEBUG)
 #include <Windows.h>
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
