@@ -11,6 +11,10 @@
 
 namespace LegendEngine::Objects::Scripts
 {
+    // Hack: To get around the warning, this function is used to access an
+    // object's application.
+    Application* _GetObjApp(Object* pObject);
+
     class ScriptHolder
     {
     public:
@@ -82,7 +86,7 @@ namespace LegendEngine::Objects::Scripts
                 Script* script = scripts[id].get();
 
                 script->pObject = pObject;
-                script->pApplication = pObject->GetApplication();
+                script->pApplication = _GetObjApp(pObject);
                 script->OnInit();
 
                 return true;

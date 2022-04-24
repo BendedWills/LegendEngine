@@ -280,7 +280,7 @@ Ref<VertexBuffer> Application::CreateVertexBuffer()
 	if (!pRenderer->CreateVertexBufferNative(vbuffer.get()))
 	{
 		Log("Failed to create vertex buffer!", LogType::ERROR);
-		return false;
+		return nullptr;
 	}
 
 	return vbuffer;

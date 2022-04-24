@@ -233,7 +233,7 @@ private:
 	Ref<Texture2D> texture;
 };
 
-#include <direct.h>
+#include <unistd.h>
 
 #if defined(_WIN32) && !defined(_DEBUG)
 #include <Windows.h>
@@ -261,8 +261,10 @@ int main()
 	}
 	Context::Dispose();
 
+#ifdef _WIN32
 	std::cout << "\nPress any key to continue..." << std::endl;
 	std::cin.get();
+#endif
 
 	return EXIT_SUCCESS;
 }
