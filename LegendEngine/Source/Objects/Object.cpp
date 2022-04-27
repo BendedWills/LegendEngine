@@ -36,13 +36,6 @@ void Object::AddPosition(Vector3f position)
     OnPositionChange();
 }
 
-void Object::AddRotation(Vector3f rotation)
-{
-    this->rotation += rotation;
-    CalculateTransformMatrix();
-    OnRotationChange();
-}
-
 void Object::AddScale(Vector3f scale)
 {
     this->scale += scale;
@@ -52,38 +45,57 @@ void Object::AddScale(Vector3f scale)
 
 void Object::SetPosition(Vector3f position)
 {
-    this->position = position;
-    CalculateTransformMatrix();
-    OnPositionChange();
-}
-
-void Object::SetRotation(Vector3f rotation)
-{
-    this->rotation = rotation;
-    CalculateTransformMatrix();
-    OnRotationChange();
+	this->position = position;
+	CalculateTransformMatrix();
+	OnPositionChange();
 }
 
 void Object::SetScale(Vector3f scale)
 {
-    this->scale = scale;
-    CalculateTransformMatrix();
-    OnScaleChange();
+	this->scale = scale;
+	CalculateTransformMatrix();
+	OnScaleChange();
 }
 
 Vector3f Object::GetPosition()
 {
-    return position;    
-}
-
-Vector3f Object::GetRotation()
-{
-    return rotation;    
+	return position;
 }
 
 Vector3f Object::GetScale()
 {
     return scale;
+}
+
+void Object::AddRotation(Vector3f rotation)
+{
+	this->rotation = Quaternion(this->rotation.GetEulerAngles() + rotation);
+	CalculateTransformMatrix();
+	OnRotationChange();
+}
+
+void Object::SetRotation(Vector3f rotation)
+{
+	this->rotation = rotation;
+	CalculateTransformMatrix();
+	OnRotationChange();
+}
+
+void Object::SetRotation(Quaternion rotation)
+{
+	this->rotation = rotation;
+	CalculateTransformMatrix();
+	OnRotationChange();
+}
+
+Vector3f Object::GetEulerRotation()
+{
+	return rotation.GetEulerAngles();
+}
+
+Quaternion Object::GetRotation()
+{
+	return rotation;
 }
 
 void Object::SetEnabled(bool enabled)
@@ -139,6 +151,17 @@ void Object::RemoveFromScene(Scene* pScene)
             scenes.erase(scenes.begin() + i);
 }
 
+void Object::OnDispose()
+{
+	if (nativeSet)
+		native->OnDispose();
+
+	ClearComponents();
+	ClearScripts();
+
+	pApplication->_OnObjectDispose(this);
+}
+
 void Object::OnComponentAdd(const std::string& typeName, 
     Components::Component* pComponent)
 {
@@ -151,15 +174,4 @@ void Object::OnComponentRemove(const std::string& typeName,
 {
     for (Scene* pScene : scenes)
         pScene->OnObjectComponentRemove(this, typeName, pComponent);
-}
-
-void Object::OnDispose()
-{
-	if (nativeSet)
-		native->OnDispose();
-
-    ClearComponents();
-    ClearScripts();
-    
-    pApplication->_OnObjectDispose(this);
 }

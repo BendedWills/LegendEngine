@@ -1,11 +1,23 @@
 #include <LegendEngine/Math/Funcs.hpp>
 
+#include <cmath>
+
 using namespace LegendEngine;
 
-float Math::Max(float arg0, float arg1)
-{
-    return arg0 < arg1 ? arg1 : arg0;
+#define LGENG_ABS_IMPL(type) \
+type Math::Abs(type arg0) \
+{ \
+	return arg0 > 0 ? arg0 : -arg0; \
 }
+
+#define LGENG_MAX_IMPL(type) \
+type Math::Max(type arg0, type arg1) \
+{ \
+	return arg0 < arg1 ? arg1 : arg0; \
+}
+
+LGENG_ABS_IMPL(float);
+LGENG_MAX_IMPL(float);
 
 float Math::Radians(float degrees)
 {
@@ -15,19 +27,4 @@ float Math::Radians(float degrees)
 float Math::Degrees(float radians)
 {
 	return radians * 180 / PI;
-}
-
-float Math::FastInverseSqrt(float num)
-{
-	const float threehalfs = 1.5F;
-	float y = num;
-
-	long i = *(long*)&y;
-
-	i = 0x5f3759df - (i >> 1);
-	y = *(float*)&i;
-
-	y = y * (threehalfs - ((num * 0.5F) * y * y));
-
-	return y;
 }

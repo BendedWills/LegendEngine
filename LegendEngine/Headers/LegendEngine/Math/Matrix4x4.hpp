@@ -2,6 +2,8 @@
 #define _LEGENDENGINE_MATH_MATRIX4X4_HPP
 
 #include <LegendEngine/Math/Vector4.hpp>
+#include <LegendEngine/Math/Quaternion.hpp>
+
 #include <cmath>
 
 namespace LegendEngine
@@ -15,6 +17,7 @@ namespace LegendEngine
 		
 		Matrix4x4();
 		Matrix4x4(T value);
+		Matrix4x4(Quaternion q);
 		
 		Matrix4x4(const Matrix4x4& ref);
 		Matrix4x4<T> operator=(const Matrix4x4<T>& toSet);

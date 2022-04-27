@@ -68,14 +68,17 @@ namespace LegendEngine::Objects
         Object();
 
         void AddPosition(Vector3f position);
-        void AddRotation(Vector3f rotation);
         void AddScale(Vector3f scale);
         void SetPosition(Vector3f position);
-        void SetRotation(Vector3f rotation);
         void SetScale(Vector3f scale);
         Vector3f GetPosition();
-        Vector3f GetRotation();
         Vector3f GetScale();
+
+		void AddRotation(Vector3f rotation);
+		void SetRotation(Vector3f rotation);
+		void SetRotation(Quaternion q);
+		Vector3f GetEulerRotation();
+		Quaternion GetRotation();
 
         void SetEnabled(bool enabled);
         bool IsEnabled();
@@ -90,8 +93,9 @@ namespace LegendEngine::Objects
 		virtual void OnScaleChange() {}
 
 		Vector3f position;
-		Vector3f rotation;
 		Vector3f scale;
+
+		Quaternion rotation;
 
         Matrix4x4f transform;
 

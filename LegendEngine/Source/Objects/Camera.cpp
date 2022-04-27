@@ -71,7 +71,7 @@ Camera::CameraUniforms* Camera::GetUniforms()
 
 void Camera::CalculateViewMatrix()
 {
-	Vector3f rotation = GetRotation();
+	Vector3f rotation = GetEulerRotation();
 	float yaw = rotation.x;
 	float pitch = rotation.y;
 	

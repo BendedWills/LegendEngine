@@ -118,7 +118,7 @@ public:
 	const float sense = 0.04f;
 	void OnRawMouseMove(Input::RawMouseMoveInfo& info)
 	{
-		Vector3f rotation = pObject->GetRotation();
+		Vector3f rotation = pObject->GetEulerRotation();
 
 		rotation += Vector3f(
 			 info.GetRawX() * sense,

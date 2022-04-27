@@ -13,6 +13,12 @@ namespace LegendEngine
 			c[i] = Vector4<T>(value);
 	}
 
+	template<typename T>
+	Matrix4x4<T>::Matrix4x4(Quaternion q)
+	{
+		// TODO
+	}
+
 	// The ref is the one to copy from (I always forget that)
 	template<typename T>
 	Matrix4x4<T>::Matrix4x4(const Matrix4x4& ref)

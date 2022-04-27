@@ -1,14 +1,18 @@
 #ifndef _LEGENDENGINE_MATH_FUNCS_HPP
 #define _LEGENDENGINE_MATH_FUNCS_HPP
 
+#define LGENG_MATH_ABS(type) type Abs(type arg0)
+#define LGENG_MATH_MAX(type) type Max(type arg0, type arg1)
+
 namespace LegendEngine::Math
 {
 	constexpr const float PI = 3.14159265358979323846f;
-
-	float Max(float arg0, float arg1);
+	
+	LGENG_MATH_ABS(float);
+	LGENG_MATH_MAX(float);
+	
 	float Radians(float degrees);
 	float Degrees(float radians);
-	float FastInverseSqrt(float num);
 }
 
 #endif //_LEGENDENGINE_MATH_FUNCS_HPP
