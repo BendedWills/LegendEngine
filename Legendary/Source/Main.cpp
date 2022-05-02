@@ -21,8 +21,6 @@ public:
 
 	void OnInit()
 	{
-		//SetRecieveUpdates(true);
-
 		// Add the mesh component
 		{
 			float r = (float)rand() / RAND_MAX;
@@ -47,6 +45,8 @@ public:
 			mesh->Init(testVertices, 4, indices, 6);
 			mesh->SetMaterial(pMaterial);
 		}
+
+		pObject->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
 	}
 private:
 	Material* pMaterial = nullptr;
@@ -87,8 +87,12 @@ public:
 		if (keys.ctrl)
 			normMoveDir *= 3.0f;
 
-		pObject->AddPosition(pCamera->GetForwardVector() * normMoveDir.x * delta);
-		pObject->AddPosition(Vector3f(1, 0, 0) * normMoveDir.y * delta);
+		Vector3f forward = pCamera->GetForwardVector();
+		forward.y = 0;
+		forward = Math::Normalize(forward);
+
+		pObject->AddPosition(forward * normMoveDir.x * delta);
+		pObject->AddPosition(pCamera->GetRightVector() * normMoveDir.y * delta);
 
 		// Vertical movement
 		if (keys.space)
@@ -124,10 +128,10 @@ public:
 		if (vert < -89.9f)
 			vert = -89.9f;
 
-		Quaternion qHorz = Math::AngleAxis(Math::Radians(horz), Vector3f(0, 1, 0));
-		Quaternion qVert = Math::AngleAxis(Math::Radians(vert), Vector3f(1, 0, 0));
+		Quaternion q = Math::AngleAxis(Math::Radians(vert), Vector3f(1, 0, 0));
+		q *= Math::AngleAxis(Math::Radians(horz), Vector3f(0, 1, 0));
 		
-		pObject->SetRotation(Math::Normalize(qHorz * qVert));
+		pObject->SetRotation(q);
 	}
 
 	struct Keys
@@ -165,23 +169,41 @@ public:
 
 		SetActiveCamera(camera.get());
 
-		// Create the material
-		material = CreateResource<Material>();
-		material->Init();
+		// Create the materials
 		{
+			material = CreateResource<Material>();
+			material->Init();
+			material2 = CreateResource<Material>();
+			material2->Init();
+
 			texture = CreateResource<Texture2D>();
 			texture->Init("Assets/planks.png");
+			texture2 = CreateResource<Texture2D>();
+			texture2->Init("Assets/tiles.png");
 			
 			material->SetTexture(texture.get());
+			material2->SetTexture(texture2.get());
 		}
 
 		// Create the objects
 		{
 			cube1 = CreateObject<Object>();
 			cube1->AddScript<TestScript>(material.get());
+			cube1->SetPosition(Vector3f(0, 0.5f, 0));
+
+			cube2 = CreateObject<Object>();
+			cube2->AddScript<TestScript>(material.get());
+			cube2->SetPosition(Vector3f(3, 0.5f, 0));
+
+			floor = CreateObject<Object>();
+			floor->AddScript<TestScript>(material2.get());
+			floor->SetScale(Vector3f(10));
+			floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 			
 			// Add the objects to the scene
 			testScene.AddObject(cube1.get());
+			testScene.AddObject(cube2.get());
+			GetDefaultScene()->AddObject(floor.get());
 		}
 
 		// Lastly, set the active scene.
@@ -208,9 +230,13 @@ public:
 
 		camera->Dispose();
 		cube1->Dispose();
+		cube2->Dispose();
+		floor->Dispose();
 		
 		material->Dispose();
+		material2->Dispose();
 		texture->Dispose();
+		texture2->Dispose();
 	}
 private:
 	Stopwatch fpsTimer;
@@ -220,9 +246,13 @@ private:
 
 	Ref<Camera> camera;
 	Ref<Object> cube1;
+	Ref<Object> cube2;
+	Ref<Object> floor;
 	
 	Ref<Material> material;
+	Ref<Material> material2;
 	Ref<Texture2D> texture;
+	Ref<Texture2D> texture2;
 };
 
 #if defined(_WIN32) && !defined(_DEBUG)

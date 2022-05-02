@@ -27,7 +27,6 @@ namespace LegendEngine::Objects
         void SetFarZ(float farZ);
 
         Vector3f GetForwardVector();
-        Vector3f GetForwardVectorPitch();
         Vector3f GetRightVector();
 
         Matrix4x4f& GetViewMatrix();
@@ -49,6 +48,7 @@ namespace LegendEngine::Objects
         float farZ = 1000.0f;
 
         CameraUniforms ubo;
+        Vector3f forwardVector;
         Vector3f rightVector;
     };
 }

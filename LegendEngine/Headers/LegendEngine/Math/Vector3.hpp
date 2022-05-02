@@ -21,22 +21,22 @@ namespace LegendEngine
 		T& operator[](int index);
 
 		// Arithmetic (+ - * /)
-		Vector3<T> operator+(const Vector3<T>& toAdd);
-		Vector3<T> operator-(const Vector3<T>& toAdd);
-		Vector3<T> operator*(const Vector3<T>& toAdd);
-		Vector3<T> operator/(const Vector3<T>& toAdd);
-		Vector3<T> operator+(const T& value);
-		Vector3<T> operator-(const T& value);
-		Vector3<T> operator*(const T& value);
-		Vector3<T> operator/(const T& value);
+		Vector3<T> operator+(const Vector3<T>& value) const;
+		Vector3<T> operator-(const Vector3<T>& value) const;
+		Vector3<T> operator*(const Vector3<T>& value) const;
+		Vector3<T> operator/(const Vector3<T>& value) const;
+		Vector3<T> operator+(const T& value) const;
+		Vector3<T> operator-(const T& value) const;
+		Vector3<T> operator*(const T& value) const;
+		Vector3<T> operator/(const T& value) const;
 
 		Vector3<T> operator-();
 
 		// Assignment (+= -= *= /=)
-		Vector3<T>& operator+=(const Vector3<T>& toAdd);
-		Vector3<T>& operator-=(const Vector3<T>& toAdd);
-		Vector3<T>& operator*=(const Vector3<T>& toAdd);
-		Vector3<T>& operator/=(const Vector3<T>& toAdd);
+		Vector3<T>& operator+=(const Vector3<T>& value);
+		Vector3<T>& operator-=(const Vector3<T>& value);
+		Vector3<T>& operator*=(const Vector3<T>& value);
+		Vector3<T>& operator/=(const Vector3<T>& value);
 		Vector3<T>& operator+=(const T& value);
 		Vector3<T>& operator-=(const T& value);
 		Vector3<T>& operator*=(const T& value);

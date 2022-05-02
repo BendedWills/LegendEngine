@@ -14,6 +14,10 @@ namespace LegendEngine
 		Quaternion(const Quaternion& ref);
 		Quaternion operator=(const Quaternion& ref);
 
+		template<typename T>
+		Vector3<T> operator*(const Vector3<T>& value);
+
+		Quaternion operator/(float value);
 		Quaternion operator*(const Quaternion& value);
 		Quaternion& operator*=(const Quaternion& value);
 		

@@ -1,5 +1,15 @@
 namespace LegendEngine
 {
+	LGENG_MATH_FUNC Quaternion Math::Conjugate(Quaternion q)
+	{
+		return Quaternion(q.w, -q.x, -q.y, -q.z);
+	}
+
+	LGENG_MATH_FUNC Quaternion Math::Inverse(Quaternion q)
+	{
+		return Conjugate(q) / Dot(q, q);
+	}
+
 	template<typename T>
 	LGENG_MATH_FUNC Quaternion Math::AngleAxis(T angle, Vector3<T> axis)
 	{
@@ -15,16 +25,14 @@ namespace LegendEngine
 		Vector3<T> halfVec(vec);
 		halfVec /= T(2);
 
-		// Pitch
 		float cx = std::cos(halfVec.x);
-		float sx = std::sin(halfVec.x);
-		// Yaw
 		float cy = std::cos(halfVec.y);
-		float sy = std::sin(halfVec.y);
-		// Roll
 		float cz = std::cos(halfVec.z);
+		
+		float sx = std::sin(halfVec.x);
+		float sy = std::sin(halfVec.y);
 		float sz = std::sin(halfVec.z);
-
+		
 		Quaternion q;
 		q.w = cx * cy * cz + sx * sy * sz;
 		q.x = sx * cy * cz - cx * sy * sz;
@@ -32,6 +40,12 @@ namespace LegendEngine
 		q.z = cx * cy * sz - sx * sy * cz;
 
 		return q;
+	}
+
+	template<typename T>
+	LGENG_MATH_FUNC Vector3<T> Math::Rotate(Quaternion q, Vector3<T> axis)
+	{
+		return q * axis;
 	}
 
 	LGENG_MATH_FUNC Quaternion Math::Normalize(Quaternion q)
@@ -43,10 +57,10 @@ namespace LegendEngine
 			return q;
 
 		return Quaternion(
+			q.w / length,
 			q.x / length,
 			q.y / length,
-			q.z / length,
-			q.w / length
+			q.z / length
 		);
 	}
 

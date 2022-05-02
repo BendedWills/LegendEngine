@@ -30,6 +30,21 @@ namespace LegendEngine
 		return *this;
 	}
 
+	template<typename T>
+	LGENG_MATH_FUNC Vector3<T> Quaternion::operator*(const Vector3<T>& v)
+	{
+		Vector3<T> quatVec(x, y, z);
+		Vector3<T> uv(Math::Cross(quatVec, v));
+		Vector3<T> uuv(Math::Cross(quatVec, uv));
+
+		return v + ((uv * w) + uuv) * static_cast<T>(2);
+	}
+
+	LGENG_MATH_FUNC Quaternion Quaternion::operator/(float v)
+	{
+		return Quaternion(w / v, x / v, y / v, z / v);
+	}
+
 	LGENG_MATH_FUNC Quaternion Quaternion::operator*(const Quaternion& q)
 	{
 		return Quaternion(*this) *= q;
@@ -37,10 +52,12 @@ namespace LegendEngine
 
 	LGENG_MATH_FUNC Quaternion& Quaternion::operator*=(const Quaternion& q)
 	{
-		w = w * q.w - x * q.x - y * q.y - z * q.z;
-		x = w * q.x + x * q.w + y * q.z - z * q.y;
-		y = w * q.y + y * q.w + z * q.x - x * q.z;
-		z = w * q.z + z * q.w + x * q.y - y * q.x;
+		Quaternion p(*this);
+
+		w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z;
+		x = p.w * q.x + p.x * q.w + p.y * q.z - p.z * q.y;
+		y = p.w * q.y + p.y * q.w + p.z * q.x - p.x * q.z;
+		z = p.w * q.z + p.z * q.w + p.x * q.y - p.y * q.x;
 		return *this;
 	}
 

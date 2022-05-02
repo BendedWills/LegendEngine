@@ -60,49 +60,49 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator+(const Vector3<T>& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator+(const Vector3<T>& value) const
 	{
 		return Vector3<T>(*this) += value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-(const Vector3<T>& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-(const Vector3<T>& value) const
 	{
 		return Vector3<T>(*this) -= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator*(const Vector3<T>& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator*(const Vector3<T>& value) const
 	{
 		return Vector3<T>(*this) *= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator+(const T& value)
-	{
-		return Vector3<T>(*this) += value;
-	}
-
-	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-(const T& value)
-	{
-		return Vector3<T>(*this) -= value;
-	}
-
-	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator*(const T& value)
-	{
-		return Vector3<T>(*this) *= value;
-	}
-
-	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator/(const T& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator/(const Vector3<T>& value) const
 	{
 		return Vector3<T>(*this) /= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator/(const Vector3<T>& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator+(const T& value) const
+	{
+		return Vector3<T>(*this) += value;
+	}
+
+	template<typename T>
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-(const T& value) const
+	{
+		return Vector3<T>(*this) -= value;
+	}
+
+	template<typename T>
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator*(const T& value) const
+	{
+		return Vector3<T>(*this) *= value;
+	}
+
+	template<typename T>
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator/(const T& value) const
 	{
 		return Vector3<T>(*this) /= value;
 	}
@@ -110,7 +110,11 @@ namespace LegendEngine
 	template<typename T>
 	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-()
 	{
-		return Vector3<T>(*this) -= 0;
+		return Vector3<T>(
+			-x,
+			-y,
+			-z
+		);
 	}
 
 	template<typename T>

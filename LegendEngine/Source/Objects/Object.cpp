@@ -117,8 +117,7 @@ void Object::CalculateTransformMatrix()
     transform = Matrix4x4f::MakeIdentity();
     transform = Math::Translate(transform, position);
     transform = Math::Scale(transform, scale);
-
-    //transform *= Matrix4x4f(rotation);
+    transform *= Matrix4x4f(rotation);
 	
     updateUniforms = true;
 }

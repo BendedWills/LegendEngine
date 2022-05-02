@@ -4,11 +4,6 @@
 
 #include <LegendEngine/LegendEngine.hpp>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 using namespace LegendEngine;
 
 std::string Vec2Str(const Vector2f& vec)
@@ -138,18 +133,11 @@ int main()
 	// Quaternions
 	std::cout << "Quaternions: \n\n";
 	{
-		Quaternion origin = Math::Euler(Vector3f(90.0f, 0, 0));
-		
-		std::cout << "Original:\n";
-		std::cout
-			<< origin.w << "W, "
-			<< origin.x << "X, "
-			<< origin.y << "Y, "
-			<< origin.z << "Z"
-		<< "\n";
+		Quaternion q = Math::AngleAxis(Math::Radians(50.0f), Vector3f(1, 0, 0));
+		q *= Math::AngleAxis(Math::Radians(84.0f), Vector3f(0, 1, 0));
+		q = Math::Normalize(q);
 
-		glm::quat q(glm::vec3(90.0f, 0, 0));
-		std::cout << "Expected:\n";
+		std::cout << "Original:\n";
 		std::cout
 			<< q.w << "W, "
 			<< q.x << "X, "

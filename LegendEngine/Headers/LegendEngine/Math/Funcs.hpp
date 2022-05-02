@@ -70,10 +70,15 @@ namespace LegendEngine::Math
 	float Dot(Quaternion q1, Quaternion q2);
 	float Length(Quaternion q);
 
+	Quaternion Conjugate(Quaternion q);
+	Quaternion Inverse(Quaternion q);
 	template<typename T>
 	Quaternion AngleAxis(T angle, Vector3<T> axis);
 	template<typename T>
 	Quaternion Euler(Vector3<T> angles);
+
+	template<typename T>
+	Vector3<T> Rotate(Quaternion q, Vector3<T> axis);
 
 // --------- Vector functions ---------
 

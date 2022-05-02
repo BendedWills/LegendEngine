@@ -41,14 +41,7 @@ void Camera::SetFarZ(float farZ)
 
 Vector3f Camera::GetForwardVector()
 {
-	Quaternion q = GetRotation();
-	return Vector3f(q.x, 0, q.z);
-}
-
-Vector3f Camera::GetForwardVectorPitch()
-{
-	Quaternion q = GetRotation();
-	return Vector3f(q.x, q.y, q.z);
+	return forwardVector;
 }
 
 Vector3f Camera::GetRightVector()
@@ -75,14 +68,12 @@ void Camera::CalculateViewMatrix()
 {
 	Quaternion q = GetRotation();
 	
-	float ang = Math::Radians(90.0f);
-	float ca = std::cos(ang);
-	float sa = std::sin(ang);
-	rightVector.x = q.x * ca - q.z * sa;
-	rightVector.z = q.z * sa + q.z * ca;
+	forwardVector = Math::Rotate(Math::Inverse(q), Vector3f(0, 0, -1.0f));
+	rightVector = Math::Rotate(Math::Inverse(q), Vector3f(1.0f, 0, 0));
 
-	ubo.view = Matrix4x4f(q);
-	ubo.view = Math::Translate(ubo.view, -position);
+	Matrix4x4f rot = Matrix4x4f(q);
+	Matrix4x4f pos = Math::Translate(Matrix4x4f::MakeIdentity(), -position);
+	ubo.view = rot * pos;
 }
 
 void Camera::CalculateProjectionMatrix()
