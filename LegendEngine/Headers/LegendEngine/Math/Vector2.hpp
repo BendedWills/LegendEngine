@@ -1,7 +1,9 @@
 #ifndef _LEGENDENGINE_MATH_VECTOR2_HPP
 #define _LEGENDENGINE_MATH_VECTOR2_HPP
 
-#include <iostream>
+#include <LegendEngine/Math/Defs.hpp>
+
+#include <cstdint>
 #include <cmath>
 
 namespace LegendEngine

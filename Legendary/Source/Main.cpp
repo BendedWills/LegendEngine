@@ -47,8 +47,6 @@ public:
 			mesh->Init(testVertices, 4, indices, 6);
 			mesh->SetMaterial(pMaterial);
 		}
-
-		pObject->AddRotation(Vector3f(0, 90, 0));
 	}
 private:
 	Material* pMaterial = nullptr;
@@ -85,12 +83,12 @@ public:
 		if (keys.d)
 			moveDir += Vector2f(0, 1);
 
-		Vector2f normMoveDir = Vector2f::Normalize(moveDir);
+		Vector2f normMoveDir = Math::Normalize(moveDir);
 		if (keys.ctrl)
 			normMoveDir *= 3.0f;
 
 		pObject->AddPosition(pCamera->GetForwardVector() * normMoveDir.x * delta);
-		pObject->AddPosition(pCamera->GetRightVector() * normMoveDir.y * delta);
+		pObject->AddPosition(Vector3f(1, 0, 0) * normMoveDir.y * delta);
 
 		// Vertical movement
 		if (keys.space)
@@ -118,20 +116,18 @@ public:
 	const float sense = 0.04f;
 	void OnRawMouseMove(Input::RawMouseMoveInfo& info)
 	{
-		Vector3f rotation = pObject->GetEulerRotation();
+		horz += info.GetRawX() * sense;
+		vert += info.GetRawY() * sense;
 
-		rotation += Vector3f(
-			 info.GetRawX() * sense,
-			-info.GetRawY() * sense,
-			0
-		);
+		if (vert > 89.9f)
+			vert = 89.9f;
+		if (vert < -89.9f)
+			vert = -89.9f;
 
-		if (rotation.y > 89.9f)
-			rotation.y = 89.9f;
-		if (rotation.y < -89.9f)
-			rotation.y = -89.9f;
-
-		pObject->SetRotation(rotation);
+		Quaternion qHorz = Math::AngleAxis(Math::Radians(horz), Vector3f(0, 1, 0));
+		Quaternion qVert = Math::AngleAxis(Math::Radians(vert), Vector3f(1, 0, 0));
+		
+		pObject->SetRotation(Math::Normalize(qHorz * qVert));
 	}
 
 	struct Keys
@@ -145,6 +141,9 @@ public:
 		bool ctrl = false;
 	};
 	Keys keys;
+
+	float horz = 0.0f;
+	float vert = 0.0f;
 private:
 	Camera* pCamera;
 };
@@ -181,13 +180,8 @@ public:
 			cube1 = CreateObject<Object>();
 			cube1->AddScript<TestScript>(material.get());
 			
-			cube2 = CreateObject<Object>();
-			cube2->AddScript<TestScript>(material.get());
-			cube2->SetPosition(Vector3f(3, 0, 0));
-			
 			// Add the objects to the scene
 			testScene.AddObject(cube1.get());
-			testScene.AddObject(cube2.get());
 		}
 
 		// Lastly, set the active scene.
@@ -214,8 +208,7 @@ public:
 
 		camera->Dispose();
 		cube1->Dispose();
-		cube2->Dispose();
-
+		
 		material->Dispose();
 		texture->Dispose();
 	}
@@ -227,8 +220,7 @@ private:
 
 	Ref<Camera> camera;
 	Ref<Object> cube1;
-	Ref<Object> cube2;
-
+	
 	Ref<Material> material;
 	Ref<Texture2D> texture;
 };

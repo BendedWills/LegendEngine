@@ -67,16 +67,9 @@ Vector3f Object::GetScale()
     return scale;
 }
 
-void Object::AddRotation(Vector3f rotation)
+void Object::SetRotation(Vector3f rot)
 {
-	this->rotation = Quaternion(this->rotation.GetEulerAngles() + rotation);
-	CalculateTransformMatrix();
-	OnRotationChange();
-}
-
-void Object::SetRotation(Vector3f rotation)
-{
-	this->rotation = rotation;
+	this->rotation = Math::Euler(rot);
 	CalculateTransformMatrix();
 	OnRotationChange();
 }
@@ -86,11 +79,6 @@ void Object::SetRotation(Quaternion rotation)
 	this->rotation = rotation;
 	CalculateTransformMatrix();
 	OnRotationChange();
-}
-
-Vector3f Object::GetEulerRotation()
-{
-	return rotation.GetEulerAngles();
 }
 
 Quaternion Object::GetRotation()
@@ -127,15 +115,11 @@ void Object::CalculateTransformMatrix()
         return;
 
     transform = Matrix4x4f::MakeIdentity();
-    transform = Matrix4x4f::Translate(transform, position);
-    transform = Matrix4x4f::Scale(transform, scale);
-	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.x),
-		Vector3f(1, 0, 0));
-	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.y),
-		Vector3f(0, 1, 0));
-	transform = Matrix4x4f::Rotate(transform, Math::Radians(rotation.z),
-		Vector3f(0, 0, 1));
+    transform = Math::Translate(transform, position);
+    transform = Math::Scale(transform, scale);
 
+    //transform *= Matrix4x4f(rotation);
+	
     updateUniforms = true;
 }
 

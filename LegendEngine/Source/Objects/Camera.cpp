@@ -41,12 +41,14 @@ void Camera::SetFarZ(float farZ)
 
 Vector3f Camera::GetForwardVector()
 {
-	return forwardVector;
+	Quaternion q = GetRotation();
+	return Vector3f(q.x, 0, q.z);
 }
 
 Vector3f Camera::GetForwardVectorPitch()
 {
-	return forwardVectorPitch;
+	Quaternion q = GetRotation();
+	return Vector3f(q.x, q.y, q.z);
 }
 
 Vector3f Camera::GetRightVector()
@@ -71,26 +73,21 @@ Camera::CameraUniforms* Camera::GetUniforms()
 
 void Camera::CalculateViewMatrix()
 {
-	Vector3f rotation = GetEulerRotation();
-	float yaw = rotation.x;
-	float pitch = rotation.y;
+	Quaternion q = GetRotation();
 	
-	forwardVector.x = cos(Math::Radians(yaw));
-	forwardVector.z = sin(Math::Radians(yaw));
+	float ang = Math::Radians(90.0f);
+	float ca = std::cos(ang);
+	float sa = std::sin(ang);
+	rightVector.x = q.x * ca - q.z * sa;
+	rightVector.z = q.z * sa + q.z * ca;
 
-	forwardVectorPitch.x = cos(Math::Radians(yaw)) * cos(Math::Radians(pitch));
-	forwardVectorPitch.y = sin(Math::Radians(pitch));
-	forwardVectorPitch.z = sin(Math::Radians(yaw)) * cos(Math::Radians(pitch));
-	
-	rightVector.x = cos(Math::Radians(yaw + 90.0f));
-	rightVector.z = sin(Math::Radians(yaw + 90.0f));
-
-	ubo.view = Matrix4x4f::LookAt(position, position + forwardVectorPitch, UP);
+	ubo.view = Matrix4x4f(q);
+	ubo.view = Math::Translate(ubo.view, -position);
 }
 
 void Camera::CalculateProjectionMatrix()
 {
-	ubo.projection = Matrix4x4f::PerspectiveRH_ZO(Math::Radians(fov),
+	ubo.projection = Math::PerspectiveRH_ZO(Math::Radians(fov),
 		aspect, nearZ, farZ);
 	ubo.projection[1][1] *= -1;
 }

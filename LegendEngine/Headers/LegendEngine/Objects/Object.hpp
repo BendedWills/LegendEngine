@@ -74,10 +74,8 @@ namespace LegendEngine::Objects
         Vector3f GetPosition();
         Vector3f GetScale();
 
-		void AddRotation(Vector3f rotation);
 		void SetRotation(Vector3f rotation);
 		void SetRotation(Quaternion q);
-		Vector3f GetEulerRotation();
 		Quaternion GetRotation();
 
         void SetEnabled(bool enabled);

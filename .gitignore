@@ -7,4 +7,5 @@ Build
 vgcore.*
 vulkan.supp
 
+glm
 LegendEngine/Assets/Bin

@@ -30,6 +30,8 @@ namespace LegendEngine
 		Vector3<T> operator*(const T& value);
 		Vector3<T> operator/(const T& value);
 
+		Vector3<T> operator-();
+
 		// Assignment (+= -= *= /=)
 		Vector3<T>& operator+=(const Vector3<T>& toAdd);
 		Vector3<T>& operator-=(const Vector3<T>& toAdd);
@@ -43,11 +45,6 @@ namespace LegendEngine
 		T x = 0.0f;
 		T y = 0.0f;
 		T z = 0.0f;
-
-		static Vector3<T> Normalize(Vector3<T> v);
-		static Vector3<T> Cross(Vector3<T> v1, Vector3<T> v2);
-		static float Dot(Vector3<T> v1, Vector3<T> v2);
-		static float Length(Vector3<T> v);
 	};
 }
 

@@ -2,7 +2,6 @@
 #define _LEGENDENGINE_MATH_VECTOR4_HPP
 
 #include <LegendEngine/Math/Vector3.hpp>
-#include <iostream>
 
 namespace LegendEngine
 {
@@ -46,10 +45,6 @@ namespace LegendEngine
 		T y = 0.0f;
 		T z = 0.0f;
 		T w = 0.0f;
-
-		static Vector4<T> Normalize(Vector4<T> v);
-		static float Dot(Vector4<T> v1, Vector4<T> v2);
-		static float Length(Vector4<T> v);
 	};
 }
 

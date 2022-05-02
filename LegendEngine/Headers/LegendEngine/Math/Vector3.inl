@@ -1,11 +1,11 @@
 namespace LegendEngine
 {
 	template<typename T>
-	Vector3<T>::Vector3()
+	LGENG_MATH_FUNC Vector3<T>::Vector3()
 	{}
 
 	template<typename T>
-	Vector3<T>::Vector3(T value)
+	LGENG_MATH_FUNC Vector3<T>::Vector3(T value)
 		:
 		x(value),
 		y(value),
@@ -13,7 +13,7 @@ namespace LegendEngine
 	{}
 
 	template<typename T>
-	Vector3<T>::Vector3(T x, T y, T z)
+	LGENG_MATH_FUNC Vector3<T>::Vector3(T x, T y, T z)
 		:
 		x(x),
 		y(y),
@@ -21,7 +21,7 @@ namespace LegendEngine
 	{}
 
 	template<typename T>
-	Vector3<T>::Vector3(Vector2<T> vec)
+	LGENG_MATH_FUNC Vector3<T>::Vector3(Vector2<T> vec)
 	{
 		x = vec.x;
 		y = vec.y;
@@ -29,7 +29,7 @@ namespace LegendEngine
 
 	// The ref is the one to copy from (I always forget that)
 	template<typename T>
-	Vector3<T>::Vector3(const Vector3<T>& ref)
+	LGENG_MATH_FUNC Vector3<T>::Vector3(const Vector3<T>& ref)
 	{
 		x = ref.x;
 		y = ref.y;
@@ -37,7 +37,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	T& Vector3<T>::operator[](int index)
+	LGENG_MATH_FUNC T& Vector3<T>::operator[](int index)
 	{
 		switch (index)
 		{
@@ -51,132 +51,106 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator=(const Vector3<T>& toSet)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator=(const Vector3<T>& value)
 	{
-		x = toSet.x;
-		y = toSet.y;
-		z = toSet.z;
+		x = value.x;
+		y = value.y;
+		z = value.z;
 		return *this;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator+(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator+(const Vector3<T>& value)
 	{
-		Vector3<T> toReturn;
-		toReturn.x = x + toAdd.x;
-		toReturn.y = y + toAdd.y;
-		toReturn.z = z + toAdd.z;
-		return toReturn;
+		return Vector3<T>(*this) += value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator-(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-(const Vector3<T>& value)
 	{
-		Vector3<T> toReturn;
-		toReturn.x = x - toAdd.x;
-		toReturn.y = y - toAdd.y;
-		toReturn.z = z - toAdd.z;
-		return toReturn;
+		return Vector3<T>(*this) -= value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator*(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator*(const Vector3<T>& value)
 	{
-		Vector3<T> product;
-		product.x = x * toAdd.x;
-		product.y = x * toAdd.y;
-		product.z = z * toAdd.z;
-		return product;
+		return Vector3<T>(*this) *= value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator+(const T& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator+(const T& value)
 	{
-		Vector3<T> product;
-		product.x = value;
-		product.y = value;
-		product.z = value;
-		return product;
+		return Vector3<T>(*this) += value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator-(const T& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-(const T& value)
 	{
-		Vector3<T> product;
-		product.x = value;
-		product.y = value;
-		product.z = value;
-		return product;
+		return Vector3<T>(*this) -= value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator*(const T& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator*(const T& value)
 	{
-		Vector3<T> product;
-		product.x = x * value;
-		product.y = y * value;
-		product.z = z * value;
-		return product;
+		return Vector3<T>(*this) *= value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator/(const T& value)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator/(const T& value)
 	{
-		Vector3<T> product;
-		product.x = value;
-		product.y = value;
-		product.z = value;
-		return product;
+		return Vector3<T>(*this) /= value;
 	}
 
 	template<typename T>
-	Vector3<T> Vector3<T>::operator/(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator/(const Vector3<T>& value)
 	{
-		Vector3<T> toReturn;
-		toReturn.x = x / toAdd.x;
-		toReturn.y = y / toAdd.y;
-		toReturn.z = z / toAdd.z;
-		return toReturn;
+		return Vector3<T>(*this) /= value;
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator+=(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T> Vector3<T>::operator-()
 	{
-		x += toAdd.x;
-		y += toAdd.y;
-		z += toAdd.z;
+		return Vector3<T>(*this) -= 0;
+	}
+
+	template<typename T>
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator+=(const Vector3<T>& value)
+	{
+		x += value.x;
+		y += value.y;
+		z += value.z;
 		return *this;
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator-=(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator-=(const Vector3<T>& value)
 	{
-		x -= toAdd.x;
-		y -= toAdd.y;
-		z -= toAdd.z;
+		x -= value.x;
+		y -= value.y;
+		z -= value.z;
 		return *this;
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator*=(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator*=(const Vector3<T>& value)
 	{
-		x *= toAdd.x;
-		y *= toAdd.y;
-		z *= toAdd.z;
+		x *= value.x;
+		y *= value.y;
+		z *= value.z;
 		return *this;
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator/=(const Vector3<T>& toAdd)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator/=(const Vector3<T>& value)
 	{
-		x /= toAdd.x;
-		y /= toAdd.y;
-		z /= toAdd.z;
+		x /= value.x;
+		y /= value.y;
+		z /= value.z;
 		return *this;
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator+=(const T& value)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator+=(const T& value)
 	{
 		x += value;
 		y += value;
@@ -185,7 +159,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator-=(const T& value)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator-=(const T& value)
 	{
 		x -= value;
 		y -= value;
@@ -194,7 +168,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator*=(const T& value)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator*=(const T& value)
 	{
 		x *= value;
 		y *= value;
@@ -203,53 +177,11 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Vector3<T>& Vector3<T>::operator/=(const T& value)
+	LGENG_MATH_FUNC Vector3<T>& Vector3<T>::operator/=(const T& value)
 	{
 		x /= value;
 		y /= value;
 		z /= value;
 		return *this;
-	}
-
-	template<typename T>
-	Vector3<T> Vector3<T>::Normalize(Vector3<T> v)
-	{
-		// Normalizing a vector is simply dividing it by its length so that
-		// its length is one.
-		float length = Length(v);
-		if (length == 0)
-			return v;
-
-		Vector3<T> vec = Vector3<T>(
-			v.x / length,
-			v.y / length,
-			v.z / length
-		);
-		return vec;
-	}
-
-	template<typename T>
-	float Vector3<T>::Dot(Vector3<T> v1, Vector3<T> v2)
-	{
-		float product = v1.x * v2.x;
-		product += v1.y * v2.y;
-		product += v1.z * v2.z;
-		return product;
-	}
-
-	template<typename T>
-	Vector3<T> Vector3<T>::Cross(Vector3<T> v1, Vector3<T> v2)
-	{
-		return Vector3<T>(
-			v1.y * v2.z - v1.z * v2.y,
-			v1.z * v2.x - v1.x * v2.z,
-			v1.x * v2.y - v1.y * v2.x
-		);
-	}
-
-	template<typename T>
-	float Vector3<T>::Length(Vector3<T> v)
-	{
-		return sqrt(Dot(v, v));
 	}
 }

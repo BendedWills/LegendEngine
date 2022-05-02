@@ -2,9 +2,8 @@
 
 namespace LegendEngine
 {
-	
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::Scale(Matrix4x4<T> m, Vector3<T> scale)
+	LGENG_MATH_FUNC Matrix4x4<T> Math::Scale(Matrix4x4<T> m, Vector3<T> scale)
 	{
 		Matrix4x4<T> product;
 		product.c[0] = m.c[0] * scale.x;
@@ -16,7 +15,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::Rotate(Matrix4x4<T> m, T a, Vector3<T> rotation)
+	LGENG_MATH_FUNC Matrix4x4<T> Math::Rotate(Matrix4x4<T> m, T a, Vector3<T> rotation)
 	{
 		T ca = cos(a);
 		T sa = sin(a);
@@ -47,7 +46,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::Translate(Matrix4x4<T> m, Vector3<T> pos)
+	LGENG_MATH_FUNC Matrix4x4<T> Math::Translate(Matrix4x4<T> m, Vector3<T> pos)
 	{
 		Matrix4x4<T> product = m;
 		product.c[3] = m[0] * pos.x + m[1] * pos.y + m[2] * pos.z + m[3];
@@ -56,7 +55,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::LookAt(Vector3<T> position, Vector3<T> target,
+	LGENG_MATH_FUNC Matrix4x4<T> Math::LookAt(Vector3<T> position, Vector3<T> target,
 		Vector3<T> up)
 	{
 		Vector3<T> centerDir = Vector3<T>::Normalize(target - position);
@@ -81,7 +80,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::Ortho(T left, T right, T bottom, T top, T near, T far)
+	LGENG_MATH_FUNC Matrix4x4<T> Math::Ortho(T left, T right, T bottom, T top, T near, T far)
 	{
 		Matrix4x4<T> product = Matrix4x4<T>::MakeIdentity();
 		product[0][0] =  T(2) / (right - left);
@@ -95,7 +94,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::PerspectiveRH_ZO(T fov, T aspect, T nearZ, T farZ)
+	LGENG_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_ZO(T fov, T aspect, T nearZ, T farZ)
 	{
 		if (abs(aspect - std::numeric_limits<T>::epsilon()) <= T(0))
 			return Matrix4x4<T>(0);
@@ -113,7 +112,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::PerspectiveRH_NO(T fov, T aspect, T nearZ, T farZ)
+	LGENG_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_NO(T fov, T aspect, T nearZ, T farZ)
 	{
 		if (abs(aspect - std::numeric_limits<T>::epsilon()) <= T(0))
 			return Matrix4x4<T>(0);
@@ -126,50 +125,6 @@ namespace LegendEngine
 		product[2][2] = -(farZ + nearZ) / (farZ - nearZ);
 		product[2][3] = -T(1);
 		product[3][2] = -(T(2) * farZ * nearZ) / (farZ - nearZ);
-
-		return product;
-	}
-
-	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::MakeIdentity()
-	{
-		Matrix4x4<T> mat;
-		mat.c[0] = Vector4<T>(1, 0, 0, 0);
-		mat.c[1] = Vector4<T>(0, 1, 0, 0);
-		mat.c[2] = Vector4<T>(0, 0, 1, 0);
-		mat.c[3] = Vector4<T>(0, 0, 0, 1);
-
-		return mat;
-	}
-
-	template<typename T>
-	Matrix4x4<T> Matrix4x4<T>::Multiply(Matrix4x4<T> m)
-	{
-		Matrix4x4<T> product;
-		product.c[0] = Vector4f(
-			c[0].x * m.c[0].x + c[1].x * m.c[0].y + c[2].x * m.c[0].z + c[3].x * m.c[0].w,
-			c[0].y * m.c[0].x + c[1].y * m.c[0].y + c[2].y * m.c[0].z + c[3].y * m.c[0].w,
-			c[0].z * m.c[0].x + c[1].z * m.c[0].y + c[2].z * m.c[0].z + c[3].z * m.c[0].w,
-			c[0].w * m.c[0].x + c[1].w * m.c[0].y + c[2].w * m.c[0].z + c[3].w * m.c[0].w
-		);
-		product.c[1] = Vector4f(
-			c[0].x * m.c[1].x + c[1].x * m.c[1].y + c[2].x * m.c[1].z + c[3].x * m.c[1].w,
-			c[0].y * m.c[1].x + c[1].y * m.c[1].y + c[2].y * m.c[1].z + c[3].y * m.c[1].w,
-			c[0].z * m.c[1].x + c[1].z * m.c[1].y + c[2].z * m.c[1].z + c[3].z * m.c[1].w,
-			c[0].w * m.c[1].x + c[1].w * m.c[1].y + c[2].w * m.c[1].z + c[3].w * m.c[1].w
-		);
-		product.c[2] = Vector4f(
-			c[0].x * m.c[2].x + c[1].x * m.c[2].y + c[2].x * m.c[2].z + c[3].x * m.c[2].w,
-			c[0].y * m.c[2].x + c[1].y * m.c[2].y + c[2].y * m.c[2].z + c[3].y * m.c[2].w,
-			c[0].z * m.c[2].x + c[1].z * m.c[2].y + c[2].z * m.c[2].z + c[3].z * m.c[2].w,
-			c[0].w * m.c[2].x + c[1].w * m.c[2].y + c[2].w * m.c[2].z + c[3].w * m.c[2].w
-		);
-		product.c[3] = Vector4f(
-			c[0].x * m.c[3].x + c[1].x * m.c[3].y + c[2].x * m.c[3].z + c[3].x * m.c[3].w,
-			c[0].y * m.c[3].x + c[1].y * m.c[3].y + c[2].y * m.c[3].z + c[3].y * m.c[3].w,
-			c[0].z * m.c[3].x + c[1].z * m.c[3].y + c[2].z * m.c[3].z + c[3].z * m.c[3].w,
-			c[0].w * m.c[3].x + c[1].w * m.c[3].y + c[2].w * m.c[3].z + c[3].w * m.c[3].w
-		);
 
 		return product;
 	}

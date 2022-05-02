@@ -4,6 +4,11 @@
 
 #include <LegendEngine/LegendEngine.hpp>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 using namespace LegendEngine;
 
 std::string Vec2Str(const Vector2f& vec)
@@ -42,11 +47,6 @@ void PrintMat4x4(const Matrix4x4f& mat)
 		<< ", " << mat.c[3].w << "]\n";
 }
 
-void NormalizeVector(Vector3f* pVec)
-{
-
-}
-
 int main()
 {
 	// Adding vectors
@@ -68,7 +68,7 @@ int main()
 	std::cout << "Vector normalization: \n\n";
 	{
 		Vector3f vec(1, 0, 0);
-		Vector3f normalized = Vector3f::Normalize(vec);
+		Vector3f normalized = Math::Normalize(vec);
 		
 		std::cout << "Original vector: " << Vec3Str(vec) << "\n";
 		std::cout << "Normalized: " << Vec3Str(normalized) << "\n";
@@ -138,8 +138,8 @@ int main()
 	// Quaternions
 	std::cout << "Quaternions: \n\n";
 	{
-		Quaternion origin;
-
+		Quaternion origin = Math::Euler(Vector3f(90.0f, 0, 0));
+		
 		std::cout << "Original:\n";
 		std::cout
 			<< origin.w << "W, "
@@ -148,7 +148,14 @@ int main()
 			<< origin.z << "Z"
 		<< "\n";
 
-		std::cout << "Euler angles:\n" << Vec3Str(origin.GetEulerAngles()) << "\n";
+		glm::quat q(glm::vec3(90.0f, 0, 0));
+		std::cout << "Expected:\n";
+		std::cout
+			<< q.w << "W, "
+			<< q.x << "X, "
+			<< q.y << "Y, "
+			<< q.z << "Z"
+		<< "\n";
 	}
 	std::cout << "\n\n";
 

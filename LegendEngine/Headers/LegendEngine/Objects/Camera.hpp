@@ -49,8 +49,6 @@ namespace LegendEngine::Objects
         float farZ = 1000.0f;
 
         CameraUniforms ubo;
-        Vector3f forwardVector;
-        Vector3f forwardVectorPitch;
         Vector3f rightVector;
     };
 }
