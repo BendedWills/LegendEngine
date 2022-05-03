@@ -8,3 +8,4 @@ vgcore.*
 vulkan.supp
 
 LegendEngine/Assets/Bin
+/build/

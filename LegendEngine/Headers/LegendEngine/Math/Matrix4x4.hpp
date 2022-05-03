@@ -4,6 +4,7 @@
 #include <LegendEngine/Math/Vector4.hpp>
 #include <LegendEngine/Math/Quaternion.hpp>
 
+#include <cstdint>
 #include <cmath>
 
 namespace LegendEngine

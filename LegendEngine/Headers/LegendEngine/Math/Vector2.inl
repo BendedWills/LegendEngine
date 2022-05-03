@@ -112,7 +112,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator*=(const Vector2<T>& toAdd)
+	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator*=(const Vector2<T>& value)
 	{
 		x *= value.x;
 		y *= value.y;
@@ -120,7 +120,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator/=(const Vector2<T>& toAdd)
+	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator/=(const Vector2<T>& value)
 	{
 		x /= value.x;
 		y /= value.y;

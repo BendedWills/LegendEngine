@@ -157,7 +157,6 @@ endforeach()
 project ("LegendEngine")
 
 # Add Tests
-add_subdirectory(Tests/MultipleApps)
 add_subdirectory(Tests/Math)
 
 # Add tether

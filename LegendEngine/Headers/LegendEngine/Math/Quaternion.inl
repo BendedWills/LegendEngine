@@ -1,4 +1,7 @@
 #include <LegendEngine/Math/Constants.hpp>
+#include <LegendEngine/Math/Funcs_Generic.hpp>
+#include <LegendEngine/Math/Funcs_Vector3.hpp>
+#include <cmath>
 
 namespace LegendEngine
 {

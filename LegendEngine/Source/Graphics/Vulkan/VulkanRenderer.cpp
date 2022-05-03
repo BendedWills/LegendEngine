@@ -324,6 +324,8 @@ VkFormat VulkanRenderer::FindSupportedFormat(const std::vector<VkFormat>& candid
 			&& (props.optimalTilingFeatures & features) == features)
 			return format;
 	}
+
+	return candidates[0];
 }
 
 VkFormat VulkanRenderer::FindDepthFormat()
