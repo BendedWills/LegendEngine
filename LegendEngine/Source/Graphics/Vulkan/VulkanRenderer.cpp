@@ -344,14 +344,14 @@ VkFormat VulkanRenderer::FindDepthFormat()
 bool VulkanRenderer::RecreateSwapchain()
 {
 	LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer",
-		"Recreating swapchain (Window resize)",
+		"Recreating swapchain (GraphicalWindow resize)",
 		LogType::DEBUG);
 
 	// The device might still have work. Wait for it to finish before 
 	// recreating the swapchain.
 	device.WaitIdle();
 
-	Tether::IWindow* pWindow = pApplication->GetWindow();
+	Tether::SimpleWindow* pWindow = pApplication->GetWindow();
 
 	DisposeSwapchain();
 	if (!InitSwapchain(pWindow->GetWidth(), pWindow->GetHeight())

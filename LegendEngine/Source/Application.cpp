@@ -70,7 +70,7 @@ bool Application::Init(
 
 	initialized = true;
 
-	*((Tether::IWindow**)(&pWindow)) = &window;
+	*((Tether::SimpleWindow**)(&pWindow)) = &window;
 
 	if (!Context::InitAPI(api, debug))
 		return false;
@@ -141,7 +141,7 @@ std::string Application::GetName()
 	return applicationName;
 }
 
-Tether::IWindow* Application::GetWindow()
+Tether::SimpleWindow* Application::GetWindow()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
 	return &window;

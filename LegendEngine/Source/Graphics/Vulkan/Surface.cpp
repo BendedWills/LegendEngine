@@ -16,7 +16,7 @@
 using namespace LegendEngine::Vulkan;
 using namespace Tether;
 
-bool Surface::Init(Instance* pInstance, Tether::IWindow* window)
+bool Surface::Init(Instance* pInstance, Tether::SimpleWindow* window)
 {
     if (initialized)
         return false;

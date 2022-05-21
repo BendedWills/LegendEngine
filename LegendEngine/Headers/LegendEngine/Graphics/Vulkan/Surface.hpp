@@ -31,7 +31,7 @@ namespace LegendEngine::Vulkan
          * 
          * @returns True if initialization succeeded. Otherwise, false.
          */
-        bool Init(Instance* pInstance, Tether::IWindow* window);
+        bool Init(Instance* pInstance, Tether::SimpleWindow* window);
 
         VkSurfaceKHR Get();
     protected:

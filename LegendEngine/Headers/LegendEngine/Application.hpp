@@ -154,10 +154,10 @@ namespace LegendEngine
 		Application* Get();
 		IRenderer* GetRenderer();
 		std::string GetName();
-		Tether::IWindow* GetWindow();
+		Tether::SimpleWindow* GetWindow();
 
 		IRenderer *const renderer = nullptr;
-		Tether::IWindow *const pWindow = nullptr;
+		Tether::SimpleWindow *const pWindow = nullptr;
 	protected:
 		/**
 		 * @brief Called before the window is shown, before OnInit.
