@@ -1,3 +1,5 @@
+// Resources are objects like Materials, Shaders, Textures, etc...
+
 #ifndef _LEGENDENGINE_RESOURCES_IRESOURCE_HPP
 #define _LEGENDENGINE_RESOURCES_IRESOURCE_HPP
 

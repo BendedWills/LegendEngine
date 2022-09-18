@@ -108,12 +108,12 @@ void MaterialNative::UpdateDescriptorSets()
 		// Write texture if it exists
 		VkWriteDescriptorSet imageWrite{};
 		VkDescriptorImageInfo imageInfo{};
-		if (pMaterial->GetTexture())
+		Resources::Texture2D* pTexture = pMaterial->GetTexture();
+		if (pTexture && pTexture->IsInitialized())
 		{
 			writeSize++;
 
-			Texture2DNative* texNative =
-				(Texture2DNative*)pMaterial->GetTexture()->GetNative();
+			Texture2DNative* texNative = (Texture2DNative*)pTexture->GetNative();
 
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfo.sampler = texNative->sampler;

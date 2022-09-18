@@ -1253,13 +1253,18 @@ void VulkanRenderer::UpdateSceneUniforms(uint64_t imageIndex, Scene* pScene)
 	using namespace Objects::Components;
 	using namespace LegendEngine::Resources;
 
+	// Cache the name of the mesh component for finding it later
 	static const std::string meshCompName = TypeTools::GetTypeName<MeshComponent>();
 
+	// Get the list of mesh components for every object in the scene
 	auto* comps = pScene->GetObjectComponents();
 	if (comps->find(meshCompName) == comps->end())
 		return;
 	std::vector<Component*>* meshComps = &comps->at(meshCompName);
 
+	// For every mesh component, find its object (if it is enabled) and update the
+	// uniforms for that object (position, rotation, scale, etc), then get its material
+	// and update it (if it has one).
 	for (uint64_t i = 0; i < meshComps->size(); i++)
 	{
 		MeshComponent* component = (MeshComponent*)meshComps->at(i);
