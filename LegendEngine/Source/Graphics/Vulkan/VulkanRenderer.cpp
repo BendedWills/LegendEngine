@@ -370,13 +370,13 @@ bool VulkanRenderer::RecreateCommandBuffers()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
 
+	// Wait for all frames to finish rendering.
+	// Command buffers cannot be reset during frame rendering.
+	for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
+		vkWaitForFences(device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
+
 	for (uint64_t i = 0; i < commandBuffers.size(); i++)
 	{
-		// Wait for all frames to finish rendering.
-		// Command buffers cannot be reset during frame rendering.
-		for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
-			vkWaitForFences(device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
-
 		vkResetCommandBuffer(commandBuffers[i], 0);
 		if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i))
 			return false;
