@@ -351,7 +351,7 @@ bool VulkanRenderer::RecreateSwapchain()
 	// recreating the swapchain.
 	device.WaitIdle();
 
-	Tether::SimpleWindow* pWindow = pApplication->GetWindow();
+	Tether::Window* pWindow = pApplication->GetWindow();
 
 	DisposeSwapchain();
 	if (!InitSwapchain(pWindow->GetWidth(), pWindow->GetHeight())
@@ -536,9 +536,9 @@ bool VulkanRenderer::OnRendererInit()
 	timer.Set();
 
 	pApplication = GetApplication();
-	pInstance = Context::GetVulkanInstance();
+	pInstance = VulkanContext::GetVulkanInstance();
 
-	if (!Context::IsVulkanInitialized())
+	if (!VulkanContext::IsVulkanInitialized())
 	{
 		pApplication->Log("Vulkan was not initialized for the Context",
 			LogType::ERROR);

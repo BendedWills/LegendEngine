@@ -154,10 +154,10 @@ namespace LegendEngine
 		Application* Get();
 		IRenderer* GetRenderer();
 		std::string GetName();
-		Tether::SimpleWindow* GetWindow();
+		Tether::Window* GetWindow();
 
 		IRenderer *const renderer = nullptr;
-		Tether::SimpleWindow *const pWindow = nullptr;
+		Tether::Window *const pWindow = nullptr;
 	protected:
 		/**
 		 * @brief Called before the window is shown, before OnInit.
@@ -247,7 +247,7 @@ namespace LegendEngine
 		bool logging = false;
 		bool debug = false;
 
-		Tether::SimpleWindow window;
+		Tether::Window window;
 
 #pragma region Graphics
 		Ref<IRenderer> pRenderer;

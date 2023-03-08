@@ -23,7 +23,7 @@ bool Swapchain::Init(
 	this->imageCount = createInfo->minImageCount;
 	
 	if (vkCreateSwapchainKHR(pDevice->Get(), 
-		createInfo, nullptr, &swapchain))
+		createInfo, nullptr, &m_Swapchain))
 		return false;
 	
 	initialized = true;
@@ -32,17 +32,17 @@ bool Swapchain::Init(
 
 uint32_t Swapchain::GetImageCount()
 {
-	return imageCount;
+	return m_ImageCount;
 }
 
 std::vector<VkImage> Swapchain::GetImages()
 {
 	uint32_t numImages;
-	vkGetSwapchainImagesKHR(pDevice->Get(), swapchain, &numImages,
+	vkGetSwapchainImagesKHR(pDevice->Get(), m_Swapchain, &numImages,
 		nullptr);
 	
 	std::vector<VkImage> swapchainImages(numImages);
-	vkGetSwapchainImagesKHR(pDevice->Get(), swapchain, &numImages,
+	vkGetSwapchainImagesKHR(pDevice->Get(), m_Swapchain, &numImages,
 		swapchainImages.data());
 
 	return swapchainImages;
@@ -92,12 +92,12 @@ VkFormat Swapchain::GetImageFormat()
 
 VkSwapchainKHR Swapchain::Get()
 {
-	return swapchain;
+	return m_Swapchain;
 }
 
 void Swapchain::OnDispose()
 {
-	vkDestroySwapchainKHR(pDevice->Get(), swapchain, nullptr);
+	vkDestroySwapchainKHR(pDevice->Get(), m_Swapchain, nullptr);
 }
 
 VkPresentModeKHR Swapchain::ChoosePresentMode(

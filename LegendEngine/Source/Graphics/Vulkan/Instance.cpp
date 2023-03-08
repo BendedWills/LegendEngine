@@ -232,25 +232,19 @@ SwapchainDetails Instance::QuerySwapchainSupport(
 	return details;
 }
 
-void Instance::AddDebugMessenger(DebugCallback* callback)
+void Instance::AddDebugMessenger(DebugCallback& callback)
 {
-	if (!callback)
-		return;
-
 	for (uint64_t i = 0; i < debugCallbacks.size(); i++)
-		if (debugCallbacks[i] == callback)
+		if (debugCallbacks[i] == &callback)
 			return;
 		
-	debugCallbacks.push_back(callback);
+	debugCallbacks.push_back(&callback);
 }
 
-void Instance::RemoveDebugMessenger(DebugCallback* callback)
+void Instance::RemoveDebugMessenger(DebugCallback& callback)
 {
-	if (!callback)
-		return;
-	
 	for (uint64_t i = 0; i < debugCallbacks.size(); i++)
-		if (debugCallbacks[i] == callback)
+		if (debugCallbacks[i] == &callback)
 		{
 			debugCallbacks.erase(debugCallbacks.begin() + i);
 			return;

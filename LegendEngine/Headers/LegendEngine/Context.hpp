@@ -11,7 +11,7 @@ namespace LegendEngine
 {
 	class ContextInternal : public IDisposable
 	{
-		friend class Context;
+		friend class VulkanContext;
 	protected:
 		LEGENDENGINE_DISPOSE_ON_DESTRUCT(ContextInternal);
 
@@ -35,7 +35,7 @@ namespace LegendEngine
 	#endif // OPENGL_API
 	};
 
-	class Context
+	class VulkanContext
 	{
 	public:
 		static bool InitAPI(RenderingAPI api, bool debugMode);

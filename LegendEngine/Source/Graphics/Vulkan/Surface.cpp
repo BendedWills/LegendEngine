@@ -16,7 +16,7 @@
 using namespace LegendEngine::Vulkan;
 using namespace Tether;
 
-bool Surface::Init(Instance* pInstance, Tether::SimpleWindow* window)
+bool Surface::Init(Instance* pInstance, Tether::Window* window)
 {
     if (initialized)
         return false;
@@ -30,7 +30,7 @@ bool Surface::Init(Instance* pInstance, Tether::SimpleWindow* window)
     createInfo.window = window->GetStorage()->window;
     
     if (vkCreateXlibSurfaceKHR(pInstance->Get(), &createInfo, nullptr,
-        &surface) != VK_SUCCESS)
+        &m_Surface) != VK_SUCCESS)
         return false;
 #elif _WIN32
     Tether::Storage::VarStorage* varStorage = 
@@ -42,7 +42,7 @@ bool Surface::Init(Instance* pInstance, Tether::SimpleWindow* window)
     createInfo.hinstance = varStorage->hinst;
     
     if (vkCreateWin32SurfaceKHR(pInstance->Get(), &createInfo, nullptr,
-        &surface) != VK_SUCCESS)
+        &m_Surface) != VK_SUCCESS)
         return false;
 #endif
     
@@ -52,12 +52,12 @@ bool Surface::Init(Instance* pInstance, Tether::SimpleWindow* window)
 
 VkSurfaceKHR Surface::Get()
 {
-    return surface;
+    return m_Surface;
 }
 
 void Surface::OnDispose()
 {
-    vkDestroySurfaceKHR(pInstance->Get(), surface, nullptr);
+    vkDestroySurfaceKHR(pInstance->Get(), m_Surface, nullptr);
 }
 
 #endif // VULKAN_API

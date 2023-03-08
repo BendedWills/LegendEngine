@@ -23,7 +23,7 @@ namespace LegendEngine::Vulkan
 	class Instance : public IDisposable
 	{
 	public:
-		Instance() {}
+		Instance() = default;
 		LEGENDENGINE_NO_COPY(Instance);
 
 		/**
@@ -54,13 +54,13 @@ namespace LegendEngine::Vulkan
 		 * 
 		 * @param messenger The debug messenger.
 		 */
-		void AddDebugMessenger(DebugCallback* messenger);
+		void AddDebugMessenger(DebugCallback& messenger);
 		/**
 		 * @brief Removes a debug messenger.
 		 * 
 		 * @param messenger The debug messenger.
 		 */
-		void RemoveDebugMessenger(DebugCallback* messenger);
+		void RemoveDebugMessenger(DebugCallback& messenger);
 
 		VkInstance Get();
 		std::vector<VkExtensionProperties> GetAvailableExtentions();
@@ -85,8 +85,8 @@ namespace LegendEngine::Vulkan
 
 		// The Vulkan instance. Essentially, it is the connection between this
 		// application and Vulkan.
-		VkInstance instance;
-		VkDebugUtilsMessengerEXT debugMessenger;
+		VkInstance instance = nullptr;
+		VkDebugUtilsMessengerEXT debugMessenger = nullptr;
 		
 		std::vector<DebugCallback*> debugCallbacks;
 		std::vector<VkExtensionProperties> extentions;

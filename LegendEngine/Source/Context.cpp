@@ -51,22 +51,22 @@ void ContextInternal::OnDispose()
 #endif // VULKAN_API
 }
 
-bool Context::InitAPI(RenderingAPI api, bool debugMode)
+bool VulkanContext::InitAPI(RenderingAPI api, bool debugMode)
 {
 	return context.InitAPI(api, debugMode);
 }
 
-Vulkan::Instance* Context::GetVulkanInstance()
+Vulkan::Instance* VulkanContext::GetVulkanInstance()
 {
 	return &context.instance;
 }
 
-bool Context::IsVulkanInitialized()
+bool VulkanContext::IsVulkanInitialized()
 {
 	return context.vulkanInitialized;
 }
 
-void Context::Dispose()
+void VulkanContext::Dispose()
 {
 	context.Dispose();
 }

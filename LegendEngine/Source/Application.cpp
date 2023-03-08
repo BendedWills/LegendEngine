@@ -70,9 +70,9 @@ bool Application::Init(
 
 	initialized = true;
 
-	*((Tether::SimpleWindow**)(&pWindow)) = &window;
+	*((Tether::Window**)(&pWindow)) = &window;
 
-	if (!Context::InitAPI(api, debug))
+	if (!VulkanContext::InitAPI(api, debug))
 		return false;
 
 	switch (api)
@@ -141,7 +141,7 @@ std::string Application::GetName()
 	return applicationName;
 }
 
-Tether::SimpleWindow* Application::GetWindow()
+Tether::Window* Application::GetWindow()
 {
 	LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
 	return &window;
@@ -400,7 +400,7 @@ bool Application::InitVulkan()
 		return false;
 	}
 
-	Context::GetVulkanInstance()->AddDebugMessenger(&callback);
+	VulkanContext::GetVulkanInstance()->AddDebugMessenger(&callback);
 
 	vulkanInitialized = true;
 	return true;
@@ -424,7 +424,7 @@ void Application::DisposeGraphics()
 
 #ifdef VULKAN_API
 	if (vulkanInitialized)
-		Context::GetVulkanInstance()->RemoveDebugMessenger(&callback);
+		VulkanContext::GetVulkanInstance()->RemoveDebugMessenger(&callback);
 #endif // VULKAN_API
 }
 
