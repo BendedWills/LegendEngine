@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Application.hpp>
-#include <LegendEngine/Context.hpp>
+#include <LegendEngine/GraphicsContext.hpp>
 
 #include <CompiledAssets/solid.vert.spv.h>
 #include <CompiledAssets/solid.frag.spv.h>

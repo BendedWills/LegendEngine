@@ -1,5 +1,5 @@
 #include <LegendEngine/Application.hpp>
-#include <LegendEngine/Context.hpp>
+#include <LegendEngine/GraphicsContext.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Objects/Camera.hpp>

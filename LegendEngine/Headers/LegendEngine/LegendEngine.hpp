@@ -3,7 +3,7 @@
 
 #include <LegendEngine/Math/Math.hpp>
 
-#include <LegendEngine/Context.hpp>
+#include <LegendEngine/GraphicsContext.hpp>
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>

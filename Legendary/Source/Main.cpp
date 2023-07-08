@@ -5,9 +5,9 @@
 #include <LegendEngine/LegendEngine.hpp>
 
 using namespace LegendEngine;
-using namespace LegendEngine::Objects;
-using namespace LegendEngine::Resources;
-using namespace LegendEngine::Objects::Components;
+using namespace Objects;
+using namespace Resources;
+using namespace Components;
 
 using namespace std::literals::chrono_literals;
 
@@ -63,8 +63,8 @@ public:
 	void OnInit()
 	{
 		SetRecieveUpdates(true);
-		pApplication->pWindow->AddInputListener(this, Input::InputType::KEY);
-		pApplication->pWindow->AddInputListener(this, Input::InputType::RAW_MOUSE_MOVE);
+		pApplication->pWindow->AddInputListener(*this, Input::InputType::KEY);
+		pApplication->pWindow->AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
 	}
 
 	void OnUpdate(float delta)
@@ -155,9 +155,29 @@ private:
 class Triangle : public Application
 {
 public:
+	Triangle()
+	{
+
+	}
+
+	~Triangle()
+	{
+		testScene.ClearObjects();
+
+		camera->Dispose();
+		cube1->Dispose();
+		cube2->Dispose();
+		floor->Dispose();
+
+		material->Dispose();
+		material2->Dispose();
+		texture->Dispose();
+		texture2->Dispose();
+	}
+
 	bool OnPreInit()
 	{
-		pWindow->SetCursorMode(Utils::CursorMode::DISABLED);
+		pWindow->SetCursorMode(Utils::Window::CursorMode::DISABLED);
 		pWindow->SetRawInputEnabled(true);
 
 		InitScene(testScene);
@@ -223,21 +243,6 @@ public:
 			fpsTimer.Set();
 		}
 	}
-
-	void OnStop()
-	{
-		testScene.ClearObjects();
-
-		camera->Dispose();
-		cube1->Dispose();
-		cube2->Dispose();
-		floor->Dispose();
-		
-		material->Dispose();
-		material2->Dispose();
-		texture->Dispose();
-		texture2->Dispose();
-	}
 private:
 	Stopwatch fpsTimer;
 	Stopwatch timer;
@@ -263,28 +268,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 int main()
 #endif
 {
-	Context::InitAPI(RenderingAPI::VULKAN, true);
-	{
-		Triangle triangle;
+	GraphicsContext::Create(RenderingAPI::VULKAN, true);
+
+	Triangle triangle;
 #if defined(_DEBUG)
-		if (!triangle.Init("Legendary", true, true))
-			return EXIT_FAILURE;
+	if (!triangle.Init("Legendary", true, true))
+		return EXIT_FAILURE;
 #else
-		if (!triangle.Init("Legendary", false, false))
-			return EXIT_FAILURE;
+	if (!triangle.Init("Legendary", false, false))
+		return EXIT_FAILURE;
 #endif
 
-		if (!triangle.Run())
-			return EXIT_FAILURE;
-
-		triangle.Dispose();
-	}
-	Context::Dispose();
-
-#ifdef _WIN32
-	std::cout << "\nPress any key to continue..." << std::endl;
-	std::cin.get();
-#endif
+	if (!triangle.Run())
+		return EXIT_FAILURE;
 
 	return EXIT_SUCCESS;
 }
