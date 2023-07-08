@@ -1,11 +1,4 @@
-/*
- * The Application class is an interface to be implemented by other types of
- * applications.
- * Using this class as an interface is optional.
- */
-
-#ifndef _LEGENDENGINE_APPLICATION_HPP
-#define _LEGENDENGINE_APPLICATION_HPP
+#pragma once
 
 #include <string>
 
@@ -332,5 +325,3 @@ namespace LegendEngine
 		return resource;
 	}
 }
-
-#endif //_LEGENDENGINE_APPLICATION_HPP

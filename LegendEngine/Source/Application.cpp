@@ -46,12 +46,6 @@ namespace LegendEngine
 		RenderingAPI api
 	)
 	{
-		if (initialized)
-		{
-			Log("Tried to initialize twice, continuing...", LogType::DEBUG);
-			return false;
-		}
-
 		this->pRenderer = nullptr;
 		this->applicationName = applicationName;
 		this->logging = logging;
