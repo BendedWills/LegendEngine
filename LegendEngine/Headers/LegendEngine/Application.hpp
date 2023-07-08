@@ -9,7 +9,6 @@
 
 #include <string>
 
-#include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Stopwatch.hpp>
@@ -41,7 +40,7 @@ namespace LegendEngine
 	}
 
 	class IRenderer;
-	class Application : public IDisposable
+	class Application
 	{
 		friend Scene;
 		friend Objects::Object;
@@ -50,12 +49,13 @@ namespace LegendEngine
 		friend Resources::IResource;
 	public:
 		LEGENDENGINE_NO_COPY(Application);
-		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Application);
-
-		Application() 
-			:
-			eventHandler(this)
-		{}
+		
+		Application(
+			const std::string& applicationName,
+			bool logging,
+			bool debug,
+			RenderingAPI api
+		);
 
 		/**
 		 * @brief Initializes the application
@@ -247,7 +247,7 @@ namespace LegendEngine
 		bool logging = false;
 		bool debug = false;
 
-		Tether::Window window;
+		Scope<Tether::Window> m_Window;
 
 #pragma region Graphics
 		Ref<IRenderer> pRenderer;
