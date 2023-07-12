@@ -9,7 +9,7 @@ namespace LegendEngine::Vulkan
 		m_Instance(CreateInstanceInfo(applicationName.data()), debug)
 	{}
 
-	Instance& GraphicsContext::GetInstance() const
+	GraphicsContext::Instance& GraphicsContext::GetInstance()
 	{
 		return m_Instance;
 	}
@@ -18,7 +18,7 @@ namespace LegendEngine::Vulkan
 		const char* appName)
 	{
 		TetherVulkan::InstanceInfo info;
-		info.applicationName = appName.data();
+		info.applicationName = appName;
 		info.engineName = "LegendEngine";
 		info.CreateInstance = vkCreateInstance;
 		info.EnumerateInstanceExtensionProperties = vkEnumerateInstanceExtensionProperties;

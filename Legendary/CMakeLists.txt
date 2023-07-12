@@ -25,7 +25,7 @@ else()
         ${SOURCES} 
     )
 endif()
-add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether)
+add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether tetherRendering)
 
 target_include_directories(${PROJECT_NAME} 
 PUBLIC 
@@ -33,6 +33,7 @@ PUBLIC
     "../LegendEngine/Headers"
 PRIVATE 
     "../LegendEngine/Vendor/Tether/Headers"
+    "../LegendEngine/Vendor/Tether.Rendering/Headers"
     "../LegendEngine/Vendor/VMA/include"
     ${Vulkan_INCLUDE_DIR}
 )
@@ -43,6 +44,7 @@ if (UNIX)
         ${CMAKE_DL_LIBS} 
         LegendEngine 
         tether 
+        tetherRendering
         pthread 
         X11
     )

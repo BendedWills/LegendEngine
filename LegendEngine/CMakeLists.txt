@@ -194,7 +194,7 @@ file(GLOB_RECURSE SOURCES
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
-add_dependencies(${PROJECT_NAME} tether compileassets)
+add_dependencies(${PROJECT_NAME} tether tetherRendering compileassets)
 
 set(VK_LIBS)
 set(VK_INCLUDES)
@@ -211,6 +211,7 @@ PUBLIC
 	"Headers"
 	"${ASSETS_BIN_DIR}"
 	"Vendor/Tether/Headers"
+	"Vendor/Tether.Rendering/Headers"
 	"Vendor/VMA/include"
 	"Vendor/stb_image/include"
 PRIVATE
@@ -219,5 +220,6 @@ PRIVATE
 
 target_link_libraries(${PROJECT_NAME} 
 	tether
+	tetherRendering
 	${VK_LIBS}
 )

@@ -13,9 +13,6 @@ bool IRenderer::Init(Application* pApplication)
     if (initialized || !pApplication)
         return false;
 
-    if (!pApplication->IsInitialized())
-        return false;
-    
     this->pApplication = pApplication;
 
     pApplication->Log("Initializing renderer", LogType::DEBUG);

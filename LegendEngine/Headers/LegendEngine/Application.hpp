@@ -6,8 +6,12 @@
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 #include <LegendEngine/Scene.hpp>
+
+#ifdef VULKAN_API
+#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
+#include <Tether/Rendering/Vulkan/DebugCallback.hpp>
+#endif // VULKAN_API
 
 #include <Tether/Tether.hpp>
 
@@ -48,24 +52,6 @@ namespace LegendEngine
 			bool logging,
 			bool debug,
 			RenderingAPI api
-		);
-
-		/**
-		 * @brief Initializes the application
-		 * 
-		 * @param applicationName The name of the application.
-		 * @param logging If the application should log.
-		 * @param debug If the application should log debug/verbose 
-		 *  information.
-		 * @param api The rendering api to use.
-		 * 
-		 * @returns True if initialization was successful; otherwise, false.
-		 */
-		bool Init(
-			const std::string& applicationName,
-			bool logging = false, 
-			bool debug = false,
-			RenderingAPI api = RenderingAPI::VULKAN
 		);
 
 		/**
@@ -189,7 +175,6 @@ namespace LegendEngine
 		virtual void OnResize(uint64_t width, uint64_t height)
 		{}
 
-		void RecieveResize(uint64_t width, uint64_t height);
 		
 		// Receiver functions (later will be used for synchronization)
 		void _OnObjectDispose(Objects::Object* pObject);
@@ -211,7 +196,7 @@ namespace LegendEngine
 
 		void DisposeGraphics();
 
-		void OnDispose();
+		void RecieveResize(uint64_t width, uint64_t height);
 
 		class EventHandler : public Utils::Events::EventHandler
 		{
@@ -249,7 +234,7 @@ namespace LegendEngine
 		bool vulkanInitialized = false;
 		bool InitVulkan();
 
-		class DebugCallback : public Vulkan::DebugCallback
+		class DebugCallback : public Vulkan::TetherVulkan::DebugCallback
 		{
 		public:
 			Application* pApplication = nullptr;

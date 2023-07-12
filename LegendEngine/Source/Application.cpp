@@ -45,6 +45,8 @@ namespace LegendEngine
 		bool debug,
 		RenderingAPI api
 	)
+		:
+		eventHandler(this)
 	{
 		this->pRenderer = nullptr;
 		this->applicationName = applicationName;
@@ -57,8 +59,6 @@ namespace LegendEngine
 			Log("Failed to initialize window!", LogType::ERROR);
 			return false;
 		}
-
-		initialized = true;
 
 		*((Tether::Window**)(&pWindow)) = &m_Window;
 

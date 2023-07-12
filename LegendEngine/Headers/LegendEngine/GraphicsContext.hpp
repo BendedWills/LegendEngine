@@ -1,11 +1,9 @@
-#ifndef _LEGENDENGINE_CONTEXT_HPP
-#define _LEGENDENGINE_CONTEXT_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Common/Ref.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
-
-#include <LegendEngine/Graphics/Vulkan/Instance.hpp>
 
 namespace LegendEngine
 {
@@ -18,5 +16,3 @@ namespace LegendEngine
 		inline static Scope<GraphicsContext> internal = nullptr;
 	};
 }
-
-#endif //_LEGENDENGINE_CONTEXT_HPP

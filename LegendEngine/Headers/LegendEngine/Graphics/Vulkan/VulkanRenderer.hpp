@@ -7,13 +7,12 @@
 #include <iostream>
 #include <vector>
 
+
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/Graphics/Vulkan/Instance.hpp>
-#include <LegendEngine/Graphics/Vulkan/Surface.hpp>
-#include <LegendEngine/Graphics/Vulkan/Device.hpp>
+#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
 #include <LegendEngine/Graphics/Vulkan/Swapchain.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 #include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
@@ -26,6 +25,7 @@
 #include <LegendEngine/Graphics/Vulkan/MaterialNative.hpp>
 
 #include <Tether/Tether.hpp>
+#include <Tether/Rendering/Vulkan/Device.hpp>
 
 #include <vk_mem_alloc.h>
 
@@ -48,7 +48,7 @@ namespace LegendEngine::Vulkan
 		// Classes
 		friend UniformBuffer;
 	public:
-		VulkanRenderer() {}
+		VulkanRenderer();
 		
 		VulkanRenderer(const VulkanRenderer&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
@@ -87,15 +87,12 @@ namespace LegendEngine::Vulkan
 			VkImageTiling tiling, VkFormatFeatureFlags features);
 		VkFormat FindDepthFormat();
 
-		// Device stuff
-		Vulkan::Device device;
-		Vulkan::QueueFamilyIndices indices;
-		VkPhysicalDevice physicalDevice;
-		// Queues
+		TetherVulkan::Device m_Device;
+
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 
-		Vulkan::Surface surface;
+		TetherVulkan::Surface surface;
 
 		Vulkan::Swapchain swapchain;
 
@@ -138,7 +135,7 @@ namespace LegendEngine::Vulkan
 		};
 
 		Application* pApplication = nullptr;
-		Vulkan::Instance* pInstance;
+		TetherVulkan::Instance& m_Instance;
 
 		Stopwatch timer;
 	private:
@@ -162,9 +159,7 @@ namespace LegendEngine::Vulkan
 
 		// Device helper functions
 		VkSurfaceFormatKHR ChooseSurfaceFormat(Vulkan::SwapchainDetails details);
-		bool PickDevice(VkPhysicalDevice* pDevice, Surface* pSurface);
-		bool IsDeviceSuitable(VkPhysicalDevice device, Surface* pSurface);
-
+		
 		// Init functions
 		bool InitDevice();
 		bool InitAllocator();

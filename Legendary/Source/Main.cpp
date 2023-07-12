@@ -156,9 +156,13 @@ class Triangle : public Application
 {
 public:
 	Triangle()
-	{
-
-	}
+		:
+#if !defined(NDEBUG)
+		Application("Legendary", true, true, RenderingAPI::VULKAN)
+#else
+		Application("Legendary", false, false, RenderingAPI::VULKAN)
+#endif
+	{}
 
 	~Triangle()
 	{
@@ -271,14 +275,6 @@ int main()
 	GraphicsContext::Create(RenderingAPI::VULKAN, true);
 
 	Triangle triangle;
-#if defined(_DEBUG)
-	if (!triangle.Init("Legendary", true, true))
-		return EXIT_FAILURE;
-#else
-	if (!triangle.Init("Legendary", false, false))
-		return EXIT_FAILURE;
-#endif
-
 	if (!triangle.Run())
 		return EXIT_FAILURE;
 
