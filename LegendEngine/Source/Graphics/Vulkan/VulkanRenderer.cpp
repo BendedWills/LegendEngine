@@ -18,12 +18,29 @@
 
 namespace LegendEngine::Vulkan
 {
-	VulkanRenderer::VulkanRenderer()
+	VulkanRenderer::VulkanRenderer(Application& application, Tether::Window& window)
 		:
-		m_Instance(((Vulkan::GraphicsContext&)GraphicsContext::Get()).GetInstance()),
-		m_Device(m_Instance)
+		m_Application(application),
+		m_Window(window),
+		m_GraphicsContext(((Vulkan::GraphicsContext&)GraphicsContext::Get())
+			.GetTetherGraphicsContext()),
+		m_Instance(m_GraphicsContext.GetInstance()),
+		m_Device(m_GraphicsContext.GetDevice()),
+		m_PhysicalDevice(m_GraphicsContext.GetPhysicalDevice()),
+		m_Surface(m_GraphicsContext, window)
 	{
+		timer.Set();
 
+		InitSwapchain(m_Application.pWindow->GetWidth(),
+			m_Application.pWindow->GetHeight());
+		InitRenderPass();
+		InitShaders();
+		InitUniforms();
+		InitPipeline();
+		InitDepthImages();
+		InitFramebuffers();
+		InitCommandBuffers();
+		InitSyncObjects();
 	}
 
 	void VulkanRenderer::SetVSyncEnabled(bool vsync)
@@ -41,7 +58,7 @@ namespace LegendEngine::Vulkan
 
 		if (!pObject)
 		{
-			pApplication->Log(
+			m_Application.Log(
 				"Creating object native: Object is nullptr. Returning.",
 				LogType::WARN);
 			return false;
@@ -57,7 +74,7 @@ namespace LegendEngine::Vulkan
 
 		if (!buffer)
 		{
-			pApplication->Log(
+			m_Application.Log(
 				"Creating vertex buffer native: Buffer is nullptr. Returning.",
 				LogType::WARN);
 			return false;
@@ -74,7 +91,7 @@ namespace LegendEngine::Vulkan
 
 		if (!shader)
 		{
-			pApplication->Log(
+			m_Application.Log(
 				"Creating shader: Shader is nullptr. Returning.",
 				LogType::WARN);
 			return false;
@@ -91,7 +108,7 @@ namespace LegendEngine::Vulkan
 
 		if (!texture)
 		{
-			pApplication->Log(
+			m_Application.Log(
 				"Creating texture native: Texture is nullptr. Returning.",
 				LogType::WARN);
 			return false;
@@ -108,7 +125,7 @@ namespace LegendEngine::Vulkan
 
 		if (!pMaterial)
 		{
-			pApplication->Log(
+			m_Application.Log(
 				"Creating material native: Material is nullptr. Returning.",
 				LogType::WARN);
 			return false;
@@ -133,7 +150,7 @@ namespace LegendEngine::Vulkan
 		cmdAllocInfo.commandPool = commandPool;
 		cmdAllocInfo.commandBufferCount = 1;
 
-		if (vkAllocateCommandBuffers(m_Device.Get(), &cmdAllocInfo,
+		if (vkAllocateCommandBuffers(m_Device, &cmdAllocInfo,
 			pCommandBuffer) != VK_SUCCESS)
 			return false;
 
@@ -156,23 +173,23 @@ namespace LegendEngine::Vulkan
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 
-		if (vkQueueSubmit(graphicsQueue, 1, &submitInfo,
+		if (vkQueueSubmit(m_Queue, 1, &submitInfo,
 			VK_NULL_HANDLE) != VK_SUCCESS)
 		{
-			vkFreeCommandBuffers(m_Device.Get(), commandPool, 1, &commandBuffer);
+			vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
 			return false;
 		}
 
 		// Wait for the data to finish uploading
-		vkQueueWaitIdle(graphicsQueue);
+		vkQueueWaitIdle(m_Queue);
 
 		// Free the command buffer
-		vkFreeCommandBuffers(m_Device.Get(), commandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
 
 		return true;
 	}
 
-	bool VulkanRenderer::CreateImageView(VkImageView* pImageView, VkImage image,
+	void VulkanRenderer::CreateImageView(VkImageView* pImageView, VkImage image,
 		VkFormat format, VkImageViewType viewType, VkImageAspectFlags aspflags)
 	{
 		VkImageViewCreateInfo createInfo{};
@@ -186,8 +203,9 @@ namespace LegendEngine::Vulkan
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
 
-		return vkCreateImageView(m_Device.Get(), &createInfo, nullptr, pImageView)
-			== VK_SUCCESS;
+		if (vkCreateImageView(m_Device, &createInfo, nullptr, pImageView)
+			!= VK_SUCCESS)
+			throw std::runtime_error("Failed to create image view");
 	}
 
 	bool VulkanRenderer::CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
@@ -207,11 +225,12 @@ namespace LegendEngine::Vulkan
 			&allocInfo, pBuffer, pAllocation, pAllocInfo) == VK_SUCCESS;
 	}
 
-	bool VulkanRenderer::ChangeImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+	void VulkanRenderer::ChangeImageLayout(VkImage image, VkFormat format, 
+		VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
 		VkCommandBuffer commandBuffer;
 		if (!BeginSingleUseCommandBuffer(&commandBuffer))
-			return false;
+			throw std::runtime_error("Failed to begin command buffer");
 
 		VkImageMemoryBarrier memoryBarrier{};
 		memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -259,7 +278,7 @@ namespace LegendEngine::Vulkan
 			destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		}
 		else
-			return false;
+			throw std::runtime_error("Unsupported layout transition");
 
 		if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 		{
@@ -280,7 +299,8 @@ namespace LegendEngine::Vulkan
 			1, &memoryBarrier
 		);
 
-		return EndSingleUseCommandBuffer(commandBuffer);
+		if (!EndSingleUseCommandBuffer(commandBuffer))
+			throw std::runtime_error("Failed to end single use command buffer");
 	}
 
 	bool VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
@@ -321,7 +341,7 @@ namespace LegendEngine::Vulkan
 		for (VkFormat format : candidates)
 		{
 			VkFormatProperties props;
-			vkGetPhysicalDeviceFormatProperties(m_Device.GetPhysicalDevice(), format, &props);
+			vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
 
 			if (tiling == VK_IMAGE_TILING_LINEAR
 				&& (props.linearTilingFeatures & features) == features)
@@ -350,21 +370,18 @@ namespace LegendEngine::Vulkan
 	bool VulkanRenderer::RecreateSwapchain()
 	{
 		LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer",
-			"Recreating swapchain (GraphicalWindow resize)",
+			"Recreating swapchain (Window resize)",
 			LogType::DEBUG);
 
 		// The m_Device might still have work. Wait for it to finish before 
-		// recreating the swapchain.
-		m_Device.WaitIdle();
-
-		Tether::Window* pWindow = pApplication->GetWindow();
+		// recreating the m_Swapchain->
+		vkDeviceWaitIdle(m_Device);
 
 		DisposeSwapchain();
-		if (!InitSwapchain(pWindow->GetWidth(), pWindow->GetHeight())
-			|| !InitDepthImages()
-			|| !InitFramebuffers()
-			|| !InitCommandBuffers())
-			return false;
+		InitSwapchain(m_Window.GetWidth(), m_Window.GetHeight());
+		InitDepthImages();
+		InitFramebuffers();
+		InitCommandBuffers();
 
 		imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
 
@@ -379,7 +396,7 @@ namespace LegendEngine::Vulkan
 		// Wait for all frames to finish rendering.
 		// Command buffers cannot be reset during frame rendering.
 		for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
-			vkWaitForFences(m_Device.Get(), 1, &inFlightFences[i2], true, UINT64_MAX);
+			vkWaitForFences(m_Device, 1, &inFlightFences[i2], true, UINT64_MAX);
 
 		for (uint64_t i = 0; i < commandBuffers.size(); i++)
 		{
@@ -402,7 +419,7 @@ namespace LegendEngine::Vulkan
 		if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
 			return false;
 
-		VkExtent2D swapchainExtent = swapchain.GetExtent();
+		VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
 
 		VkClearValue clearColors[] =
 		{
@@ -449,11 +466,11 @@ namespace LegendEngine::Vulkan
 			// from the camera.
 
 			// Default scene
-			Scene* pDefault = pApplication->GetDefaultScene();
+			Scene* pDefault = m_Application.GetDefaultScene();
 			PopulateByScene(buffer, framebuffer, commandBufferIndex, pDefault);
 
 			// ActiveScene
-			Scene* pActive = pApplication->GetActiveScene();
+			Scene* pActive = m_Application.GetActiveScene();
 			PopulateByScene(buffer, framebuffer, commandBufferIndex, pActive);
 		}
 		vkCmdEndRenderPass(buffer);
@@ -537,106 +554,6 @@ namespace LegendEngine::Vulkan
 		}
 	}
 
-	bool VulkanRenderer::OnRendererInit()
-	{
-		timer.Set();
-
-		pApplication = GetApplication();
-		pInstance = GraphicsContextVk::Get().GetVulkanInstance();
-
-		if (!GraphicsContextVk::IsVulkanInitialized())
-		{
-			pApplication->Log("Vulkan was not initialized for the Context",
-				LogType::ERROR);
-			return false;
-		}
-
-		if (!surface.Init(pInstance, pApplication->pWindow))
-			return false;
-
-		if (!PickDevice(m_Device.GetPhysicalDevice(), &surface))
-			return false;
-
-		indices = pInstance->FindQueueFamilies(m_Device.GetPhysicalDevice(), &surface);
-
-		if (!InitDevice())
-		{
-			pApplication->Log("Failed to initialize m_Device!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitAllocator())
-		{
-			pApplication->Log("Failed to initialize allocator!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitSwapchain(
-			pApplication->pWindow->GetWidth(),
-			pApplication->pWindow->GetHeight()
-		))
-		{
-			pApplication->Log("Failed to initialize swapchain!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitRenderPass())
-		{
-			pApplication->Log("Failed to initialize render pass!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitShaders())
-		{
-			pApplication->Log("Failed to initialize shaders!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitUniforms())
-		{
-			pApplication->Log("Failed to initialize uniforms!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitPipeline())
-		{
-			pApplication->Log("Failed to initialize pipeline!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitCommandPool())
-		{
-			pApplication->Log("Failed to initialize command pool!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitDepthImages())
-		{
-			pApplication->Log("Failed to initialize depth image!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitFramebuffers())
-		{
-			pApplication->Log("Failed to initialize framebuffers!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitCommandBuffers())
-		{
-			pApplication->Log("Failed to initialize command buffers!", LogType::ERROR);
-			return false;
-		}
-
-		if (!InitSyncObjects())
-		{
-			pApplication->Log("Failed to initialize sync objects!", LogType::ERROR);
-			return false;
-		}
-
-		return true;
-	}
-
 	void VulkanRenderer::OnObjectChange(Objects::Object* pObject)
 	{
 		shouldRecreateCommandBuffers = true;
@@ -659,28 +576,28 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::OnRendererDispose()
 	{
-		m_Device.WaitIdle();
+		vkDeviceWaitIdle(m_Device);
 
 		DisposeSwapchain();
 
 		shaderProgram.Dispose();
 
-		vkDestroyDescriptorSetLayout(m_Device.Get(), objectLayout, nullptr);
-		vkDestroyDescriptorSetLayout(m_Device.Get(), cameraLayout, nullptr);
-		vkDestroyDescriptorSetLayout(m_Device.Get(), materialLayout, nullptr);
+		vkDestroyDescriptorSetLayout(m_Device, objectLayout, nullptr);
+		vkDestroyDescriptorSetLayout(m_Device, cameraLayout, nullptr);
+		vkDestroyDescriptorSetLayout(m_Device, materialLayout, nullptr);
 		cameraUniform.Dispose();
 		cameraManager.Dispose();
 
-		vkDestroyRenderPass(m_Device.Get(), renderPass, nullptr);
+		vkDestroyRenderPass(m_Device, renderPass, nullptr);
 
 		for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vkDestroySemaphore(m_Device.Get(), renderFinishedSemaphores[i], nullptr);
-			vkDestroySemaphore(m_Device.Get(), imageAvailableSemaphores[i], nullptr);
-			vkDestroyFence(m_Device.Get(), inFlightFences[i], nullptr);
+			vkDestroySemaphore(m_Device, renderFinishedSemaphores[i], nullptr);
+			vkDestroySemaphore(m_Device, imageAvailableSemaphores[i], nullptr);
+			vkDestroyFence(m_Device, inFlightFences[i], nullptr);
 		}
 
-		vkDestroyCommandPool(m_Device.Get(), commandPool, nullptr);
+		vkDestroyCommandPool(m_Device, commandPool, nullptr);
 
 		vmaDestroyAllocator(allocator);
 	}
@@ -688,61 +605,6 @@ namespace LegendEngine::Vulkan
 	void VulkanRenderer::OnWindowResize()
 	{
 		shouldRecreateSwapchain = true;
-	}
-
-	bool VulkanRenderer::InitDevice()
-	{
-		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-		std::set<uint32_t> uniqueQueueFamilies = {
-			indices.graphicsFamilyIndex,
-			indices.presentFamilyIndex
-		};
-
-		float queuePriority = 1.0f;
-		for (uint32_t queueFamily : uniqueQueueFamilies)
-		{
-			VkDeviceQueueCreateInfo queueCreateInfo{};
-			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			queueCreateInfo.queueFamilyIndex = queueFamily;
-			queueCreateInfo.queueCount = 1;
-			queueCreateInfo.pQueuePriorities = &queuePriority;
-
-			queueCreateInfos.push_back(queueCreateInfo);
-		}
-
-		VkPhysicalDeviceFeatures features{};
-
-		if (!m_Device.Init(
-			pInstance,
-			m_Device.GetPhysicalDevice(),
-			queueCreateInfos.data(),
-			static_cast<uint32_t>(queueCreateInfos.size()),
-			features,
-			deviceExtensions.data(),
-			static_cast<uint32_t>(deviceExtensions.size())
-		))
-			return false;
-
-		graphicsQueue = m_Device.GetDeviceQueue(indices.graphicsFamilyIndex, 0);
-		presentQueue = m_Device.GetDeviceQueue(indices.presentFamilyIndex, 0);
-
-		return true;
-	}
-
-	bool VulkanRenderer::InitAllocator()
-	{
-		VmaVulkanFunctions funcs{};
-		funcs.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
-		funcs.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
-
-		VmaAllocatorCreateInfo createInfo{};
-		createInfo.vulkanApiVersion = VK_API_VERSION_1_0;
-		createInfo.m_Device.GetPhysicalDevice() = m_Device.GetPhysicalDevice();
-		createInfo.m_Device = m_Device.Get();
-		createInfo.instance = pInstance->Get();
-		createInfo.pVulkanFunctions = &funcs;
-
-		return vmaCreateAllocator(&createInfo, &allocator) == VK_SUCCESS;
 	}
 
 	VkSurfaceFormatKHR VulkanRenderer::ChooseSurfaceFormat(Vulkan::SwapchainDetails details)
@@ -754,10 +616,10 @@ namespace LegendEngine::Vulkan
 		return details.formats[0];
 	}
 
-	bool VulkanRenderer::InitSwapchain(uint64_t width, uint64_t height)
+	void VulkanRenderer::InitSwapchain(uint64_t width, uint64_t height)
 	{
 		Vulkan::SwapchainDetails details =
-			pInstance->QuerySwapchainSupport(m_Device.GetPhysicalDevice(), &surface);
+			pInstance->QuerySwapchainSupport(m_PhysicalDevice, &m_Surface);
 		VkSurfaceFormatKHR surfaceFormat = ChooseSurfaceFormat(details);
 
 		uint32_t imageCount = details.capabilities.minImageCount + 1;
@@ -767,11 +629,11 @@ namespace LegendEngine::Vulkan
 
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = surface.Get();
+		createInfo.surface = m_Surface.Get();
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = surfaceFormat.format;
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
-		createInfo.imageExtent = swapchain.ChooseExtent(details.capabilities,
+		createInfo.imageExtent = m_Swapchain->ChooseExtent(details.capabilities,
 			width, height);
 		createInfo.imageArrayLayers = 1;
 
@@ -785,12 +647,12 @@ namespace LegendEngine::Vulkan
 		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		createInfo.preTransform = details.capabilities.currentTransform;
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		createInfo.presentMode = swapchain.ChoosePresentMode(details.presentModes,
+		createInfo.presentMode = ChoosePresentMode(details.presentModes,
 			enableVsync);
 		createInfo.clipped = true;
 		createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-		indices = pInstance->FindQueueFamilies(m_Device.GetPhysicalDevice(), &surface);
+		indices = pInstance->FindQueueFamilies(m_PhysicalDevice, &m_Surface);
 		if (indices.graphicsFamilyIndex != indices.presentFamilyIndex)
 		{
 			if (!indices.hasPresentFamily)
@@ -809,18 +671,14 @@ namespace LegendEngine::Vulkan
 		else
 			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (!swapchain.Init(&surface, &m_Device, details,
-			&createInfo))
-			return false;
+		m_Swapchain.emplace(m_GraphicsContext, m_GraphicsContext.GetG)
 
-		swapchainImages = swapchain.GetImages();
-		if (!swapchain.GetImageViews(&swapchainImageViews))
-			return false;
-
-		return true;
+		swapchainImages = m_Swapchain->GetImages();
+		if (!m_Swapchain->GetImageViews(&swapchainImageViews))
+			throw std::runtime_error("Failed to create camera manager");
 	}
 
-	bool VulkanRenderer::InitShaders()
+	void VulkanRenderer::InitShaders()
 	{
 		vertexModule.Init(&m_Device, ShaderType::VERTEX);
 		fragmentModule.Init(&m_Device, ShaderType::FRAG);
@@ -830,7 +688,7 @@ namespace LegendEngine::Vulkan
 			sizeof(LegendEngine::Resources::solid_vert_spv)
 		))
 		{
-			pApplication->Log("Vertex creation failed!", LogType::ERROR);
+			m_Application.Log("Vertex creation failed!", LogType::ERROR);
 			return false;
 		}
 
@@ -839,17 +697,15 @@ namespace LegendEngine::Vulkan
 			sizeof(LegendEngine::Resources::solid_frag_spv)
 		))
 		{
-			pApplication->Log("Fragment creation failed!", LogType::ERROR);
+			m_Application.Log("Fragment creation failed!", LogType::ERROR);
 			return false;
 		}
-
-		return true;
 	}
 
-	bool VulkanRenderer::InitRenderPass()
+	void VulkanRenderer::InitRenderPass()
 	{
 		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = swapchain.GetImageFormat();
+		colorAttachment.format = m_Swapchain->GetImageFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -908,16 +764,14 @@ namespace LegendEngine::Vulkan
 		desc.dependencyCount = 1;
 		desc.pDependencies = &dependency;
 
-		if (vkCreateRenderPass(m_Device.Get(), &desc, nullptr, &renderPass)
+		if (vkCreateRenderPass(m_Device, &desc, nullptr, &renderPass)
 			!= VK_SUCCESS)
-			return false;
-
-		return true;
+			throw std::runtime_error("Failed to create render pass");
 	}
 
-	bool VulkanRenderer::InitUniforms()
+	void VulkanRenderer::InitUniforms()
 	{
-		uint32_t swapchainImages = swapchain.GetImageCount();
+		uint32_t swapchainImages = m_Swapchain->GetImageCount();
 
 		// Camera set
 		{
@@ -932,9 +786,9 @@ namespace LegendEngine::Vulkan
 			setInfo.bindingCount = 1;
 			setInfo.pBindings = &cameraSetBinding;
 
-			if (vkCreateDescriptorSetLayout(m_Device.Get(),
+			if (vkCreateDescriptorSetLayout(m_Device,
 				&setInfo, nullptr, &cameraLayout) != VK_SUCCESS)
-				return false;
+				throw std::runtime_error("Failed to create descriptor set layout");
 		}
 
 		// Material set
@@ -962,9 +816,9 @@ namespace LegendEngine::Vulkan
 			setInfo.bindingCount = sizeof(bindings) / sizeof(bindings[0]);
 			setInfo.pBindings = bindings;
 
-			if (vkCreateDescriptorSetLayout(m_Device.Get(),
+			if (vkCreateDescriptorSetLayout(m_Device,
 				&setInfo, nullptr, &materialLayout) != VK_SUCCESS)
-				return false;
+				throw std::runtime_error("Failed to create descriptor set layout");
 		}
 
 		// Object set
@@ -980,24 +834,22 @@ namespace LegendEngine::Vulkan
 			setInfo.bindingCount = 1;
 			setInfo.pBindings = &binding;
 
-			if (vkCreateDescriptorSetLayout(m_Device.Get(),
+			if (vkCreateDescriptorSetLayout(m_Device,
 				&setInfo, nullptr, &objectLayout) != VK_SUCCESS)
-				return false;
+				throw std::runtime_error("Failed to create descriptor set layout");
 		}
 
 		if (!cameraManager.Init(&m_Device, 1, swapchainImages))
-			return false;
+			throw std::runtime_error("Failed to create camera manager");
 		if (!cameraUniform.Init(this, sizeof(Objects::Camera::CameraUniforms),
-			swapchain.GetImageCount()))
-			return false;
+			m_Swapchain->GetImageCount()))
+			throw std::runtime_error("Failed to create camera uniform");
 
 		cameraUniform.BindToSet(&cameraManager, cameraLayout);
 		cameraUniform.Bind(0);
-
-		return true;
 	}
 
-	bool VulkanRenderer::InitPipeline()
+	void VulkanRenderer::InitPipeline()
 	{
 		VkPipelineShaderStageCreateInfo vertexStage{};
 		vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1039,18 +891,16 @@ namespace LegendEngine::Vulkan
 		pipelineInfo.pSetLayouts = sets;
 
 		if (!shaderProgram.Init(this, &pipelineInfo))
-			return false;
+			throw std::runtime_error("Failed to create shader program");
 
 		vertexModule.Dispose();
 		fragmentModule.Dispose();
-
-		return true;
 	}
 
-	bool VulkanRenderer::InitDepthImages()
+	void VulkanRenderer::InitDepthImages()
 	{
 		uint64_t swapImageCount = swapchainImageViews.size();
-		VkExtent2D swapchainExtent = swapchain.GetExtent();
+		VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1072,21 +922,18 @@ namespace LegendEngine::Vulkan
 
 		if (vmaCreateImage(allocator, &imageInfo, &allocInfo,
 			&depthImage, &depthAlloc, nullptr) != VK_SUCCESS)
-			return false;
+			throw std::runtime_error("Failed to create depth image");
 
-		if (!CreateImageView(&depthImageView, depthImage, imageInfo.format,
-			VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT))
-			return false;
+		CreateImageView(&depthImageView, depthImage, imageInfo.format,
+			VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 		ChangeImageLayout(depthImage, imageInfo.format, VK_IMAGE_LAYOUT_UNDEFINED,
 			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-		return true;
 	}
 
-	bool VulkanRenderer::InitFramebuffers()
+	void VulkanRenderer::InitFramebuffers()
 	{
-		VkExtent2D swapchainExtent = swapchain.GetExtent();
+		VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
 		uint64_t imageViewCount = swapchainImageViews.size();
 
 		framebuffers.resize(imageViewCount);
@@ -1108,26 +955,13 @@ namespace LegendEngine::Vulkan
 			framebufferDesc.height = swapchainExtent.height;
 			framebufferDesc.layers = 1;
 
-			if (vkCreateFramebuffer(m_Device.Get(), &framebufferDesc, nullptr,
+			if (vkCreateFramebuffer(m_Device, &framebufferDesc, nullptr,
 				&framebuffers[i]) != VK_SUCCESS)
-				return false;
+				throw std::runtime_error("Failed to create framebuffer");
 		}
-
-		return true;
 	}
 
-	bool VulkanRenderer::InitCommandPool()
-	{
-		VkCommandPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		poolInfo.queueFamilyIndex = indices.graphicsFamilyIndex;
-
-		return vkCreateCommandPool(m_Device.Get(), &poolInfo, nullptr, &commandPool)
-			== VK_SUCCESS;
-	}
-
-	bool VulkanRenderer::InitCommandBuffers()
+	void VulkanRenderer::InitCommandBuffers()
 	{
 		commandBuffers.resize(framebuffers.size());
 
@@ -1137,17 +971,15 @@ namespace LegendEngine::Vulkan
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
-		if (vkAllocateCommandBuffers(m_Device.Get(), &allocInfo,
+		if (vkAllocateCommandBuffers(m_Device, &allocInfo,
 			commandBuffers.data()) != VK_SUCCESS)
-			return false;
+			throw std::runtime_error("Failed to allocate command buffers");
 
 		for (uint64_t i = 0; i < commandBuffers.size(); i++)
 			PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i);
-
-		return true;
 	}
 
-	bool VulkanRenderer::InitSyncObjects()
+	void VulkanRenderer::InitSyncObjects()
 	{
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1163,25 +995,23 @@ namespace LegendEngine::Vulkan
 
 		for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			if (vkCreateSemaphore(m_Device.Get(), &semaphoreInfo, nullptr,
+			if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
 				&imageAvailableSemaphores[i]) != VK_SUCCESS)
-				return false;
-			if (vkCreateSemaphore(m_Device.Get(), &semaphoreInfo, nullptr,
+				throw std::runtime_error("Failed to create semaphore");
+			if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
 				&renderFinishedSemaphores[i]) != VK_SUCCESS)
-				return false;
-			if (vkCreateFence(m_Device.Get(), &fenceInfo, nullptr,
+				throw std::runtime_error("Failed to create semaphore");
+			if (vkCreateFence(m_Device, &fenceInfo, nullptr,
 				&inFlightFences[i]) != VK_SUCCESS)
-				return false;
+				throw std::runtime_error("Failed to create fence");
 		}
-
-		return true;
 	}
 
 	void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 	{
 		defaultMaterial->Update();
 
-		Objects::Camera* pCamera = pApplication->GetActiveCamera();
+		Objects::Camera* pCamera = m_Application.GetActiveCamera();
 		if (pCamera)
 			if (pCamera->IsEnabled())
 			{
@@ -1191,8 +1021,8 @@ namespace LegendEngine::Vulkan
 					sizeof(Objects::Camera::CameraUniforms), imageIndex);
 			}
 
-		UpdateSceneUniforms(imageIndex, pApplication->GetDefaultScene());
-		UpdateSceneUniforms(imageIndex, pApplication->GetActiveScene());
+		UpdateSceneUniforms(imageIndex, m_Application.GetDefaultScene());
+		UpdateSceneUniforms(imageIndex, m_Application.GetActiveScene());
 	}
 
 	void VulkanRenderer::UpdateSceneUniforms(uint64_t imageIndex, Scene* pScene)
@@ -1237,21 +1067,21 @@ namespace LegendEngine::Vulkan
 	{
 		if (shouldRecreateSwapchain)
 			if (!RecreateSwapchain())
-				pApplication->Log("Failed to recreate swapchain!", LogType::ERROR);
+				m_Application.Log("Failed to recreate swapchain!", LogType::ERROR);
 
 		// in flight frame = a frame that is being rendered while still rendering 
 		// more frames
 
 		// If this frame is still in flight, wait for it to finish rendering before
 		// rendering another frame.
-		vkWaitForFences(m_Device.Get(), 1, &inFlightFences[currentFrame], VK_TRUE,
+		vkWaitForFences(m_Device, 1, &inFlightFences[currentFrame], VK_TRUE,
 			UINT64_MAX);
 
 		// Get the next swapchain image. The swapchain has the minimum
 		// amount of images plus one.
 		uint32_t imageIndex;
-		VkResult result = vkAcquireNextImageKHR(m_Device.Get(),
-			swapchain.Get(), UINT64_MAX, imageAvailableSemaphores[currentFrame],
+		VkResult result = vkAcquireNextImageKHR(m_Device,
+			m_Swapchain->Get(), UINT64_MAX, imageAvailableSemaphores[currentFrame],
 			VK_NULL_HANDLE, &imageIndex);
 		// vkAcquireNextImageKHR might throw an error.
 		// If it does throw an error, simply return true if it is suboptimal or
@@ -1268,7 +1098,7 @@ namespace LegendEngine::Vulkan
 		if (shouldRecreateCommandBuffers)
 		{
 			if (!RecreateCommandBuffers())
-				pApplication->Log("Failed to recreate command buffers!", LogType::ERROR);
+				m_Application.Log("Failed to recreate command buffers!", LogType::ERROR);
 
 			shouldRecreateCommandBuffers = false;
 		}
@@ -1278,7 +1108,7 @@ namespace LegendEngine::Vulkan
 		// image that is in flight.
 		// Check for that here.
 		if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-			vkWaitForFences(m_Device.Get(), 1, &imagesInFlight[imageIndex], VK_TRUE,
+			vkWaitForFences(m_Device, 1, &imagesInFlight[imageIndex], VK_TRUE,
 				UINT64_MAX);
 		imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
@@ -1299,14 +1129,14 @@ namespace LegendEngine::Vulkan
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
 		// The in flight fence for this frame must be reset.
-		vkResetFences(m_Device.Get(), 1, &inFlightFences[currentFrame]);
-		if (vkQueueSubmit(graphicsQueue, 1, &submitInfo,
+		vkResetFences(m_Device, 1, &inFlightFences[currentFrame]);
+		if (vkQueueSubmit(m_Queue, 1, &submitInfo,
 			inFlightFences[currentFrame]) != VK_SUCCESS)
 			return false;
 
 		// Wait for the frame to be rendered until presenting
 		// (hence the wait semaphores being the signal semaphores)
-		VkSwapchainKHR swapchains[] = { swapchain.Get() };
+		VkSwapchainKHR swapchains[] = { m_Swapchain->Get() };
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
@@ -1315,7 +1145,7 @@ namespace LegendEngine::Vulkan
 		presentInfo.pSwapchains = swapchains;
 		presentInfo.pImageIndices = &imageIndex;
 
-		if (vkQueuePresentKHR(presentQueue, &presentInfo)
+		if (vkQueuePresentKHR(m_Queue, &presentInfo)
 			!= VK_SUCCESS)
 			return true;
 
@@ -1326,19 +1156,19 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::DisposeSwapchain()
 	{
-		vkFreeCommandBuffers(m_Device.Get(), commandPool,
+		vkFreeCommandBuffers(m_Device, commandPool,
 			static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
 		for (VkFramebuffer framebuffer : framebuffers)
-			vkDestroyFramebuffer(m_Device.Get(), framebuffer, nullptr);
+			vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
 
 		// Destroy depth stuff
-		vkDestroyImageView(m_Device.Get(), depthImageView, nullptr);
+		vkDestroyImageView(m_Device, depthImageView, nullptr);
 		vmaDestroyImage(allocator, depthImage, depthAlloc);
 
 		for (VkImageView imageView : swapchainImageViews)
-			vkDestroyImageView(m_Device.Get(), imageView, nullptr);
+			vkDestroyImageView(m_Device, imageView, nullptr);
 
-		swapchain.Dispose();
+		m_Swapchain->Dispose();
 	}
 }

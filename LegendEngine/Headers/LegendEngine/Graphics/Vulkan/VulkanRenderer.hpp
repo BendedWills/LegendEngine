@@ -7,7 +7,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
@@ -26,6 +25,7 @@
 
 #include <Tether/Tether.hpp>
 #include <Tether/Rendering/Vulkan/Device.hpp>
+#include <Tether/Rendering/Vulkan/Swapchain.hpp>
 
 #include <vk_mem_alloc.h>
 
@@ -48,7 +48,7 @@ namespace LegendEngine::Vulkan
 		// Classes
 		friend UniformBuffer;
 	public:
-		VulkanRenderer();
+		VulkanRenderer(Application& application, Tether::Window& window);
 		
 		VulkanRenderer(const VulkanRenderer&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
@@ -75,11 +75,11 @@ namespace LegendEngine::Vulkan
 		// Vulkan utility functions
 		bool BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer);
 		bool EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer);
-		bool CreateImageView(VkImageView* pImageView, VkImage image, 
+		void CreateImageView(VkImageView* pImageView, VkImage image, 
 			VkFormat format, VkImageViewType viewType, VkImageAspectFlags aspflags);
 		bool CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
 			VmaAllocationInfo* pAllocInfo, uint64_t size);
-		bool ChangeImageLayout(VkImage image, VkFormat format, 
+		void ChangeImageLayout(VkImage image, VkFormat format, 
 			VkImageLayout oldLayout, VkImageLayout newLayout);
 		bool CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
 			uint64_t height);
@@ -87,14 +87,19 @@ namespace LegendEngine::Vulkan
 			VkImageTiling tiling, VkFormatFeatureFlags features);
 		VkFormat FindDepthFormat();
 
-		TetherVulkan::Device m_Device;
+		Application& m_Application;
+		Tether::Window& m_Window;
 
-		VkQueue graphicsQueue;
-		VkQueue presentQueue;
+		TetherVulkan::GraphicsContext& m_GraphicsContext;
 
-		TetherVulkan::Surface surface;
+		VkInstance m_Instance;
+		VkDevice m_Device;
+		VkPhysicalDevice m_PhysicalDevice;
+		VkQueue m_Queue;
 
-		Vulkan::Swapchain swapchain;
+		TetherVulkan::Surface m_Surface;
+
+		std::optional<TetherVulkan::Swapchain> m_Swapchain;
 
 		// Descriptor set stuff
 		VkDescriptorSetLayout objectLayout;
@@ -134,9 +139,6 @@ namespace LegendEngine::Vulkan
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
 
-		Application* pApplication = nullptr;
-		TetherVulkan::Instance& m_Instance;
-
 		Stopwatch timer;
 	private:
 		bool RecreateSwapchain();
@@ -161,18 +163,15 @@ namespace LegendEngine::Vulkan
 		VkSurfaceFormatKHR ChooseSurfaceFormat(Vulkan::SwapchainDetails details);
 		
 		// Init functions
-		bool InitDevice();
-		bool InitAllocator();
-		bool InitSwapchain(uint64_t width, uint64_t height);
-		bool InitShaders();
-		bool InitRenderPass();
-		bool InitUniforms();
-		bool InitPipeline();
-		bool InitCommandPool();
-		bool InitDepthImages();
-		bool InitFramebuffers();
-		bool InitCommandBuffers();
-		bool InitSyncObjects();
+		void InitSwapchain(uint64_t width, uint64_t height);
+		void InitShaders();
+		void InitRenderPass();
+		void InitUniforms();
+		void InitPipeline();
+		void InitDepthImages();
+		void InitFramebuffers();
+		void InitCommandBuffers();
+		void InitSyncObjects();
 
 		// Uniforms
 		void UpdateUniforms(uint64_t imageIndex);

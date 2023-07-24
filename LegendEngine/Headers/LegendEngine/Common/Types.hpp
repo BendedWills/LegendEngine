@@ -13,7 +13,7 @@ namespace LegendEngine
 
     enum class RenderingAPI
     {
-        VULKAN
+        VULKAN,
     };
 
     enum class ShaderType

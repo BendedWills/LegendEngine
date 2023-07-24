@@ -17,17 +17,14 @@ namespace LegendEngine
 #ifdef VULKAN_API
 			case RenderingAPI::VULKAN:
 			{
-				internal = std::make_unique<Vulkan::GraphicsContext>(debug);
+				internal = std::make_unique<Vulkan::GraphicsContext>("LegendEngineApp",
+					debug);
 			}
 			break;
 #endif
 
 #ifdef OPENGL_API
-			case RenderingAPI::OPENGL:
-			{
-				
-			}
-			break;
+			
 #endif
 			
 			default:

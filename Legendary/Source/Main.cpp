@@ -162,7 +162,9 @@ public:
 #else
 		Application("Legendary", false, false, RenderingAPI::VULKAN)
 #endif
-	{}
+	{
+		FinishCreation();
+	}
 
 	~Triangle()
 	{

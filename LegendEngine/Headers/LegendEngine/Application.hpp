@@ -54,6 +54,8 @@ namespace LegendEngine
 			RenderingAPI api
 		);
 
+		~Application();
+
 		/**
 		 * @brief Runs the application with a non-blocking render loop.
 		 *	The delta time in this loop is in seconds.
@@ -130,28 +132,12 @@ namespace LegendEngine
 
 		bool IsCloseRequested();
 
-		Application* Get();
-		IRenderer* GetRenderer();
 		std::string GetName();
-		Tether::Window* GetWindow();
-
-		IRenderer *const renderer = nullptr;
-		Tether::Window *const pWindow = nullptr;
+		IRenderer& GetRenderer();
+		Tether::Window& GetWindow();
 	protected:
-		/**
-		 * @brief Called before the window is shown, before OnInit.
-		 * 
-		 * @return Should return true if pre-init was successful;
-		 *  otherwise, false.
-		 */
-		virtual bool OnPreInit() { return true; }
-		/**
-		 * @brief Called after the Init function is called.
-		 * 
-		 * @return Should return true if initialization was successful;
-		 *  otherwise, false.
-		 */
-		virtual bool OnInit() { return true; }
+		void FinishCreation();
+
 		/**
 		 * @brief Called every frame
 		 */
@@ -160,15 +146,7 @@ namespace LegendEngine
 		 * @brief Called after every frame
 		 */
 		virtual void OnRendered(float delta) {}
-		/**
-		 * @brief Called before the application is disposed.
-		 */
-		virtual void OnStop() {}
-		/**
-		 * @brief Called after the application is disposed.
-		 */
-		virtual void OnDisposed() {}
-
+		
 		/**
 		 * @brief Called when the window is resized.
 		 */
@@ -188,9 +166,8 @@ namespace LegendEngine
 		std::vector<VertexBuffer*> vertexBuffers;
 		std::vector<Resources::IResource*> resources;
 	private:
-		bool InitWindow(const std::string& title);
+		void InitWindow(const std::string& title);
 
-		void UpdateWindow();
 		void Update(float delta, bool updateWindow = true);
 		void Render(float delta);
 

@@ -6,13 +6,9 @@ namespace LegendEngine::Vulkan
 {
 	GraphicsContext::GraphicsContext(std::string_view applicationName, bool debug)
 		:
-		m_Instance(CreateInstanceInfo(applicationName.data()), debug)
+		m_ContextCreator(debug, applicationName, "LegendEngine"),
+		m_GraphicsContext(m_ContextCreator)
 	{}
-
-	GraphicsContext::Instance& GraphicsContext::GetInstance()
-	{
-		return m_Instance;
-	}
 
 	TetherVulkan::InstanceInfo GraphicsContext::CreateInstanceInfo(
 		const char* appName)
@@ -26,5 +22,10 @@ namespace LegendEngine::Vulkan
 		info.GetInstanceProcAddr = vkGetInstanceProcAddr;
 
 		return info;
+	}
+
+	TetherVulkan::GraphicsContext& GraphicsContext::GetTetherGraphicsContext()
+	{
+		return m_GraphicsContext;
 	}
 }

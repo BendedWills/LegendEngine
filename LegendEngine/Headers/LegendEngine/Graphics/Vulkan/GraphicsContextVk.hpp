@@ -15,10 +15,11 @@ namespace LegendEngine::Vulkan
 
 		GraphicsContext(std::string_view applicationName, bool debug);
 
-		Instance& GetInstance();
+		TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
 	private:
 		TetherVulkan::InstanceInfo CreateInstanceInfo(const char* appName);
 
-		Instance m_Instance;
+		TetherVulkan::ContextCreator m_ContextCreator;
+		TetherVulkan::GraphicsContext m_GraphicsContext;
 	};
 }

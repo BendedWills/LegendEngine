@@ -46,22 +46,14 @@ namespace LegendEngine
 		RenderingAPI api
 	)
 		:
-		eventHandler(this)
+		eventHandler(this),
+		applicationName(applicationName),
+		logging(logging),
+		debug(debug)
 	{
-		this->pRenderer = nullptr;
-		this->applicationName = applicationName;
-		this->logging = logging;
-		this->debug = debug;
-
-		Log("Initializing window", LogType::DEBUG);
-		if (!InitWindow(applicationName))
-		{
-			Log("Failed to initialize window!", LogType::ERROR);
-			return false;
-		}
-
-		*((Tether::Window**)(&pWindow)) = &m_Window;
-
+		Log("Creating window", LogType::DEBUG);
+		m_Window = Tether::Window::Create(1280, 720, title, false);
+		
 		if (!VulkanContext::InitAPI(api, debug))
 			return false;
 
@@ -77,27 +69,40 @@ namespace LegendEngine
 #endif // VULKAN_API
 		}
 
-		// Okay, yes, this is kind of stupid, but I really didn't want to have to call
-		// GetRenderer all the time when I need the renderer. Even if I were to store the
-		// renderer from GetRenderer, it's still messy and it is much easier to do:
-		// application.renderer->DoAThing
-		*((IRenderer**)&renderer) = pRenderer.get();
-
 		InitScene(defaultScene);
+	}
 
-		if (!OnPreInit())
-			return false;
+	Application::~Application()
+	{
+		Log("Disposing application", LogType::INFO);
 
-		// Show the window AFTER pre-initialization
-		m_Window.SetVisible(true);
-		m_Window.AddEventHandler(&eventHandler, Utils::Events::EventType::WINDOW_RESIZE);
+		m_Window->SetVisible(false);
 
-		if (!OnInit())
-			return false;
+		RemoveActiveScene();
 
-		Log("Initialized application", LogType::INFO);
+		// Dispose everything
+		{
+			// Objects are removed as they are disposed, so an original copy is required.
+			std::vector<Objects::Object*> oldObjects(objects);
+			for (uint64_t i = 0; i < oldObjects.size(); i++)
+				oldObjects[i]->Dispose();
 
-		return true;
+			// And same for resources
+			std::vector<Resources::IResource*> oldResources(resources);
+			for (uint64_t i = 0; i < oldResources.size(); i++)
+				oldResources[i]->Dispose();
+
+			// You get the idea
+			std::vector<VertexBuffer*> oldVertexBuffers(vertexBuffers);
+			for (uint64_t i = 0; i < oldVertexBuffers.size(); i++)
+				oldVertexBuffers[i]->Dispose();
+		}
+
+		DisposeGraphics();
+
+		defaultScene.ClearObjects();
+		
+		m_Window.RemoveEventHandler(eventHandler);
 	}
 
 	bool Application::Run()
@@ -114,48 +119,30 @@ namespace LegendEngine
 		return true;
 	}
 
-	IRenderer* Application::GetRenderer()
+	IRenderer& Application::GetRenderer()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
-		return pRenderer.get();
-	}
-
-	Application* Application::Get()
-	{
-		return this;
+		return *pRenderer;
 	}
 
 	std::string Application::GetName()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET("");
 		return applicationName;
 	}
 
-	Tether::Window* Application::GetWindow()
+	Tether::Window& Application::GetWindow()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(NULL);
-		return &m_Window;
+		return *m_Window;
 	}
 
 	bool Application::IsCloseRequested()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-		return m_Window.IsCloseRequested();
-	}
-
-	void Application::UpdateWindow()
-	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
-		m_Window.PollEvents();
+		return m_Window->IsCloseRequested();
 	}
 
 	void Application::Update(float delta, bool updateWindow)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
 		if (updateWindow)
-			UpdateWindow();
+			Tether::Application::Get().PollEvents();
 
 		OnUpdate(delta);
 
@@ -165,8 +152,6 @@ namespace LegendEngine
 
 	void Application::Render(float delta)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
 		if (!pRenderer)
 			return;
 
@@ -262,8 +247,6 @@ namespace LegendEngine
 
 	Ref<VertexBuffer> Application::CreateVertexBuffer()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
-
 		Ref<VertexBuffer> vbuffer = RefTools::Create<VertexBuffer>();
 		vbuffer->pApplication = this;
 
@@ -283,8 +266,6 @@ namespace LegendEngine
 
 	bool Application::InitScene(Scene* pScene)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		if (!pScene)
 		{
 			Log("Initializing scene: Scene is nullptr. Returning.",
@@ -318,8 +299,6 @@ namespace LegendEngine
 
 	void Application::RenderFrame(float delta)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
 		Update(delta);
 		Render(delta);
 	}
@@ -328,7 +307,7 @@ namespace LegendEngine
 	{
 		if (pCamera)
 		{
-			float aspect = (float)m_Window.GetWidth() / (float)m_Window.GetHeight();
+			float aspect = (float)m_Window->GetWidth() / (float)m_Window->GetHeight();
 			pCamera->SetAspectRatio(aspect);
 		}
 
@@ -342,8 +321,6 @@ namespace LegendEngine
 
 	Scene* Application::GetDefaultScene()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
-
 		return &defaultScene;
 	}
 
@@ -354,8 +331,6 @@ namespace LegendEngine
 
 	void Application::SetActiveScene(Scene* pScene)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
 		if (pScene)
 			if (pScene->pApplication != this)
 				return;
@@ -366,21 +341,17 @@ namespace LegendEngine
 
 	void Application::RemoveActiveScene()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
 		SetActiveScene(nullptr);
 	}
 
 	Scene* Application::GetActiveScene()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
 		return activeScene;
 	}
 
 #ifdef VULKAN_API
 	bool Application::InitVulkan()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		callback.pApplication = this;
 
 		pRenderer = RefTools::Create<Vulkan::VulkanRenderer>();
@@ -397,17 +368,6 @@ namespace LegendEngine
 	}
 #endif // VULKAN_API
 
-	bool Application::InitWindow(const std::string& title)
-	{
-		m_Window.Hint(Tether::HintType::VISIBLE, false);
-		m_Window.Hint(Tether::HintType::X, 120);
-		m_Window.Hint(Tether::HintType::Y, 120);
-		if (!m_Window.Init(1280, 720, title.c_str()))
-			return false;
-
-		return true;
-	}
-
 	void Application::DisposeGraphics()
 	{
 		pRenderer->Dispose();
@@ -416,47 +376,6 @@ namespace LegendEngine
 		if (vulkanInitialized)
 			VulkanContext::GetVulkanInstance()->RemoveDebugMessenger(&callback);
 #endif // VULKAN_API
-	}
-
-	void Application::OnDispose()
-	{
-		Log("Disposing application", LogType::INFO);
-
-		m_Window.SetVisible(false);
-
-		OnStop();
-		RemoveActiveScene();
-
-		m_Window.Dispose();
-
-		// Dispose everything
-		{
-			// Objects are removed as they are disposed, so an original copy is required.
-			std::vector<Objects::Object*> oldObjects(objects);
-			for (uint64_t i = 0; i < oldObjects.size(); i++)
-				oldObjects[i]->Dispose();
-
-			// And same for resources
-			std::vector<Resources::IResource*> oldResources(resources);
-			for (uint64_t i = 0; i < oldResources.size(); i++)
-				oldResources[i]->Dispose();
-
-			// You get the idea
-			std::vector<VertexBuffer*> oldVertexBuffers(vertexBuffers);
-			for (uint64_t i = 0; i < oldVertexBuffers.size(); i++)
-				oldVertexBuffers[i]->Dispose();
-		}
-
-		DisposeGraphics();
-
-		defaultScene.ClearObjects();
-		objects.clear();
-		updateScripts.clear();
-		renderUpdateScripts.clear();
-
-		m_Window.RemoveEventHandler(eventHandler);
-
-		OnDisposed();
 	}
 
 	void Application::RecieveResize(uint64_t width, uint64_t height)
@@ -470,10 +389,16 @@ namespace LegendEngine
 		OnResize(width, height);
 	}
 
+	void Application::FinishCreation()
+	{
+		m_Window->SetVisible(true);
+		m_Window->AddEventHandler(eventHandler, Utils::Events::EventType::WINDOW_RESIZE);
+
+		Log("Initialized application", LogType::INFO);
+	}
+
 	void Application::_OnObjectDispose(Objects::Object* pObject)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
 		for (uint64_t i = 0; i < objects.size(); i++)
 			if (objects[i] == pObject)
 			{
