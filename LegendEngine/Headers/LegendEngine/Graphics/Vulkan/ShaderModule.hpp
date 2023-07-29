@@ -1,16 +1,10 @@
-/*
- * Shader modules in Vulkan are literally just shaders.
- */
-
-#ifndef _LEGENDENGINE_VULKAN_SHADERMODULE_HPP
-#define _LEGENDENGINE_VULKAN_SHADERMODULE_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
 
-#include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Common/Types.hpp>
-#include <LegendEngine/Graphics/Vulkan/Device.hpp>
+#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -22,14 +16,12 @@
 
 namespace LegendEngine::Vulkan
 {
-    class ShaderModule : public IDisposable
+    class ShaderModule
     {
     public:
-        ShaderModule() {}
+        ShaderModule(TetherVulkan::GraphicsContext& context, ShaderType type);
         LEGENDENGINE_NO_COPY(ShaderModule);
 
-        bool Init(Device* pDevice, ShaderType type);
-    
     #ifdef SHADER_COMPILATION
         /**
          * @brief Compiles a shader from GLSL and creates the shader.
@@ -81,13 +73,10 @@ namespace LegendEngine::Vulkan
         void InitResources(TBuiltInResource& resources);
     #endif
 
-        Device* pDevice = nullptr;
+        TetherVulkan::GraphicsContext& m_Context;
 
         ShaderType type;
         VkShaderModule shaderModule;
         bool shaderCreated = false;
     };
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKAN_SHADERMODULE_HPP

@@ -101,8 +101,6 @@ namespace LegendEngine
 		DisposeGraphics();
 
 		defaultScene.ClearObjects();
-		
-		m_Window.RemoveEventHandler(eventHandler);
 	}
 
 	bool Application::Run()

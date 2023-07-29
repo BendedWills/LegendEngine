@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_VULKANRENDERER_HPP
-#define _LEGENDENGINE_VULKANRENDERER_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
 #ifdef VULKAN_API
@@ -189,6 +188,3 @@ namespace LegendEngine::Vulkan
 		bool enableVsync = false;
 	};
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKANRENDERER_HPP

@@ -2,7 +2,7 @@
 
 #include <LegendEngine/GraphicsContext.hpp>
 
-#include <Tether/Rendering/Vulkan/Instance.hpp>
+#include <Tether/Rendering/Vulkan/ContextCreator.hpp>
 
 namespace LegendEngine::Vulkan
 {

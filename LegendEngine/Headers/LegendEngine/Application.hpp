@@ -166,8 +166,6 @@ namespace LegendEngine
 		std::vector<VertexBuffer*> vertexBuffers;
 		std::vector<Resources::IResource*> resources;
 	private:
-		void InitWindow(const std::string& title);
-
 		void Update(float delta, bool updateWindow = true);
 		void Render(float delta);
 

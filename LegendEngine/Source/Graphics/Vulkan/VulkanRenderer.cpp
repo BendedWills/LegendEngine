@@ -369,10 +369,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::RecreateSwapchain()
 	{
-		LEGENDENGINE_OBJECT_LOG(pApplication, "VulkanRenderer",
-			"Recreating swapchain (Window resize)",
-			LogType::DEBUG);
-
 		// The m_Device might still have work. Wait for it to finish before 
 		// recreating the m_Swapchain->
 		vkDeviceWaitIdle(m_Device);
@@ -459,7 +455,7 @@ namespace LegendEngine::Vulkan
 			vkCmdSetViewport(buffer, 0, 1, &viewport);
 			vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-			cameraUniform.GetDescriptorSet(&sets[0], commandBufferIndex);
+			sets[0] = cameraUniform.GetDescriptorSet(commandBufferIndex);
 
 			// This will probably be changed later on
 			// Eventually, objects will have to be rendered in order of distance
@@ -512,7 +508,7 @@ namespace LegendEngine::Vulkan
 				(VertexBufferNative*)pVertexBuffer->GetNative();
 
 			ObjectNative* native = (ObjectNative*)object->GetNative();
-			native->GetUniform()->GetDescriptorSet(&sets[2], commandBufferIndex);
+			sets[2] = native->GetUniform()->GetDescriptorSet(commandBufferIndex);
 
 			Resources::Material* pMaterial = component->GetMaterial();
 			if (pMaterial)
@@ -520,7 +516,7 @@ namespace LegendEngine::Vulkan
 				if (pMaterial != lastMaterial)
 				{
 					MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
-					matNative->uniform.GetDescriptorSet(&sets[1], commandBufferIndex);
+					sets[1] = matNative->uniform.GetDescriptorSet(commandBufferIndex);
 
 					lastMaterial = pMaterial;
 				}
@@ -528,7 +524,7 @@ namespace LegendEngine::Vulkan
 			else
 			{
 				MaterialNative* matNative = (MaterialNative*)defaultMaterial->GetNative();
-				matNative->uniform.GetDescriptorSet(&sets[1], commandBufferIndex);
+				sets[1] = matNative->uniform.GetDescriptorSet(commandBufferIndex);
 			}
 
 			vkCmdBindDescriptorSets(
@@ -585,7 +581,6 @@ namespace LegendEngine::Vulkan
 		vkDestroyDescriptorSetLayout(m_Device, objectLayout, nullptr);
 		vkDestroyDescriptorSetLayout(m_Device, cameraLayout, nullptr);
 		vkDestroyDescriptorSetLayout(m_Device, materialLayout, nullptr);
-		cameraUniform.Dispose();
 		cameraManager.Dispose();
 
 		vkDestroyRenderPass(m_Device, renderPass, nullptr);
@@ -1169,6 +1164,6 @@ namespace LegendEngine::Vulkan
 		for (VkImageView imageView : swapchainImageViews)
 			vkDestroyImageView(m_Device, imageView, nullptr);
 
-		m_Swapchain->Dispose();
+		m_Swapchain.reset();
 	}
 }
