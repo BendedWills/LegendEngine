@@ -63,8 +63,8 @@ public:
 	void OnInit()
 	{
 		SetRecieveUpdates(true);
-		pApplication->pWindow->AddInputListener(*this, Input::InputType::KEY);
-		pApplication->pWindow->AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
+		GetApplication()->GetWindow().AddInputListener(*this, Input::InputType::KEY);
+		GetApplication()->GetWindow().AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
 	}
 
 	void OnUpdate(float delta)
@@ -183,8 +183,8 @@ public:
 
 	bool OnPreInit()
 	{
-		pWindow->SetCursorMode(Utils::Window::CursorMode::DISABLED);
-		pWindow->SetRawInputEnabled(true);
+		GetWindow().SetCursorMode(Utils::Window::CursorMode::DISABLED);
+		GetWindow().SetRawInputEnabled(true);
 
 		InitScene(testScene);
 

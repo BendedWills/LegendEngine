@@ -11,7 +11,6 @@
 
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
-#include <LegendEngine/Graphics/Vulkan/Swapchain.hpp>
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/Common/PipelineInfo.hpp>
 

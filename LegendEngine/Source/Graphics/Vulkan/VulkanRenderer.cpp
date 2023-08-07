@@ -31,10 +31,8 @@ namespace LegendEngine::Vulkan
 	{
 		timer.Set();
 
-		InitSwapchain(m_Application.pWindow->GetWidth(),
-			m_Application.pWindow->GetHeight());
+		InitSwapchain();
 		InitRenderPass();
-		InitShaders();
 		InitUniforms();
 		InitPipeline();
 		InitDepthImages();
@@ -367,6 +365,54 @@ namespace LegendEngine::Vulkan
 		);
 	}
 
+	TetherVulkan::SwapchainDetails VulkanRenderer::QuerySwapchainSupport()
+	{
+		TetherVulkan::SwapchainDetails details;
+
+		VkPhysicalDevice physicalDevice = m_GraphicsContext.GetPhysicalDevice();
+		VkSurfaceKHR vkSurface = m_Surface.Get();
+
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			physicalDevice,
+			vkSurface, &details.capabilities
+		);
+
+		uint32_t formatCount;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(
+			physicalDevice, vkSurface,
+			&formatCount, nullptr
+		);
+
+		if (formatCount != 0)
+		{
+			details.formats.resize(formatCount);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(
+				physicalDevice,
+				vkSurface, &formatCount,
+				details.formats.data()
+			);
+		}
+
+		uint32_t presentModeCount;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(
+			physicalDevice,
+			vkSurface, &presentModeCount,
+			details.presentModes.data()
+		);
+
+		if (presentModeCount != 0)
+		{
+			details.presentModes.resize(presentModeCount);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(
+				physicalDevice,
+				vkSurface, &presentModeCount,
+				details.presentModes.data()
+			);
+		}
+
+		return details;
+	}
+
 	bool VulkanRenderer::RecreateSwapchain()
 	{
 		// The m_Device might still have work. Wait for it to finish before 
@@ -374,7 +420,7 @@ namespace LegendEngine::Vulkan
 		vkDeviceWaitIdle(m_Device);
 
 		DisposeSwapchain();
-		InitSwapchain(m_Window.GetWidth(), m_Window.GetHeight());
+		InitSwapchain();
 		InitDepthImages();
 		InitFramebuffers();
 		InitCommandBuffers();
@@ -455,7 +501,7 @@ namespace LegendEngine::Vulkan
 			vkCmdSetViewport(buffer, 0, 1, &viewport);
 			vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-			sets[0] = cameraUniform.GetDescriptorSet(commandBufferIndex);
+			sets[0] = cameraUniform->GetDescriptorSet(commandBufferIndex);
 
 			// This will probably be changed later on
 			// Eventually, objects will have to be rendered in order of distance
@@ -581,8 +627,7 @@ namespace LegendEngine::Vulkan
 		vkDestroyDescriptorSetLayout(m_Device, objectLayout, nullptr);
 		vkDestroyDescriptorSetLayout(m_Device, cameraLayout, nullptr);
 		vkDestroyDescriptorSetLayout(m_Device, materialLayout, nullptr);
-		cameraManager.Dispose();
-
+		
 		vkDestroyRenderPass(m_Device, renderPass, nullptr);
 
 		for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -602,105 +647,34 @@ namespace LegendEngine::Vulkan
 		shouldRecreateSwapchain = true;
 	}
 
-	VkSurfaceFormatKHR VulkanRenderer::ChooseSurfaceFormat(Vulkan::SwapchainDetails details)
+	void VulkanRenderer::ChooseSurfaceFormat(TetherVulkan::SwapchainDetails details)
 	{
 		for (const auto& availableFormat : details.formats)
 			if (availableFormat.format == VK_FORMAT_R32G32B32_UINT)
-				return availableFormat;
+			{
+				m_SurfaceFormat = availableFormat;
+				return;
+			}
 
-		return details.formats[0];
+		m_SurfaceFormat = details.formats[0];
 	}
 
-	void VulkanRenderer::InitSwapchain(uint64_t width, uint64_t height)
+	void VulkanRenderer::InitSwapchain()
 	{
-		Vulkan::SwapchainDetails details =
-			pInstance->QuerySwapchainSupport(m_PhysicalDevice, &m_Surface);
-		VkSurfaceFormatKHR surfaceFormat = ChooseSurfaceFormat(details);
+		TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
+		ChooseSurfaceFormat(details);
 
-		uint32_t imageCount = details.capabilities.minImageCount + 1;
-		if (details.capabilities.maxImageCount > 0 &&
-			imageCount > details.capabilities.maxImageCount)
-			imageCount = details.capabilities.maxImageCount;
-
-		VkSwapchainCreateInfoKHR createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = m_Surface.Get();
-		createInfo.minImageCount = imageCount;
-		createInfo.imageFormat = surfaceFormat.format;
-		createInfo.imageColorSpace = surfaceFormat.colorSpace;
-		createInfo.imageExtent = m_Swapchain->ChooseExtent(details.capabilities,
-			width, height);
-		createInfo.imageArrayLayers = 1;
-
-		// This will probably be changed later on to take in a parameter in this
-		// function.
-		// This parameter in the swapchain specifies what the images in the
-		// swapchain are used for.
-		// This may seem familiar if you have done computer graphics before,
-		// as this is only the color attachment. There are others too, such as
-		// the depth buffer.
-		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		createInfo.preTransform = details.capabilities.currentTransform;
-		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		createInfo.presentMode = ChoosePresentMode(details.presentModes,
-			enableVsync);
-		createInfo.clipped = true;
-		createInfo.oldSwapchain = VK_NULL_HANDLE;
-
-		indices = pInstance->FindQueueFamilies(m_PhysicalDevice, &m_Surface);
-		if (indices.graphicsFamilyIndex != indices.presentFamilyIndex)
-		{
-			if (!indices.hasPresentFamily)
-				return false;
-
-			uint32_t queueFamilyIndices[] =
-			{
-				indices.graphicsFamilyIndex,
-				indices.presentFamilyIndex
-			};
-
-			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-			createInfo.queueFamilyIndexCount = 2;
-			createInfo.pQueueFamilyIndices = queueFamilyIndices;
-		}
-		else
-			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		m_Swapchain.emplace(m_GraphicsContext, m_GraphicsContext.GetG)
+		m_Swapchain.emplace(m_GraphicsContext, details, m_SurfaceFormat,
+			m_Surface, m_Window.GetWidth(), m_Window.GetHeight(), enableVsync);
 
 		swapchainImages = m_Swapchain->GetImages();
-		if (!m_Swapchain->GetImageViews(&swapchainImageViews))
-			throw std::runtime_error("Failed to create camera manager");
-	}
-
-	void VulkanRenderer::InitShaders()
-	{
-		vertexModule.Init(&m_Device, ShaderType::VERTEX);
-		fragmentModule.Init(&m_Device, ShaderType::FRAG);
-
-		if (!vertexModule.FromSpirV(
-			(uint32_t*)LegendEngine::Resources::solid_vert_spv,
-			sizeof(LegendEngine::Resources::solid_vert_spv)
-		))
-		{
-			m_Application.Log("Vertex creation failed!", LogType::ERROR);
-			return false;
-		}
-
-		if (!fragmentModule.FromSpirV(
-			(uint32_t*)LegendEngine::Resources::solid_frag_spv,
-			sizeof(LegendEngine::Resources::solid_frag_spv)
-		))
-		{
-			m_Application.Log("Fragment creation failed!", LogType::ERROR);
-			return false;
-		}
+		swapchainImageViews = m_Swapchain->CreateImageViews();
 	}
 
 	void VulkanRenderer::InitRenderPass()
 	{
 		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = m_Swapchain->GetImageFormat();
+		colorAttachment.format = m_SurfaceFormat.format;
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -834,18 +808,19 @@ namespace LegendEngine::Vulkan
 				throw std::runtime_error("Failed to create descriptor set layout");
 		}
 
-		if (!cameraManager.Init(&m_Device, 1, swapchainImages))
-			throw std::runtime_error("Failed to create camera manager");
-		if (!cameraUniform.Init(this, sizeof(Objects::Camera::CameraUniforms),
-			m_Swapchain->GetImageCount()))
-			throw std::runtime_error("Failed to create camera uniform");
+		cameraManager.emplace(&m_Device, 1, swapchainImages);
+		cameraUniform.emplace(this, sizeof(Objects::Camera::CameraUniforms),
+			m_Swapchain->GetImageCount());
 
-		cameraUniform.BindToSet(&cameraManager, cameraLayout);
-		cameraUniform.Bind(0);
+		cameraUniform->BindToSet(&*cameraManager, cameraLayout);
+		cameraUniform->Bind(0);
 	}
 
 	void VulkanRenderer::InitPipeline()
 	{
+		Vulkan::ShaderModule vertexModule(m_GraphicsContext, ShaderType::VERTEX);
+		Vulkan::ShaderModule fragmentModule(m_GraphicsContext, ShaderType::FRAG);
+
 		VkPipelineShaderStageCreateInfo vertexStage{};
 		vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vertexStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -887,9 +862,6 @@ namespace LegendEngine::Vulkan
 
 		if (!shaderProgram.Init(this, &pipelineInfo))
 			throw std::runtime_error("Failed to create shader program");
-
-		vertexModule.Dispose();
-		fragmentModule.Dispose();
 	}
 
 	void VulkanRenderer::InitDepthImages()
@@ -1012,7 +984,7 @@ namespace LegendEngine::Vulkan
 			{
 				// Upload camera matrices
 
-				cameraUniform.UpdateBuffer(pCamera->GetUniforms(),
+				cameraUniform->UpdateBuffer(pCamera->GetUniforms(),
 					sizeof(Objects::Camera::CameraUniforms), imageIndex);
 			}
 

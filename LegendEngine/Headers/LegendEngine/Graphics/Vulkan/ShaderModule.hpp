@@ -1,7 +1,6 @@
 #pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
 
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
@@ -45,7 +44,7 @@ namespace LegendEngine::Vulkan
          * 
          * @returns True if creation was successful. Otherwise, false.
          */
-        bool FromSpirV(uint32_t* spv, uint64_t spvSize); 
+        void FromSpirV(uint32_t* spv, uint64_t spvSize); 
 
     #ifdef SHADER_COMPILATION
         /**
@@ -73,7 +72,7 @@ namespace LegendEngine::Vulkan
         void InitResources(TBuiltInResource& resources);
     #endif
 
-        TetherVulkan::GraphicsContext& m_Context;
+        VkDevice m_Device = nullptr;
 
         ShaderType type;
         VkShaderModule shaderModule;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
 
 #include <iostream>
 #include <vector>
@@ -11,7 +10,6 @@
 #include <LegendEngine/Objects/Camera.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
-#include <LegendEngine/Graphics/Vulkan/Swapchain.hpp>
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 #include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
@@ -85,6 +83,7 @@ namespace LegendEngine::Vulkan
 		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
 			VkImageTiling tiling, VkFormatFeatureFlags features);
 		VkFormat FindDepthFormat();
+		TetherVulkan::SwapchainDetails QuerySwapchainSupport();
 
 		Application& m_Application;
 		Tether::Window& m_Window;
@@ -104,16 +103,14 @@ namespace LegendEngine::Vulkan
 		VkDescriptorSetLayout objectLayout;
 		VkDescriptorSetLayout cameraLayout;
 		VkDescriptorSetLayout materialLayout;
-		Vulkan::UniformManager cameraManager;
-		Vulkan::UniformBuffer cameraUniform;
+		std::optional<Vulkan::UniformManager> cameraManager;
+		std::optional<Vulkan::UniformBuffer> cameraUniform;
 
 		VkRenderPass renderPass;
 		VkCommandPool commandPool;
 
 		// Shader stuff
 		Vulkan::Pipeline shaderProgram;
-		Vulkan::ShaderModule vertexModule;
-		Vulkan::ShaderModule fragmentModule;
 
 		VmaAllocator allocator;
 
@@ -129,6 +126,8 @@ namespace LegendEngine::Vulkan
 		std::vector<VkImage> swapchainImages;
 		std::vector<VkImageView> swapchainImageViews;
 		std::vector<VkCommandBuffer> commandBuffers;
+
+		VkSurfaceFormatKHR m_SurfaceFormat;
 
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 		uint64_t currentFrame = 0;
@@ -159,11 +158,10 @@ namespace LegendEngine::Vulkan
 		void OnRendererDispose();
 
 		// Device helper functions
-		VkSurfaceFormatKHR ChooseSurfaceFormat(Vulkan::SwapchainDetails details);
+		void ChooseSurfaceFormat(TetherVulkan::SwapchainDetails details);
 		
 		// Init functions
-		void InitSwapchain(uint64_t width, uint64_t height);
-		void InitShaders();
+		void InitSwapchain();
 		void InitRenderPass();
 		void InitUniforms();
 		void InitPipeline();

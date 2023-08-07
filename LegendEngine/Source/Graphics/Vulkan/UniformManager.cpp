@@ -1,43 +1,36 @@
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
 
 #include <LegendEngine/Graphics/Vulkan/UniformManager.hpp>
 
-using namespace LegendEngine::Vulkan;
-
-bool UniformManager::Init(Device* pDevice, uint32_t uniformCount, uint32_t images)
+namespace LegendEngine::Vulkan
 {
-    if (initialized)
-        return false;
-    this->pDevice = pDevice;
+	UniformManager::UniformManager(TetherVulkan::GraphicsContext& context, uint32_t uniformCount, uint32_t images)
+		:
+		m_Device(context.GetDevice())
+	{
+		VkDescriptorPoolSize poolSize{};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = uniformCount * images;
 
-	VkDescriptorPoolSize poolSize{};
-	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = uniformCount * images;
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		poolInfo.maxSets = poolSize.descriptorCount;
 
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-	poolInfo.poolSizeCount = 1;
-	poolInfo.pPoolSizes = &poolSize;
-	poolInfo.maxSets = poolSize.descriptorCount;
+		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &pool)
+			!= VK_SUCCESS)
+			throw std::runtime_error("Failed to create descriptor pool!");
+	}
 
-    if (vkCreateDescriptorPool(pDevice->Get(), &poolInfo, nullptr, &pool)
-        != VK_SUCCESS)
-        return false;
+	UniformManager::~UniformManager()
+	{
+		vkDestroyDescriptorPool(m_Device, pool, nullptr);
+	}
 
-    initialized = true;
-    return true;
+	VkDescriptorPool* UniformManager::GetPool()
+	{
+		return &pool;
+	}
 }
-
-VkDescriptorPool* UniformManager::GetPool()
-{
-    return &pool;
-}
-
-void UniformManager::OnDispose()
-{
-	vkDestroyDescriptorPool(pDevice->Get(), pool, nullptr);
-}
-
-#endif // VULKAN_API
