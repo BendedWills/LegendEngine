@@ -1,8 +1,6 @@
-#ifndef _LEGENDENGINE_VULKAN_MATERIALNATIVE_HPP
-#define _LEGENDENGINE_VULKAN_MATERIALNATIVE_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
 
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
@@ -20,18 +18,16 @@ namespace LegendEngine::Vulkan
     public:
         LEGENDENGINE_NO_COPY(MaterialNative);
         
-        MaterialNative(VulkanRenderer* pRenderer, Resources::Material* pMaterial)
-            :
-            pVulkanRenderer(pRenderer),
-            Resources::IMaterialNative(pMaterial)
-        {}
+        MaterialNative(VulkanRenderer& renderer,
+            Resources::Material* pMaterial);
     protected:
-        Vulkan::UniformBuffer uniform;
+        std::optional<Vulkan::UniformBuffer> uniform;
         VkDescriptorPool pool;
 
         uint32_t images = 0;
         
-        VulkanRenderer* pVulkanRenderer = nullptr;
+        VkDevice m_Device = nullptr;
+        VulkanRenderer& m_Renderer;
     private:
 		bool OnCreate();
 		void OnUpdate();
@@ -41,6 +37,3 @@ namespace LegendEngine::Vulkan
         void UpdateDescriptorSets();
     };
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKAN_MATERIALNATIVE_HPP
