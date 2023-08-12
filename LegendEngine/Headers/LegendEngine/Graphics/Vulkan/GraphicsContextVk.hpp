@@ -14,12 +14,29 @@ namespace LegendEngine::Vulkan
 		using Instance = TetherVulkan::Instance;
 
 		GraphicsContext(std::string_view applicationName, bool debug);
+		~GraphicsContext();
 
 		TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
 	private:
+		class DebugCallback : public Vulkan::TetherVulkan::DebugCallback
+		{
+		public:
+			DebugCallback(GraphicsContext& context);
+
+			void OnDebugLog(
+				VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+				VkDebugUtilsMessageTypeFlagsEXT messageType,
+				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
+			);
+		private:
+			GraphicsContext& m_Context;
+		};
+
 		TetherVulkan::InstanceInfo CreateInstanceInfo(const char* appName);
 
 		TetherVulkan::ContextCreator m_ContextCreator;
 		TetherVulkan::GraphicsContext m_GraphicsContext;
+		
+		DebugCallback m_Callback;
 	};
 }

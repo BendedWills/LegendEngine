@@ -10,6 +10,8 @@ namespace LegendEngine
 	class GraphicsContext
 	{
 	public:
+		virtual Scope<IRenderer> CreateRenderer() = 0;
+
 		static GraphicsContext& Create(RenderingAPI api, bool debug);
 		static GraphicsContext& Get();
 	private:

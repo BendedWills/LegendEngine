@@ -8,11 +8,6 @@
 #include <LegendEngine/Graphics/IRenderer.hpp>
 #include <LegendEngine/Scene.hpp>
 
-#ifdef VULKAN_API
-#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
-#include <Tether/Rendering/Vulkan/DebugCallback.hpp>
-#endif // VULKAN_API
-
 #include <Tether/Tether.hpp>
 
 namespace LegendEngine
@@ -111,22 +106,9 @@ namespace LegendEngine
 		void SetActiveCamera(Objects::Camera* pCamera);
 		Objects::Camera* GetActiveCamera();
 
-		/**
-		 * @brief Sets the active scene.
-		 *
-		 * @param scene The scene.
-		 */
 		void SetActiveScene(Scene& scene);
-		/**
-		 * @brief Sets the active scene.
-		 *
-		 * @param pScene A pointer to the scene.
-		 */
 		void SetActiveScene(Scene* pScene);
 		void RemoveActiveScene();
-		/**
-		 * @returns The active scene (wow really?)
-		 */
 		Scene* GetActiveScene();
 		Scene* GetDefaultScene();
 
@@ -201,36 +183,12 @@ namespace LegendEngine
 		bool debug = false;
 
 		Scope<Tether::Window> m_Window;
-
-#pragma region Graphics
-		Ref<IRenderer> pRenderer;
-
-#ifdef VULKAN_API
-		bool vulkanInitialized = false;
-		bool InitVulkan();
-
-		class DebugCallback : public Vulkan::TetherVulkan::DebugCallback
-		{
-		public:
-			Application* pApplication = nullptr;
-
-			void OnDebugLog(
-				VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-				VkDebugUtilsMessageTypeFlagsEXT messageType,
-				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
-			);
-		};
-		DebugCallback callback;
-#endif // VULKAN_API
-
-#pragma endregion Graphics
+		Scope<IRenderer> m_Renderer;
 	};
 
 	template<typename T>
 	Ref<T> Application::CreateObject()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
-
 		if (!std::is_base_of<Objects::Object, T>())
 		{
 			Log("In Application::CreateObject: T is not of base class Object!",
@@ -241,7 +199,7 @@ namespace LegendEngine
 		Ref<T> object = RefTools::Create<T>();
 		object->pApplication = this;
 
-		pRenderer->CreateObjectNative(object.get());
+		m_Renderer->CreateObjectNative(object.get());
 
 		objects.push_back(object.get());
 
@@ -257,8 +215,6 @@ namespace LegendEngine
 	template<typename T, typename... Args>
 	Ref<T> Application::CreateResource(Args... args)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(nullptr);
-
 		if (!std::is_base_of<Resources::IResource, T>())
 		{
 			Log("In Application::CreateResource: T is not of base class IResource!",
@@ -270,11 +226,11 @@ namespace LegendEngine
 		resource->pApplication = this;
 
 		if (std::is_same<Resources::Shader, T>())
-			pRenderer->CreateShaderNative((Resources::Shader*)resource.get());
+			m_Renderer->CreateShaderNative((Resources::Shader*)resource.get());
 		else if (std::is_same<Resources::Texture2D, T>())
-			pRenderer->CreateTexture2DNative((Resources::Texture2D*)resource.get());
+			m_Renderer->CreateTexture2DNative((Resources::Texture2D*)resource.get());
 		else if (std::is_same<Resources::Material, T>())
-			pRenderer->CreateMaterialNative((Resources::Material*)resource.get());
+			m_Renderer->CreateMaterialNative((Resources::Material*)resource.get());
 
 		std::stringstream str;
 		str << "Created Resource (" << (uint64_t)resource.get() << ")";

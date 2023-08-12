@@ -51,7 +51,7 @@ void Scene::AddObject(Objects::Object* pObject)
 
     AddObjectComponents(pObject);
 
-    pApplication->pRenderer->OnSceneChange(this, pObject);
+    pApplication->m_Renderer->OnSceneChange(this, pObject);
 }
 
 bool Scene::HasObject(Ref<Objects::Object>& object)
@@ -102,7 +102,7 @@ bool Scene::RemoveObject(Objects::Object* pObject)
             objects[i]->RemoveFromScene(this);
 
             RemoveObjectComponents(pObject);
-            pApplication->pRenderer->OnSceneChange(this, pObject);
+            pApplication->m_Renderer->OnSceneChange(this, pObject);
 
             objects.erase(objects.begin() + i);
         }
@@ -134,7 +134,7 @@ void Scene::OnObjectComponentAdd(Objects::Object* pObject, std::string typeName,
     // Add the component to the list
     vecref.push_back(pComponent);
 
-    pApplication->pRenderer->OnSceneChange(this, pObject);
+    pApplication->m_Renderer->OnSceneChange(this, pObject);
 }
 
 void Scene::OnObjectComponentRemove(Objects::Object* pObject, std::string typeName,
@@ -153,19 +153,19 @@ void Scene::OnObjectComponentRemove(Objects::Object* pObject, std::string typeNa
             break;
         }
 
-    pApplication->pRenderer->OnSceneChange(this, pObject);
+    pApplication->m_Renderer->OnSceneChange(this, pObject);
 }
 
 void Scene::OnObjectEnable(Objects::Object* pObject)
 {
     LGENG_RETURN_IF_APP_NULL();
-    pApplication->pRenderer->OnSceneChange(this, pObject);
+    pApplication->m_Renderer->OnSceneChange(this, pObject);
 }
 
 void Scene::OnObjectDisable(Objects::Object* pObject)
 {
     LGENG_RETURN_IF_APP_NULL();
-    pApplication->pRenderer->OnSceneChange(this, pObject);
+    pApplication->m_Renderer->OnSceneChange(this, pObject);
 }
 
 void Scene::AddObjectComponents(Objects::Object* pObject)

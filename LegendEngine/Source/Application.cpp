@@ -1,13 +1,14 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/GraphicsContext.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 #include <LegendEngine/Objects/Scripts/Script.hpp>
 
 #include <iostream>
 #include <chrono>
 #include <sstream>
+#include <codecvt>
+#include <locale>
 #include <algorithm>
 
 namespace LegendEngine
@@ -24,21 +25,6 @@ namespace LegendEngine
 		this->pApplication->RecieveResize(event.GetNewWidth(), event.GetNewHeight());
 	}
 
-	void Application::DebugCallback::OnDebugLog(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT messageType,
-		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
-	)
-	{
-		std::stringstream ss;
-		ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
-
-		if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-			pApplication->Log(ss.str(), LogType::ERROR);
-		else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			pApplication->Log(ss.str(), LogType::WARN);
-	}
-
 	Application::Application(
 		const std::string& applicationName,
 		bool logging,
@@ -51,23 +37,15 @@ namespace LegendEngine
 		logging(logging),
 		debug(debug)
 	{
-		Log("Creating window", LogType::DEBUG);
-		m_Window = Tether::Window::Create(1280, 720, title, false);
-		
-		if (!VulkanContext::InitAPI(api, debug))
-			return false;
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
-		switch (api)
-		{
-#ifdef VULKAN_API
-			case RenderingAPI::VULKAN:
-			{
-				if (!InitVulkan())
-					return false;
-			}
-			break;
-#endif // VULKAN_API
-		}
+		Log("Creating window", LogType::DEBUG);
+		m_Window = Tether::Window::Create(1280, 720, 
+			converter.from_bytes(applicationName), false);
+		
+		GraphicsContext::Create(api, debug);
+		GraphicsContext& graphicsContext = GraphicsContext::Get();
+		m_Renderer = graphicsContext.CreateRenderer();
 
 		InitScene(defaultScene);
 	}
@@ -119,7 +97,7 @@ namespace LegendEngine
 
 	IRenderer& Application::GetRenderer()
 	{
-		return *pRenderer;
+		return *m_Renderer;
 	}
 
 	std::string Application::GetName()
@@ -150,13 +128,13 @@ namespace LegendEngine
 
 	void Application::Render(float delta)
 	{
-		if (!pRenderer)
+		if (!m_Renderer)
 			return;
 
 		for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
 			renderUpdateScripts[i]->OnRender();
 
-		pRenderer->RenderFrame();
+		m_Renderer->RenderFrame();
 
 		OnRendered(delta);
 	}
@@ -248,7 +226,7 @@ namespace LegendEngine
 		Ref<VertexBuffer> vbuffer = RefTools::Create<VertexBuffer>();
 		vbuffer->pApplication = this;
 
-		if (!pRenderer->CreateVertexBufferNative(vbuffer.get()))
+		if (!m_Renderer->CreateVertexBufferNative(vbuffer.get()))
 		{
 			Log("Failed to create vertex buffer!", LogType::ERROR);
 			return nullptr;
@@ -333,7 +311,7 @@ namespace LegendEngine
 			if (pScene->pApplication != this)
 				return;
 
-		pRenderer->OnSceneChange(pScene, nullptr);
+		m_Renderer->OnSceneChange(pScene, nullptr);
 		this->activeScene = pScene;
 	}
 
@@ -347,38 +325,14 @@ namespace LegendEngine
 		return activeScene;
 	}
 
-#ifdef VULKAN_API
-	bool Application::InitVulkan()
-	{
-		callback.pApplication = this;
-
-		pRenderer = RefTools::Create<Vulkan::VulkanRenderer>();
-		if (!pRenderer->Init(this))
-		{
-			Log("Failed to initialize Vulkan renderer!", LogType::ERROR);
-			return false;
-		}
-
-		VulkanContext::GetVulkanInstance()->AddDebugMessenger(&callback);
-
-		vulkanInitialized = true;
-		return true;
-	}
-#endif // VULKAN_API
-
 	void Application::DisposeGraphics()
 	{
-		pRenderer->Dispose();
-
-#ifdef VULKAN_API
-		if (vulkanInitialized)
-			VulkanContext::GetVulkanInstance()->RemoveDebugMessenger(&callback);
-#endif // VULKAN_API
+		m_Renderer->Dispose();
 	}
 
 	void Application::RecieveResize(uint64_t width, uint64_t height)
 	{
-		pRenderer->OnWindowResize(width, height);
+		m_Renderer->OnWindowResize(width, height);
 
 		float aspect = (float)width / (float)height;
 		if (pActiveCamera)
@@ -443,5 +397,4 @@ namespace LegendEngine
 			if (renderUpdateScripts[i] == pScript)
 				renderUpdateScripts.erase(renderUpdateScripts.begin() + i);
 	}
-
 }
