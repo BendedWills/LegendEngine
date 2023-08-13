@@ -193,7 +193,7 @@ file(GLOB_RECURSE SOURCES
 	"Vendor/stb_image/*.h" 
 )
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES} "Source/Common/Logger.cpp")
 add_dependencies(${PROJECT_NAME} tether tetherRendering compileassets)
 
 set(VK_LIBS)

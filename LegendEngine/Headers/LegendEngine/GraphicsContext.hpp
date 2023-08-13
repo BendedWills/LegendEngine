@@ -4,6 +4,7 @@
 #include <LegendEngine/Common/Ref.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
+#include <LegendEngine/Graphics/IRenderer.hpp>
 
 namespace LegendEngine
 {
