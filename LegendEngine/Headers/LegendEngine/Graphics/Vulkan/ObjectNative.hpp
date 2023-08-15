@@ -17,23 +17,21 @@ namespace LegendEngine::Vulkan
 	{
 	public:
 		LEGENDENGINE_NO_COPY(ObjectNative);
-		ObjectNative(VulkanRenderer* pRenderer, Objects::Object* pObject);
+		ObjectNative(TetherVulkan::GraphicsContext& context, 
+			VkDescriptorSetLayout objectSetLayout,
+			Objects::Object* pObject);
 
 		void SetCurrentImage(uint64_t imageIndex);
 		void OnUniformsUpdate();
 
 		Vulkan::UniformBuffer* GetUniform();
-
-		void OnDispose();
 	private:
-		Vulkan::UniformBuffer uniform;
-		Vulkan::UniformManager uniformManager;
-		IObjectNative::ObjectUniforms ubo;
-		
-		uint32_t images = 0;
+		uint32_t m_Images = 0;
 		uint64_t imageIndex = 0;
 
-		VulkanRenderer* pRenderer = nullptr;
+		Vulkan::UniformBuffer m_Uniform;
+		Vulkan::UniformManager m_UniformManager;
+		IObjectNative::ObjectUniforms ubo;
 	};
 }
 

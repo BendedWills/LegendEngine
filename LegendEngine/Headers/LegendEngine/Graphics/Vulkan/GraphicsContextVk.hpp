@@ -4,6 +4,10 @@
 
 #include <Tether/Rendering/Vulkan/ContextCreator.hpp>
 
+// Don't Remove these. They are used by other files.
+#include <Tether/Rendering/Vulkan/ImageStager.hpp>
+#include <Tether/Rendering/Vulkan/BufferStager.hpp>
+
 namespace LegendEngine::Vulkan
 {
 	namespace TetherVulkan = Tether::Rendering::Vulkan;

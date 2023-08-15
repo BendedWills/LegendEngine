@@ -38,6 +38,8 @@ namespace LegendEngine::Vulkan
 
 	UniformBuffer::~UniformBuffer()
 	{
+		vkDeviceWaitIdle(m_GraphicsContext.GetDevice());
+
 		FreeSet();
 
 		for (uint64_t i = 0; i < m_Images; i++)

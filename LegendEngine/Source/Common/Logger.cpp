@@ -24,10 +24,6 @@ namespace LegendEngine
 
 	void Logger::Log(Level level, std::string_view message)
 	{
-		// If debug isn't enabled, disable debug logs.
-		if ((level == Level::DEBUG && !debug) || !logging)
-			return;
-
 		const std::string reset = "\x1b[0m";
 
 		std::string severity = "";

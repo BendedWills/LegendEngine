@@ -18,10 +18,7 @@ namespace LegendEngine::Vulkan
 		std::stringstream ss;
 		ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
 
-		if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-			pApplication->Log(ss.str(), LogType::ERROR);
-		else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			pApplication->Log(ss.str(), LogType::WARN);
+		std::cout << ss.str() << '\n';
 	}
 
 	GraphicsContext::GraphicsContext(std::string_view applicationName, bool debug)

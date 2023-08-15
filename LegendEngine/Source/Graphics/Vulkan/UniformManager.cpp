@@ -26,6 +26,7 @@ namespace LegendEngine::Vulkan
 
 	UniformManager::~UniformManager()
 	{
+		vkDeviceWaitIdle(m_Device);
 		vkDestroyDescriptorPool(m_Device, pool, nullptr);
 	}
 

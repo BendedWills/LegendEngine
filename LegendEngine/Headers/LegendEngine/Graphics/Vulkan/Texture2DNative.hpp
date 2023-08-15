@@ -1,11 +1,9 @@
-#ifndef _LEGENDENGINE_VULKAN_TEXTURE2DNATIVE_HPP
-#define _LEGENDENGINE_VULKAN_TEXTURE2DNATIVE_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
-
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Resources/Texture2D.hpp>
+#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
 
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
@@ -21,11 +19,8 @@ namespace LegendEngine::Vulkan
     public:
         LEGENDENGINE_NO_COPY(Texture2DNative);
         
-        Texture2DNative(VulkanRenderer* pRenderer, Resources::Texture2D* pTexture)
-            :
-            pVulkanRenderer(pRenderer),
-            Resources::ITexture2DNative(pTexture)
-        {}
+        Texture2DNative(TetherVulkan::GraphicsContext& context,
+            Resources::Texture2D* pTexture);
     protected:
         VkSampler sampler;
 
@@ -38,21 +33,21 @@ namespace LegendEngine::Vulkan
         VmaAllocation stagingAlloc;
         VmaAllocationInfo stagingAllocInfo;
 
+        std::optional<TetherVulkan::ImageStager> m_Stager;
+
         uint64_t width;
         uint64_t height;
         uint32_t channels;
 
         VkFormat imageFormat;
         
-        VulkanRenderer* pVulkanRenderer = nullptr;
+        TetherVulkan::GraphicsContext& m_Context;
+        VkDevice m_Device = nullptr;
     private:
 		bool OnCreate(uint64_t width, uint64_t height, uint32_t channels, 
             uint8_t* data);
 		void OnDispose();
 
-        bool StageImageData(uint8_t* data);
+        void StageImageData(uint8_t* data);
     };
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKAN_TEXTURE2DNATIVE_HPP
