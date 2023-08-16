@@ -24,7 +24,8 @@ namespace LegendEngine::Vulkan
 	GraphicsContext::GraphicsContext(std::string_view applicationName, bool debug)
 		:
 		m_ContextCreator(debug, applicationName, "LegendEngine"),
-		m_GraphicsContext(m_ContextCreator)
+		m_GraphicsContext(m_ContextCreator),
+		m_Callback(*this)
 	{
 		m_ContextCreator.AddDebugMessenger(&m_Callback);
 	}

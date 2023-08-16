@@ -496,7 +496,7 @@ namespace LegendEngine::Vulkan
 			VK_SUBPASS_CONTENTS_INLINE);
 		{
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				shaderProgram.GetPipeline());
+				shaderProgram->GetPipeline());
 
 			vkCmdSetViewport(buffer, 0, 1, &viewport);
 			vkCmdSetScissor(buffer, 0, 1, &scissor);
@@ -562,7 +562,7 @@ namespace LegendEngine::Vulkan
 				if (pMaterial != lastMaterial)
 				{
 					MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
-					sets[1] = matNative->uniform.GetDescriptorSet(commandBufferIndex);
+					sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
 
 					lastMaterial = pMaterial;
 				}
@@ -570,12 +570,12 @@ namespace LegendEngine::Vulkan
 			else
 			{
 				MaterialNative* matNative = (MaterialNative*)defaultMaterial->GetNative();
-				sets[1] = matNative->uniform.GetDescriptorSet(commandBufferIndex);
+				sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
 			}
 
 			vkCmdBindDescriptorSets(
 				buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				shaderProgram.GetPipelineLayout(),
+				shaderProgram->GetPipelineLayout(),
 				0, sizeof(sets) / sizeof(sets[0]),
 				sets,
 				0, nullptr
@@ -622,7 +622,7 @@ namespace LegendEngine::Vulkan
 
 		DisposeSwapchain();
 
-		shaderProgram.Dispose();
+		shaderProgram.reset();
 
 		vkDestroyDescriptorSetLayout(m_Device, objectLayout, nullptr);
 		vkDestroyDescriptorSetLayout(m_Device, cameraLayout, nullptr);
@@ -860,8 +860,8 @@ namespace LegendEngine::Vulkan
 		pipelineInfo.setCount = sizeof(sets) / sizeof(sets[0]);
 		pipelineInfo.pSetLayouts = sets;
 
-		if (!shaderProgram.Init(this, &pipelineInfo))
-			throw std::runtime_error("Failed to create shader program");
+		shaderProgram.emplace(m_GraphicsContext, m_Swapchain->GetExtent(),
+			renderPass, pipelineInfo);
 	}
 
 	void VulkanRenderer::InitDepthImages()

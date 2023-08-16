@@ -135,5 +135,6 @@ namespace LegendEngine::Vulkan
 		// TODO: Log Staging vertex data...
 
 		m_Stager.emplace(m_Context, image, width, height, channels, data, imageFormat);
+		m_Stager->Upload();
 	}
 }

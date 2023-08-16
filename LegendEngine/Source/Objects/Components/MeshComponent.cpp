@@ -22,19 +22,8 @@ bool MeshComponent::Init(
         return false;
     
     Application* pApplication = GetObject()->GetApplication();
-    IRenderer* pRenderer = pApplication->GetRenderer();
+    IRenderer& renderer = pApplication->GetRenderer();
     
-    if (pRenderer == nullptr)
-    {
-        LEGENDENGINE_OBJECT_LOG(
-            pApplication, "MeshComponent",
-            "Renderer is nullptr!",
-            LogType::ERROR
-        );
-
-        return false;
-    }
-
     vertexBuffer = pApplication->CreateVertexBuffer();
     if (!vertexBuffer->Init(pVertices, vertexCount, pIndices, indexCount))
     {

@@ -110,7 +110,7 @@ namespace LegendEngine::Vulkan
 		VkCommandPool commandPool;
 
 		// Shader stuff
-		Vulkan::Pipeline shaderProgram;
+		std::optional<Vulkan::Pipeline> shaderProgram;
 
 		VmaAllocator allocator;
 

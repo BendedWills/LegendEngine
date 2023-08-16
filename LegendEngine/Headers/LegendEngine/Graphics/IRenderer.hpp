@@ -78,6 +78,12 @@ namespace LegendEngine
          */
         virtual bool CreateVertexBufferNative(LegendEngine::VertexBuffer* pObject) = 0;
 
+        /**
+         * @brief
+         * Called when a resource changes in any way
+         */
+        virtual void OnResourceChange(Resources::IResource* pResource) {}
+
         Application* GetApplication();
     protected:
         IRenderer() {}
@@ -129,11 +135,6 @@ namespace LegendEngine
          *  present when an object is added or removed from the scene
          */
         virtual void OnSceneChange(Scene* pScene, Objects::Object* pObject) {}
-        /**
-         * @brief
-         * Called when a resource changes in any way
-         */
-        virtual void OnResourceChange(Resources::IResource* pResource) {}
 
         virtual void OnRendererDispose() {}
 

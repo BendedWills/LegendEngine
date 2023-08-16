@@ -58,7 +58,7 @@ void Material::Update()
 	// Update the native as well (with Vulkan this updates the uniform buffer).
 	if (nativeSet)
 		native->OnUpdate();
-	pApplication->renderer->OnResourceChange(this);
+	pApplication->GetRenderer().OnResourceChange(this);
 	
 	// Set this to false since the uniforms have been updated.
 	shouldUpdateUniforms = false;
