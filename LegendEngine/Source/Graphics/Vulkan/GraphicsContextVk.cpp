@@ -1,4 +1,5 @@
 #include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -52,5 +53,10 @@ namespace LegendEngine::Vulkan
 	TetherVulkan::GraphicsContext& GraphicsContext::GetTetherGraphicsContext()
 	{
 		return m_GraphicsContext;
+	}
+
+	Scope<IRenderer> GraphicsContext::CreateRenderer(Application& app, Tether::Window& window)
+	{
+		return std::make_unique<VulkanRenderer>(app, window);
 	}
 }

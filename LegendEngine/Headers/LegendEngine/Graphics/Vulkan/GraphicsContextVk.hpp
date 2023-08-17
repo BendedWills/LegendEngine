@@ -19,9 +19,11 @@ namespace LegendEngine::Vulkan
 
 		GraphicsContext(std::string_view applicationName, bool debug);
 		~GraphicsContext();
-
+		
 		TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
 	private:
+		Scope<IRenderer> CreateRenderer(Application& app, Tether::Window& window) override;
+
 		class DebugCallback : public Vulkan::TetherVulkan::DebugCallback
 		{
 		public:

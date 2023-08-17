@@ -45,7 +45,7 @@ namespace LegendEngine
 		
 		GraphicsContext::Create(api, debug);
 		GraphicsContext& graphicsContext = GraphicsContext::Get();
-		m_Renderer = graphicsContext.CreateRenderer();
+		m_Renderer = graphicsContext.CreateRenderer(*this, *m_Window);
 
 		InitScene(defaultScene);
 	}
