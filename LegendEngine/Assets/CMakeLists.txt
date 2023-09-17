@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Relative to the build directory 
-# Build/*name*/Tether/Tether.Rendering/Assets
+# Build/*name*/LegendEngine/Assets
 set(APPLICATION_NAME LegendEngine)
 set(COMMON_DIR Common)
 set(SHADER_BINARY_DIR VulkanShaders)
@@ -9,24 +9,24 @@ set(SHADER_HEADER_DIR CompiledShaders)
 set(COMPILED_ASSETS_DIR Compiled)
 
 # The absolute path to the compiled assets directory
-# Build/*name*/Tether/Tether.Rendering/Assets/${COMPILED_ASSETS_DIR}
+# Build/*name*/LegendEngine/Assets/${COMPILED_ASSETS_DIR}
 set (BUILD_COMPILED_DIR
 	"${CMAKE_CURRENT_BINARY_DIR}/${COMPILED_ASSETS_DIR}"
 )
 
 # The absolute path to the shader binary directory
-# Build/*name*/Tether/Tether.Rendering/Assets/${SHADER_BINARY_DIR}
+# Build/*name*/LegendEngine/Assets/${SHADER_BINARY_DIR}
 set (BUILD_SHADER_DIR
 	"${CMAKE_CURRENT_BINARY_DIR}/${SHADER_BINARY_DIR}"
 )
 
 # The absolute path to the shader headers directory
-# Build/*name*/Tether/Tether.Rendering/Assets/${SHADER_HEADER_DIR}
+# Build/*name*/LegendEngine/Assets/${SHADER_HEADER_DIR}
 set (BUILD_SHADER_HEADER_DIR
 	"${CMAKE_CURRENT_BINARY_DIR}/${SHADER_HEADER_DIR}"
 )
 
-if (TETHER_RENDERING_VULKAN_API)
+if (LGENG_VULKAN_API)
 	# Firstly, compile Vulkan shaders into .spv.
 
 	add_custom_target(compile${APPLICATION_NAME}VKSpv)
@@ -88,8 +88,8 @@ endif()
 # Convert all assets into header files with bin2cpp
 
 # Target & deps
-add_custom_target(compile${APPLICATION_NAME}RenderingAssets)
-add_dependencies(compile${APPLICATION_NAME}RenderingAssets bin2cpp)
+add_custom_target(compile${APPLICATION_NAME}Assets)
+add_dependencies(compile${APPLICATION_NAME}Assets bin2cpp)
 
 # Find all assets (relative to the list directory)
 file(GLOB_RECURSE ASSETS
@@ -100,8 +100,8 @@ file(MAKE_DIRECTORY ${BUILD_COMPILED_DIR})
 
 # If Tether.Rendering is compiled with Vulkan features, then add the target that
 # compiles VULKAN shaders into SPV.
-if (TETHER_RENDERING_VULKAN_API)
-	add_dependencies(compile${APPLICATION_NAME}RenderingAssets convert${APPLICATION_NAME}SpvToHeaders)
+if (LGENG_VULKAN_API)
+	add_dependencies(compile${APPLICATION_NAME}Assets convert${APPLICATION_NAME}SpvToHeaders)
 endif()
 
 foreach(source IN LISTS ASSETS)
@@ -117,7 +117,7 @@ foreach(source IN LISTS ASSETS)
 	set(OUTPUT_FILE "${OUTPUT_DIRECTORY}/${FILENAME}.h")
 
 	add_custom_command(
-		TARGET compileTetherRenderingAssets 
+		TARGET compileTetherAssets 
 		COMMAND
 			bin2cpp
 			-s ${source}

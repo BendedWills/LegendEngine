@@ -3,12 +3,9 @@
  * support of a swapchain.
  */
 
-#ifndef _LEGENDENGINE_VULKAN_PIPELINEINFO_HPP
-#define _LEGENDENGINE_VULKAN_PIPELINEINFO_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-
-#ifdef VULKAN_API
 
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
 
@@ -27,6 +24,3 @@ namespace LegendEngine::Vulkan
 		VkDynamicState* pDynamicStates;
 	};
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKAN_PIPELINEINFO_HPP

@@ -1,8 +1,6 @@
-#ifndef _LEGENDENGINE_VULKAN_VULKANOBJECTNATIVE_HPP
-#define _LEGENDENGINE_VULKAN_VULKANOBJECTNATIVE_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Objects/Object.hpp>
@@ -34,6 +32,3 @@ namespace LegendEngine::Vulkan
 		IObjectNative::ObjectUniforms ubo;
 	};
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKAN_VULKANOBJECTNATIVE_HPP

@@ -1,10 +1,10 @@
 #include <LegendEngine/GraphicsContext.hpp>
 
-#ifdef VULKAN_API
+#ifdef _VULKAN_API
 #include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
 #endif
 
-#ifdef OPENGL_API
+#ifdef _OPENGL_API
 // Include something
 #endif
 
@@ -14,7 +14,7 @@ namespace LegendEngine
 	{
 		switch (api)
 		{
-#ifdef VULKAN_API
+#ifdef _VULKAN_API
 			case RenderingAPI::VULKAN:
 			{
 				internal = std::make_unique<Vulkan::GraphicsContext>("LegendEngineApp",
@@ -23,7 +23,7 @@ namespace LegendEngine
 			break;
 #endif
 
-#ifdef OPENGL_API
+#ifdef _OPENGL_API
 			
 #endif
 			

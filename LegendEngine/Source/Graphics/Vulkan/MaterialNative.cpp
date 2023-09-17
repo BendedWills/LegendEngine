@@ -12,17 +12,19 @@
 namespace LegendEngine::Vulkan
 {
 
-	MaterialNative::MaterialNative(VulkanRenderer& renderer, Resources::Material* pMaterial)
+	MaterialNative::MaterialNative(TetherVulkan::GraphicsContext& context,
+		uint32_t images, VkDescriptorSetLayout layout,
+		Resources::Material* pMaterial)
 		:
-		m_Renderer(renderer),
-		m_Device(renderer.m_Device),
-		Resources::IMaterialNative(pMaterial)
+		Resources::IMaterialNative(pMaterial),
+		m_GraphicsContext(context),
+		m_Device(context.GetDevice()),
+		m_Layout(layout),
+		images(images)
 	{}
 
 	bool MaterialNative::OnCreate()
 	{
-		this->images = m_Renderer.m_Swapchain->GetImageCount();
-
 		VkDescriptorPoolSize uniformsSize{};
 		uniformsSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uniformsSize.descriptorCount = images;
@@ -48,11 +50,11 @@ namespace LegendEngine::Vulkan
 			!= VK_SUCCESS)
 			return false;
 
-		uniform.emplace(m_Renderer.m_GraphicsContext, 
+		uniform.emplace(m_GraphicsContext,
 			sizeof(Resources::Material::MaterialUniforms), images);
 
 		// Allocate the descriptor sets for the uniform
-		uniform->BindToSet(&pool, m_Renderer.materialLayout);
+		uniform->BindToSet(&pool, m_Layout);
 
 		UpdateDescriptorSets();
 
@@ -82,12 +84,7 @@ namespace LegendEngine::Vulkan
 	{
 		// Wait for all frames to finish rendering.
 		// Command buffers cannot be reset during frame rendering.
-		for (uint64_t i2 = 0; i2 < m_Renderer.inFlightFences.size(); i2++)
-			vkWaitForFences(
-				m_Device, 1,
-				&m_Renderer.inFlightFences[i2], true,
-				UINT64_MAX
-			);
+		vkDeviceWaitIdle(m_Device);
 
 		for (uint64_t i = 0; i < images; i++)
 		{

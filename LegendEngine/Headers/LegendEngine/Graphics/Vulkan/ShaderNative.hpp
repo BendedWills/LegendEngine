@@ -1,8 +1,6 @@
-#ifndef _LEGENDENGINE_VULKAN_SHADER_HPP
-#define _LEGENDENGINE_VULKAN_SHADER_HPP
+#pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
-#ifdef VULKAN_API
 
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Resources/Shader.hpp>
@@ -36,6 +34,3 @@ namespace LegendEngine::Vulkan
         VulkanRenderer* pVulkanRenderer = nullptr;
     };
 }
-
-#endif // VULKAN_API
-#endif //_LEGENDENGINE_VULKAN_SHADER_HPP

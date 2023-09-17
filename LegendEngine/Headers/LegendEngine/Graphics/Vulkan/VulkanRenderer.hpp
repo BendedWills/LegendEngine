@@ -149,7 +149,6 @@ namespace LegendEngine::Vulkan
 			uint64_t commandBufferIndex, Scene* pScene);
 
 		// Renderer virtual functions
-		bool OnRendererInit();
 		void OnObjectChange(Objects::Object* pObject);
 		void OnSceneChange(Scene* pScene, Objects::Object* pObject);
 		void OnResourceChange(Resources::IResource* pResource);

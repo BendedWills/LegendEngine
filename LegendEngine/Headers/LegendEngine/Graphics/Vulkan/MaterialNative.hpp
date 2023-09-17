@@ -5,6 +5,7 @@
 #include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
 #include <LegendEngine/Common/IDisposable.hpp>
 #include <LegendEngine/Resources/Material.hpp>
+#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
 
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
@@ -18,7 +19,8 @@ namespace LegendEngine::Vulkan
     public:
         LEGENDENGINE_NO_COPY(MaterialNative);
         
-        MaterialNative(VulkanRenderer& renderer,
+        MaterialNative(TetherVulkan::GraphicsContext& context,
+            uint32_t images, VkDescriptorSetLayout layout, 
             Resources::Material* pMaterial);
     protected:
         std::optional<Vulkan::UniformBuffer> uniform;
@@ -26,8 +28,10 @@ namespace LegendEngine::Vulkan
 
         uint32_t images = 0;
         
+        TetherVulkan::GraphicsContext& m_GraphicsContext;
         VkDevice m_Device = nullptr;
-        VulkanRenderer& m_Renderer;
+
+        VkDescriptorSetLayout m_Layout = nullptr;
     private:
 		bool OnCreate();
 		void OnUpdate();

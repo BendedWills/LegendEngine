@@ -2,8 +2,8 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/GraphicsContext.hpp>
 
-#include <CompiledAssets/solid.vert.spv.h>
-#include <CompiledAssets/solid.frag.spv.h>
+#include <Assets/CompiledShaders/solid.vert.spv.h>
+#include <Assets/CompiledShaders/solid.frag.spv.h>
 
 #include <set>
 #include <cmath>
@@ -62,7 +62,8 @@ namespace LegendEngine::Vulkan
 			return false;
 		}
 
-		pObject->SetNative(RefTools::Create<ObjectNative>(this, pObject));
+		pObject->SetNative(std::make_shared<ObjectNative>(m_GraphicsContext, 
+			objectLayout, pObject));
 		return true;
 	}
 
@@ -78,7 +79,8 @@ namespace LegendEngine::Vulkan
 			return false;
 		}
 
-		buffer->SetNative(RefTools::Create<VertexBufferNative>(this, buffer));
+		buffer->SetNative(std::make_shared<VertexBufferNative>(m_GraphicsContext, 
+			buffer));
 
 		return true;
 	}
@@ -95,7 +97,7 @@ namespace LegendEngine::Vulkan
 			return false;
 		}
 
-		shader->SetNative(RefTools::Create<ShaderNative>(this, shader));
+		shader->SetNative(std::make_shared<ShaderNative>(this, shader));
 
 		return true;
 	}
@@ -112,7 +114,7 @@ namespace LegendEngine::Vulkan
 			return false;
 		}
 
-		texture->SetNative(RefTools::Create<Texture2DNative>(this, texture));
+		texture->SetNative(std::make_shared<Texture2DNative>(m_GraphicsContext, texture));
 
 		return true;
 	}
@@ -129,7 +131,8 @@ namespace LegendEngine::Vulkan
 			return false;
 		}
 
-		pMaterial->SetNative(RefTools::Create<MaterialNative>(this, pMaterial));
+		pMaterial->SetNative(std::make_shared<MaterialNative>(m_GraphicsContext, 
+			m_Swapchain->GetImageCount(), materialLayout, pMaterial));
 
 		return true;
 	}
@@ -665,7 +668,7 @@ namespace LegendEngine::Vulkan
 		ChooseSurfaceFormat(details);
 
 		m_Swapchain.emplace(m_GraphicsContext, details, m_SurfaceFormat,
-			m_Surface, m_Window.GetWidth(), m_Window.GetHeight(), enableVsync);
+			m_Surface.Get(), m_Window.GetWidth(), m_Window.GetHeight(), enableVsync);
 
 		swapchainImages = m_Swapchain->GetImages();
 		swapchainImageViews = m_Swapchain->CreateImageViews();
@@ -808,9 +811,9 @@ namespace LegendEngine::Vulkan
 				throw std::runtime_error("Failed to create descriptor set layout");
 		}
 
-		cameraManager.emplace(&m_Device, 1, swapchainImages);
-		cameraUniform.emplace(this, sizeof(Objects::Camera::CameraUniforms),
-			m_Swapchain->GetImageCount());
+		cameraManager.emplace(m_GraphicsContext, 1, swapchainImages);
+		cameraUniform.emplace(m_GraphicsContext, 
+			sizeof(Objects::Camera::CameraUniforms), m_Swapchain->GetImageCount());
 
 		cameraUniform->BindToSet(&*cameraManager, cameraLayout);
 		cameraUniform->Bind(0);

@@ -27,6 +27,13 @@ else()
 endif()
 add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether tetherRendering)
 
+if (MSVC)
+	target_compile_options(${PROJECT_NAME} 
+        PRIVATE
+            "/wd4251;" # Disable the dll-interface warning thingy
+    )
+endif()
+
 target_include_directories(${PROJECT_NAME} 
 PUBLIC 
     "Headers"
