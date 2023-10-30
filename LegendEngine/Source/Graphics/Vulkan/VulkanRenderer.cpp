@@ -20,13 +20,17 @@ namespace LegendEngine::Vulkan
 {
 	VulkanRenderer::VulkanRenderer(Application& application, Tether::Window& window)
 		:
+		IRenderer(application),
 		m_Application(application),
 		m_Window(window),
 		m_GraphicsContext(((Vulkan::GraphicsContext&)GraphicsContext::Get())
 			.GetTetherGraphicsContext()),
+		m_Allocator(m_GraphicsContext.GetAllocator()),
+		m_CommandPool(m_GraphicsContext.GetCommandPool()),
 		m_Instance(m_GraphicsContext.GetInstance()),
 		m_Device(m_GraphicsContext.GetDevice()),
 		m_PhysicalDevice(m_GraphicsContext.GetPhysicalDevice()),
+		m_Queue(m_GraphicsContext.GetQueue()),
 		m_Surface(m_GraphicsContext, window)
 	{
 		timer.Set();
@@ -43,8 +47,6 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::SetVSyncEnabled(bool vsync)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED();
-
 		this->enableVsync = vsync;
 
 		Reload();
@@ -52,8 +54,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::CreateObjectNative(Objects::Object* pObject)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		if (!pObject)
 		{
 			m_Application.Log(
@@ -69,8 +69,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		if (!buffer)
 		{
 			m_Application.Log(
@@ -87,8 +85,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::CreateShaderNative(Resources::Shader* shader)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		if (!shader)
 		{
 			m_Application.Log(
@@ -104,8 +100,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::CreateTexture2DNative(Resources::Texture2D* texture)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		if (!texture)
 		{
 			m_Application.Log(
@@ -121,8 +115,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::CreateMaterialNative(Resources::Material* pMaterial)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
-
 		if (!pMaterial)
 		{
 			m_Application.Log(
@@ -139,7 +131,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::Reload()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(false);
 		return RecreateSwapchain();
 	}
 
@@ -148,7 +139,7 @@ namespace LegendEngine::Vulkan
 		VkCommandBufferAllocateInfo cmdAllocInfo{};
 		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		cmdAllocInfo.commandPool = commandPool;
+		cmdAllocInfo.commandPool = m_CommandPool;
 		cmdAllocInfo.commandBufferCount = 1;
 
 		if (vkAllocateCommandBuffers(m_Device, &cmdAllocInfo,
@@ -177,7 +168,7 @@ namespace LegendEngine::Vulkan
 		if (vkQueueSubmit(m_Queue, 1, &submitInfo,
 			VK_NULL_HANDLE) != VK_SUCCESS)
 		{
-			vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
+			vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
 			return false;
 		}
 
@@ -185,7 +176,7 @@ namespace LegendEngine::Vulkan
 		vkQueueWaitIdle(m_Queue);
 
 		// Free the command buffer
-		vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
 
 		return true;
 	}
@@ -222,7 +213,7 @@ namespace LegendEngine::Vulkan
 		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 		// Create the staging buffer
-		return vmaCreateBuffer(allocator, &createInfo,
+		return vmaCreateBuffer(m_Allocator, &createInfo,
 			&allocInfo, pBuffer, pAllocation, pAllocInfo) == VK_SUCCESS;
 	}
 
@@ -436,8 +427,6 @@ namespace LegendEngine::Vulkan
 
 	bool VulkanRenderer::RecreateCommandBuffers()
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
-
 		// Wait for all frames to finish rendering.
 		// Command buffers cannot be reset during frame rendering.
 		for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
@@ -456,8 +445,6 @@ namespace LegendEngine::Vulkan
 	bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
 		VkFramebuffer framebuffer, uint64_t commandBufferIndex)
 	{
-		LEGENDENGINE_ASSERT_INITIALIZED_RET(true);
-
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -640,9 +627,9 @@ namespace LegendEngine::Vulkan
 			vkDestroyFence(m_Device, inFlightFences[i], nullptr);
 		}
 
-		vkDestroyCommandPool(m_Device, commandPool, nullptr);
+		vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
 
-		vmaDestroyAllocator(allocator);
+		vmaDestroyAllocator(m_Allocator);
 	}
 
 	void VulkanRenderer::OnWindowResize()
@@ -821,8 +808,12 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::InitPipeline()
 	{
-		Vulkan::ShaderModule vertexModule(m_GraphicsContext, ShaderType::VERTEX);
-		Vulkan::ShaderModule fragmentModule(m_GraphicsContext, ShaderType::FRAG);
+		using namespace Resources::VulkanShaders;
+
+		Vulkan::ShaderModule vertexModule(m_GraphicsContext, ShaderType::VERTEX,
+			(uint32_t*)_binary_solid_vert_spv, sizeof(_binary_solid_vert_spv));
+		Vulkan::ShaderModule fragmentModule(m_GraphicsContext, ShaderType::FRAG,
+			(uint32_t*)_binary_solid_frag_spv, sizeof(_binary_solid_frag_spv));
 
 		VkPipelineShaderStageCreateInfo vertexStage{};
 		vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -890,7 +881,7 @@ namespace LegendEngine::Vulkan
 		VmaAllocationCreateInfo allocInfo{};
 		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		if (vmaCreateImage(allocator, &imageInfo, &allocInfo,
+		if (vmaCreateImage(m_Allocator, &imageInfo, &allocInfo,
 			&depthImage, &depthAlloc, nullptr) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create depth image");
 
@@ -937,7 +928,7 @@ namespace LegendEngine::Vulkan
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = commandPool;
+		allocInfo.commandPool = m_CommandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
@@ -1126,7 +1117,7 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::DisposeSwapchain()
 	{
-		vkFreeCommandBuffers(m_Device, commandPool,
+		vkFreeCommandBuffers(m_Device, m_CommandPool,
 			static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
 		for (VkFramebuffer framebuffer : framebuffers)
@@ -1134,7 +1125,7 @@ namespace LegendEngine::Vulkan
 
 		// Destroy depth stuff
 		vkDestroyImageView(m_Device, depthImageView, nullptr);
-		vmaDestroyImage(allocator, depthImage, depthAlloc);
+		vmaDestroyImage(m_Allocator, depthImage, depthAlloc);
 
 		for (VkImageView imageView : swapchainImageViews)
 			vkDestroyImageView(m_Device, imageView, nullptr);

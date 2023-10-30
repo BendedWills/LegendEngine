@@ -6,44 +6,34 @@
 #include <LegendEngine/Resources/Shader.hpp>
 #include <LegendEngine/Resources/Texture2D.hpp>
 
-using namespace LegendEngine;
-
-bool IRenderer::Init(Application* pApplication)
+namespace LegendEngine
 {
-    if (initialized || !pApplication)
-        return false;
-
-    this->pApplication = pApplication;
-
-    pApplication->Log("Initializing renderer", LogType::DEBUG);
-
-    if (!OnRendererInit())
+    IRenderer::IRenderer(Application& application)
+		:
+		m_Application(application)
     {
-        pApplication->Log("Failed to initialize renderer", LogType::ERROR);
-        return false;
+		m_Application.Log("Initializing renderer", LogType::DEBUG);
+
+        if (!OnRendererInit())
+            throw std::runtime_error("Failed to initialize renderer");
+
+		defaultMaterial = m_Application.CreateResource<Resources::Material>();
+		
+		m_Application.Log("Initialized renderer", LogType::DEBUG);
     }
 
-    initialized = true;
+	IRenderer::~IRenderer()
+	{
+		m_Application.Log("Disposing renderer", LogType::DEBUG);
+		{
+			defaultMaterial->Dispose();
+			OnRendererDispose();
+		}
+		m_Application.Log("Disposed renderer", LogType::DEBUG);
+	}
 
-	defaultMaterial = pApplication->CreateResource<Resources::Material>();
-	defaultMaterial->Init();
-
-    pApplication->Log("Initialized renderer", LogType::DEBUG);
-
-    return true;
-}
-
-Application* IRenderer::GetApplication()
-{
-    return pApplication;
-}
-
-void IRenderer::OnDispose()
-{
-    pApplication->Log("Disposing renderer", LogType::DEBUG);
-    {
-        defaultMaterial->Dispose();
-        OnRendererDispose();
-    }
-    pApplication->Log("Disposed renderer", LogType::DEBUG);
+	Application* IRenderer::GetApplication()
+	{
+		return &m_Application;
+	}
 }

@@ -93,7 +93,7 @@ namespace LegendEngine::Vulkan
 		VkInstance m_Instance;
 		VkDevice m_Device;
 		VkPhysicalDevice m_PhysicalDevice;
-		VkQueue m_Queue;
+		VkQueue m_Queue = nullptr;
 
 		TetherVulkan::Surface m_Surface;
 
@@ -107,12 +107,12 @@ namespace LegendEngine::Vulkan
 		std::optional<Vulkan::UniformBuffer> cameraUniform;
 
 		VkRenderPass renderPass;
-		VkCommandPool commandPool;
+		VkCommandPool m_CommandPool = nullptr;
 
 		// Shader stuff
 		std::optional<Vulkan::Pipeline> shaderProgram;
 
-		VmaAllocator allocator;
+		VmaAllocator m_Allocator = nullptr;
 
 		VkImage depthImage;
 		VmaAllocation depthAlloc;

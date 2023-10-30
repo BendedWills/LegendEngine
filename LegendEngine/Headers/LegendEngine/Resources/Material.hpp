@@ -38,11 +38,9 @@ namespace LegendEngine::Resources
 			float brightness = 1.0f;
 		};
 
-		Material() = default;
-		LEGENDENGINE_DISPOSE_ON_DESTRUCT(Material);
+		Material();
+		~Material();
 		LEGENDENGINE_NO_COPY(Material);
-
-		bool Init();
 
 		void SetTexture(Texture2D* pTexture);
 		void SetBrightness(float brightness);
@@ -56,8 +54,6 @@ namespace LegendEngine::Resources
 		MaterialUniforms uniforms;
 
 		bool shouldUpdateUniforms = false;
-
-		void OnResourceDispose();
 	};
 }
 

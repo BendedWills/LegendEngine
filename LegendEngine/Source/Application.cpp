@@ -76,8 +76,6 @@ namespace LegendEngine
 				oldVertexBuffers[i]->Dispose();
 		}
 
-		DisposeGraphics();
-
 		defaultScene.ClearObjects();
 	}
 
@@ -108,6 +106,11 @@ namespace LegendEngine
 	Tether::Window& Application::GetWindow()
 	{
 		return *m_Window;
+	}
+
+	Application& Application::Get()
+	{
+		return *m_Instance;
 	}
 
 	bool Application::IsCloseRequested()
@@ -323,11 +326,6 @@ namespace LegendEngine
 	Scene* Application::GetActiveScene()
 	{
 		return activeScene;
-	}
-
-	void Application::DisposeGraphics()
-	{
-		m_Renderer->Dispose();
 	}
 
 	void Application::RecieveResize(uint64_t width, uint64_t height)

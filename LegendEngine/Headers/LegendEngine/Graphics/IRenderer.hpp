@@ -29,19 +29,16 @@ namespace LegendEngine
     class Application;
     class Scene;
 
-    class IRenderer : public IDisposable
+    class IRenderer
     {
         friend Application;
         friend Scene;
         friend Objects::IObjectNative;
         friend Resources::Material;
     public:
-        LEGENDENGINE_DISPOSE_ON_DESTRUCT(IRenderer);
-        
-        IRenderer(const IRenderer&) = delete;
-		IRenderer(IRenderer&&) = delete;
-		IRenderer& operator=(const IRenderer&) = delete;
-		IRenderer& operator=(IRenderer&&) = delete;
+        IRenderer(Application& application);
+        ~IRenderer();
+        LEGENDENGINE_NO_COPY(IRenderer);
 
         /**
          * @brief Initializes the renderer.
@@ -86,8 +83,6 @@ namespace LegendEngine
 
         Application* GetApplication();
     protected:
-        IRenderer() {}
-
         bool RenderFrame() { return OnRenderFrame(); }
 
         /**
@@ -142,7 +137,7 @@ namespace LegendEngine
     private:
         void OnDispose();
 
-        Application* pApplication = nullptr;
+        Application& m_Application;
     };
 }
 

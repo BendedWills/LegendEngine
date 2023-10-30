@@ -48,17 +48,21 @@ namespace LegendEngine
 			bool debug,
 			RenderingAPI api
 		);
+		virtual ~Application() = 0;
 
-		~Application();
+		template<typename T, typename... Args>
+		static int RunApplication(RenderingAPI api, bool debug, Args... args)
+		{
+			if (!std::is_base_of<Application, T>::value)
+				throw std::runtime_error("T is not derived from Application");
 
-		/**
-		 * @brief Runs the application with a non-blocking render loop.
-		 *	The delta time in this loop is in seconds.
-		 *
-		 * @returns True if the application finished successfully; otherwise, false.
-		 */
-		bool Run();
-		
+			GraphicsContext::Create(api, debug);
+
+			m_Instance = std::make_unique<T>(args...);
+
+			Run();
+		}
+
 		/**
 		 * @param message The message to log
 		 * @param type The type of log.
@@ -100,9 +104,6 @@ namespace LegendEngine
 		 */
 		bool InitScene(Scene* pScene);
 
-		// Must be called on the main thread
-		void RenderFrame(float delta = 1.0f);
-
 		void SetActiveCamera(Objects::Camera* pCamera);
 		Objects::Camera* GetActiveCamera();
 
@@ -117,6 +118,8 @@ namespace LegendEngine
 		std::string GetName();
 		IRenderer& GetRenderer();
 		Tether::Window& GetWindow();
+
+		static Application& Get();
 	protected:
 		void FinishCreation();
 
@@ -148,10 +151,13 @@ namespace LegendEngine
 		std::vector<VertexBuffer*> vertexBuffers;
 		std::vector<Resources::IResource*> resources;
 	private:
+		bool Run();
+
+		// Must be called on the main thread
+		void RenderFrame(float delta = 1.0f);
+
 		void Update(float delta, bool updateWindow = true);
 		void Render(float delta);
-
-		void DisposeGraphics();
 
 		void RecieveResize(uint64_t width, uint64_t height);
 
@@ -184,6 +190,8 @@ namespace LegendEngine
 
 		Scope<Tether::Window> m_Window;
 		Scope<IRenderer> m_Renderer;
+
+		inline static Scope<Application> m_Instance = nullptr;
 	};
 
 	template<typename T>
@@ -222,7 +230,7 @@ namespace LegendEngine
 			return nullptr;
 		}
 
-		Ref<T> resource = RefTools::Create<T>(args...);
+		Ref<T> resource = std::make_shared<T>(args...);
 		resource->pApplication = this;
 
 		if (std::is_same<Resources::Shader, T>())

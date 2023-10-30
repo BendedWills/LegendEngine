@@ -3,75 +3,63 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Common/Defs.hpp>
 
-using namespace LegendEngine;
-using namespace LegendEngine::Resources;
-
-IMaterialNative::IMaterialNative(Material* pMaterial)
-	:
-	pMaterial(pMaterial)
-{}
-
-bool Material::Init()
+namespace LegendEngine::Resources
 {
-	if (initialized)
-		return false;
-	OnInit();
+	IMaterialNative::IMaterialNative(Material* pMaterial)
+		:
+		pMaterial(pMaterial)
+	{}
 
-	if (nativeSet)
-		if (!native->OnCreate())
-			return false;
+	Material::Material()
+	{
 
-	initialized = true;
-	return true;
-}
+	}
 
-void Material::SetTexture(Texture2D* pTexture)
-{
-	this->pTexture = pTexture;
-	shouldUpdateUniforms = true;
-}
+	Material::~Material()
+	{
+		LEGENDENGINE_OBJECT_LOG(
+			pApplication, "Material",
+			"Disposed material",
+			LogType::DEBUG
+		);
+	}
 
-void Material::SetBrightness(float brightness)
-{
-	uniforms.brightness = brightness;
-	shouldUpdateUniforms = true;
-}
+	void Material::SetTexture(Texture2D* pTexture)
+	{
+		this->pTexture = pTexture;
+		shouldUpdateUniforms = true;
+	}
 
-Texture2D* Material::GetTexture()
-{
-	return pTexture;
-}
+	void Material::SetBrightness(float brightness)
+	{
+		uniforms.brightness = brightness;
+		shouldUpdateUniforms = true;
+	}
 
-Material::MaterialUniforms* Material::GetUniforms()
-{
-	return &uniforms;
-}
+	Texture2D* Material::GetTexture()
+	{
+		return pTexture;
+	}
 
-void Material::Update()
-{
-	// The shouldUpdateUniforms variable is set to true when an attribute of the
-	// material has changed and therefore must be updated on the GPU. If nothing
-	// has changed since the material was last updated, return.
-	if (!shouldUpdateUniforms)
-		return;
+	Material::MaterialUniforms* Material::GetUniforms()
+	{
+		return &uniforms;
+	}
 
-	// Update the native as well (with Vulkan this updates the uniform buffer).
-	if (nativeSet)
-		native->OnUpdate();
-	pApplication->GetRenderer().OnResourceChange(this);
-	
-	// Set this to false since the uniforms have been updated.
-	shouldUpdateUniforms = false;
-}
+	void Material::Update()
+	{
+		// The shouldUpdateUniforms variable is set to true when an attribute of the
+		// material has changed and therefore must be updated on the GPU. If nothing
+		// has changed since the material was last updated, return.
+		if (!shouldUpdateUniforms)
+			return;
 
-void Material::OnResourceDispose()
-{
-    if (nativeSet)
-        native->OnDispose();
+		// Update the native as well (with Vulkan this updates the uniform buffer).
+		if (nativeSet)
+			native->OnUpdate();
+		pApplication->GetRenderer().OnResourceChange(this);
 
-	LEGENDENGINE_OBJECT_LOG(
-		pApplication, "Material",
-		"Disposed material",
-		LogType::DEBUG
-	);
+		// Set this to false since the uniforms have been updated.
+		shouldUpdateUniforms = false;
+	}
 }

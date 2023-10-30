@@ -198,10 +198,8 @@ public:
 		// Create the materials
 		{
 			material = CreateResource<Material>();
-			material->Init();
 			material2 = CreateResource<Material>();
-			material2->Init();
-
+			
 			texture = CreateResource<Texture2D>();
 			texture->Init("Assets/planks.png");
 			texture2 = CreateResource<Texture2D>();
@@ -274,11 +272,5 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 int main()
 #endif
 {
-	GraphicsContext::Create(RenderingAPI::VULKAN, true);
-
-	Triangle triangle;
-	if (!triangle.Run())
-		return EXIT_FAILURE;
-
-	return EXIT_SUCCESS;
+	return Application::RunApplication<Triangle>(RenderingAPI::VULKAN, true);
 }
