@@ -132,8 +132,6 @@ namespace LegendEngine
         virtual void OnSceneChange(Scene* pScene, Objects::Object* pObject) {}
 
         virtual void OnRendererDispose() {}
-
-        Ref<Resources::Material> defaultMaterial;
     private:
         void OnDispose();
 

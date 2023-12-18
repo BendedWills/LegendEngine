@@ -46,6 +46,7 @@ namespace LegendEngine::Vulkan
 		friend UniformBuffer;
 	public:
 		VulkanRenderer(Application& application, Tether::Window& window);
+		~VulkanRenderer();
 		
 		VulkanRenderer(const VulkanRenderer&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
@@ -149,9 +150,6 @@ namespace LegendEngine::Vulkan
 			uint64_t commandBufferIndex, Scene* pScene);
 
 		// Renderer virtual functions
-		void OnObjectChange(Objects::Object* pObject);
-		void OnSceneChange(Scene* pScene, Objects::Object* pObject);
-		void OnResourceChange(Resources::IResource* pResource);
 		void OnWindowResize();
 		bool OnRenderFrame();
 		void OnRendererDispose();
@@ -169,6 +167,9 @@ namespace LegendEngine::Vulkan
 		void InitCommandBuffers();
 		void InitSyncObjects();
 
+		void CreateDefaultMaterialUniforms();
+		void UpdateDefaultMaterialUniforms();
+
 		// Uniforms
 		void UpdateUniforms(uint64_t imageIndex);
 		void UpdateSceneUniforms(uint64_t imageIndex, Scene* pScene);
@@ -181,7 +182,9 @@ namespace LegendEngine::Vulkan
 		VkDescriptorSet sets[3] = {};
 
 		bool shouldRecreateSwapchain = false;
-		bool shouldRecreateCommandBuffers = false;
 		bool enableVsync = false;
+
+		std::optional<Vulkan::UniformBuffer> m_DefaultMatUniform;
+		VkDescriptorPool pool;
 	};
 }

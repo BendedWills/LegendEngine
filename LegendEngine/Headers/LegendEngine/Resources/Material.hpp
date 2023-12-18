@@ -18,12 +18,7 @@ namespace LegendEngine::Resources
 
 		IMaterialNative(Material* pMaterial);
 
-		virtual bool OnCreate()
-		{ return false; }
-
 		virtual void OnUpdate() {}
-
-		virtual void OnDispose() {}
 	protected:
 		Material* pMaterial;
 	};

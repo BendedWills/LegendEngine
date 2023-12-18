@@ -17,8 +17,6 @@ namespace LegendEngine
         if (!OnRendererInit())
             throw std::runtime_error("Failed to initialize renderer");
 
-		defaultMaterial = m_Application.CreateResource<Resources::Material>();
-		
 		m_Application.Log("Initialized renderer", LogType::DEBUG);
     }
 
@@ -26,7 +24,6 @@ namespace LegendEngine
 	{
 		m_Application.Log("Disposing renderer", LogType::DEBUG);
 		{
-			defaultMaterial->Dispose();
 			OnRendererDispose();
 		}
 		m_Application.Log("Disposed renderer", LogType::DEBUG);

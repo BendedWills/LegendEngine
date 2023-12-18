@@ -22,6 +22,7 @@ namespace LegendEngine::Vulkan
         MaterialNative(TetherVulkan::GraphicsContext& context,
             uint32_t images, VkDescriptorSetLayout layout, 
             Resources::Material* pMaterial);
+        ~MaterialNative();
     protected:
         std::optional<Vulkan::UniformBuffer> uniform;
         VkDescriptorPool pool;
@@ -33,11 +34,9 @@ namespace LegendEngine::Vulkan
 
         VkDescriptorSetLayout m_Layout = nullptr;
     private:
-		bool OnCreate();
 		void OnUpdate();
 		void OnUpdateUniforms();
-		void OnDispose();
-
+		
         void UpdateDescriptorSets();
     };
 }

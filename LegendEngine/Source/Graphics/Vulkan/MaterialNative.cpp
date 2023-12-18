@@ -11,7 +11,6 @@
 
 namespace LegendEngine::Vulkan
 {
-
 	MaterialNative::MaterialNative(TetherVulkan::GraphicsContext& context,
 		uint32_t images, VkDescriptorSetLayout layout,
 		Resources::Material* pMaterial)
@@ -21,9 +20,6 @@ namespace LegendEngine::Vulkan
 		m_Device(context.GetDevice()),
 		m_Layout(layout),
 		images(images)
-	{}
-
-	bool MaterialNative::OnCreate()
 	{
 		VkDescriptorPoolSize uniformsSize{};
 		uniformsSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -48,7 +44,7 @@ namespace LegendEngine::Vulkan
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &pool)
 			!= VK_SUCCESS)
-			return false;
+			throw std::runtime_error("Failed to create descriptor pool");
 
 		uniform.emplace(m_GraphicsContext,
 			sizeof(Resources::Material::MaterialUniforms), images);
@@ -57,8 +53,13 @@ namespace LegendEngine::Vulkan
 		uniform->BindToSet(&pool, m_Layout);
 
 		UpdateDescriptorSets();
+	}
 
-		return true;
+	MaterialNative::~MaterialNative()
+	{
+		vkDeviceWaitIdle(m_Device);
+
+		vkDestroyDescriptorPool(m_Device, pool, nullptr);
 	}
 
 	void MaterialNative::OnUpdate()
@@ -71,13 +72,6 @@ namespace LegendEngine::Vulkan
 				sizeof(Resources::Material::MaterialUniforms),
 				i
 			);
-	}
-
-	void MaterialNative::OnDispose()
-	{
-		vkDeviceWaitIdle(m_Device);
-
-		vkDestroyDescriptorPool(m_Device, pool, nullptr);
 	}
 
 	void MaterialNative::UpdateDescriptorSets()

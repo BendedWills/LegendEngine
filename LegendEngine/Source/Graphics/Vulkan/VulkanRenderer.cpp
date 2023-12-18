@@ -45,6 +45,11 @@ namespace LegendEngine::Vulkan
 		InitSyncObjects();
 	}
 
+	VulkanRenderer::~VulkanRenderer()
+	{
+		vkDestroyDescriptorPool(m_Device, pool, nullptr);
+	}
+
 	void VulkanRenderer::SetVSyncEnabled(bool vsync)
 	{
 		this->enableVsync = vsync;
@@ -124,7 +129,7 @@ namespace LegendEngine::Vulkan
 		}
 
 		pMaterial->SetNative(std::make_shared<MaterialNative>(m_GraphicsContext, 
-			m_Swapchain->GetImageCount(), materialLayout, pMaterial));
+			MAX_FRAMES_IN_FLIGHT, materialLayout, pMaterial));
 
 		return true;
 	}
@@ -429,17 +434,12 @@ namespace LegendEngine::Vulkan
 	{
 		// Wait for all frames to finish rendering.
 		// Command buffers cannot be reset during frame rendering.
-		for (uint64_t i2 = 0; i2 < inFlightFences.size(); i2++)
-			vkWaitForFences(m_Device, 1, &inFlightFences[i2], true, UINT64_MAX);
+		
+		vkWaitForFences(m_Device, 1, &inFlightFences[currentFrame], true, UINT64_MAX);
+		vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 
-		for (uint64_t i = 0; i < commandBuffers.size(); i++)
-		{
-			vkResetCommandBuffer(commandBuffers[i], 0);
-			if (!PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i))
-				return false;
-		}
-
-		return true;
+		return PopulateCommandBuffer(commandBuffers[currentFrame], 
+			framebuffers[currentFrame], currentFrame);
 	}
 
 	bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
@@ -547,21 +547,16 @@ namespace LegendEngine::Vulkan
 			sets[2] = native->GetUniform()->GetDescriptorSet(commandBufferIndex);
 
 			Resources::Material* pMaterial = component->GetMaterial();
-			if (pMaterial)
+			if (pMaterial && pMaterial != lastMaterial 
+				&& pMaterial->GetTexture()->IsInitialized())
 			{
-				if (pMaterial != lastMaterial)
-				{
-					MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
-					sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
+				MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
+				sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
 
-					lastMaterial = pMaterial;
-				}
+				lastMaterial = pMaterial;
 			}
 			else
-			{
-				MaterialNative* matNative = (MaterialNative*)defaultMaterial->GetNative();
-				sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
-			}
+				sets[1] = m_DefaultMatUniform->GetDescriptorSet(commandBufferIndex);
 
 			vkCmdBindDescriptorSets(
 				buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -584,21 +579,6 @@ namespace LegendEngine::Vulkan
 
 			vkCmdDrawIndexed(buffer, component->GetVertexCount(), 1, 0, 0, 0);
 		}
-	}
-
-	void VulkanRenderer::OnObjectChange(Objects::Object* pObject)
-	{
-		shouldRecreateCommandBuffers = true;
-	}
-
-	void VulkanRenderer::OnSceneChange(Scene* pScene, Objects::Object* pObject)
-	{
-		shouldRecreateCommandBuffers = true;
-	}
-
-	void VulkanRenderer::OnResourceChange(Resources::IResource* pResource)
-	{
-		shouldRecreateCommandBuffers = true;
 	}
 
 	bool VulkanRenderer::OnRenderFrame()
@@ -804,6 +784,8 @@ namespace LegendEngine::Vulkan
 
 		cameraUniform->BindToSet(&*cameraManager, cameraLayout);
 		cameraUniform->Bind(0);
+
+		CreateDefaultMaterialUniforms();
 	}
 
 	void VulkanRenderer::InitPipeline()
@@ -968,9 +950,52 @@ namespace LegendEngine::Vulkan
 		}
 	}
 
+	void VulkanRenderer::CreateDefaultMaterialUniforms()
+	{
+		uint32_t imageCount = m_Swapchain->GetImageCount();
+
+		VkDescriptorPoolSize uniformsSize{};
+		uniformsSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uniformsSize.descriptorCount = imageCount;
+
+		VkDescriptorPoolSize samplersSize{};
+		samplersSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplersSize.descriptorCount = imageCount;
+
+		VkDescriptorPoolSize sizes[] =
+		{
+			uniformsSize,
+			samplersSize
+		};
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		poolInfo.poolSizeCount = sizeof(sizes) / sizeof(sizes[0]);
+		poolInfo.pPoolSizes = sizes;
+		poolInfo.maxSets = poolInfo.poolSizeCount * imageCount;
+
+		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &pool)
+			!= VK_SUCCESS)
+			throw std::runtime_error("Failed to create descriptor pool");
+
+		m_DefaultMatUniform.emplace(m_GraphicsContext,
+			sizeof(Resources::Material::MaterialUniforms), m_Swapchain->GetImageCount());
+
+		// Allocate the descriptor sets for the uniform
+		m_DefaultMatUniform->BindToSet(&pool, materialLayout);
+
+		UpdateDefaultMaterialUniforms();
+	}
+
+	void VulkanRenderer::UpdateDefaultMaterialUniforms()
+	{
+
+	}
+
 	void VulkanRenderer::UpdateUniforms(uint64_t imageIndex)
 	{
-		defaultMaterial->Update();
+		UpdateDefaultMaterialUniforms();
 
 		Objects::Camera* pCamera = m_Application.GetActiveCamera();
 		if (pCamera)
@@ -988,6 +1013,9 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::UpdateSceneUniforms(uint64_t imageIndex, Scene* pScene)
 	{
+		if (!pScene)
+			return;
+
 		using namespace Objects;
 		using namespace Objects::Components;
 		using namespace LegendEngine::Resources;
@@ -1056,13 +1084,8 @@ namespace LegendEngine::Vulkan
 
 		UpdateUniforms(imageIndex);
 
-		if (shouldRecreateCommandBuffers)
-		{
-			if (!RecreateCommandBuffers())
-				m_Application.Log("Failed to recreate command buffers!", LogType::ERROR);
-
-			shouldRecreateCommandBuffers = false;
-		}
+		if (!RecreateCommandBuffers())
+			m_Application.Log("Failed to recreate command buffers!", LogType::ERROR);
 
 		// If images are acquired out of order, or MAX_FRAMES_IN_FLIGHT is higher
 		// than the number of swapchain images, we may start rendering to an

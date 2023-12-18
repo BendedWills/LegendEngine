@@ -59,8 +59,7 @@ namespace LegendEngine
 			GraphicsContext::Create(api, debug);
 
 			m_Instance = std::make_unique<T>(args...);
-
-			Run();
+			m_Instance->Run();
 		}
 
 		/**

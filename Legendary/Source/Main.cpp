@@ -163,26 +163,6 @@ public:
 		Application("Legendary", false, false, RenderingAPI::VULKAN)
 #endif
 	{
-		FinishCreation();
-	}
-
-	~Triangle()
-	{
-		testScene.ClearObjects();
-
-		camera->Dispose();
-		cube1->Dispose();
-		cube2->Dispose();
-		floor->Dispose();
-
-		material->Dispose();
-		material2->Dispose();
-		texture->Dispose();
-		texture2->Dispose();
-	}
-
-	bool OnPreInit()
-	{
 		GetWindow().SetCursorMode(Utils::Window::CursorMode::DISABLED);
 		GetWindow().SetRawInputEnabled(true);
 
@@ -199,12 +179,12 @@ public:
 		{
 			material = CreateResource<Material>();
 			material2 = CreateResource<Material>();
-			
+
 			texture = CreateResource<Texture2D>();
 			texture->Init("Assets/planks.png");
 			texture2 = CreateResource<Texture2D>();
 			texture2->Init("Assets/tiles.png");
-			
+
 			material->SetTexture(texture.get());
 			material2->SetTexture(texture2.get());
 		}
@@ -223,7 +203,7 @@ public:
 			floor->AddScript<TestScript>(material2.get());
 			floor->SetScale(Vector3f(10));
 			floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
-			
+
 			// Add the objects to the scene
 			testScene.AddObject(cube1.get());
 			testScene.AddObject(cube2.get());
@@ -235,8 +215,23 @@ public:
 		// performance since objects notify the scene when they are added for misc
 		// init tasks.
 		SetActiveScene(testScene);
-		
-		return true;
+
+		FinishCreation();
+	}
+
+	~Triangle()
+	{
+		testScene.ClearObjects();
+
+		camera->Dispose();
+		cube1->Dispose();
+		cube2->Dispose();
+		floor->Dispose();
+
+		material->Dispose();
+		material2->Dispose();
+		texture->Dispose();
+		texture2->Dispose();
 	}
 
 	void OnUpdate(float delta)
