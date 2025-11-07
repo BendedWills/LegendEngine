@@ -16,6 +16,7 @@ namespace LegendEngine::Vulkan
 	public:
 		LEGENDENGINE_NO_COPY(ObjectNative);
 		ObjectNative(TetherVulkan::GraphicsContext& context, 
+			uint32_t images,
 			VkDescriptorSetLayout objectSetLayout,
 			Objects::Object* pObject);
 
@@ -27,8 +28,8 @@ namespace LegendEngine::Vulkan
 		uint32_t m_Images = 0;
 		uint64_t imageIndex = 0;
 
-		Vulkan::UniformBuffer m_Uniform;
 		Vulkan::UniformManager m_UniformManager;
+		Vulkan::UniformBuffer m_Uniform;
 		IObjectNative::ObjectUniforms ubo;
 	};
 }

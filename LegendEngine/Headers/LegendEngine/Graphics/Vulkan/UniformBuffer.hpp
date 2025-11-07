@@ -45,6 +45,7 @@ namespace LegendEngine::Vulkan
 		uint32_t m_Images = 0;
 
 		VkDescriptorPool* pDescriptorPool = nullptr;
+		UniformManager* pUniformManager = nullptr;
 		bool boundToSet = false;
 	};
 }

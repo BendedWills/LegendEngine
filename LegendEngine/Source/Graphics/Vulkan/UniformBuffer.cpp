@@ -38,6 +38,11 @@ namespace LegendEngine::Vulkan
 
 	UniformBuffer::~UniformBuffer()
 	{
+#if !defined(NDEBUG)
+		if (this->pUniformManager)
+			this->pUniformManager->UnregisterUniformBuffer(this);
+#endif
+
 		vkDeviceWaitIdle(m_GraphicsContext.GetDevice());
 
 		FreeSet();
@@ -48,6 +53,14 @@ namespace LegendEngine::Vulkan
 
 	void UniformBuffer::BindToSet(UniformManager* manager, VkDescriptorSetLayout layout)
 	{
+#if !defined(NDEBUG)
+		if (this->pUniformManager)
+			this->pUniformManager->UnregisterUniformBuffer(this);
+
+		this->pUniformManager = manager;
+		this->pUniformManager->RegisterUniformBuffer(this);
+#endif
+
 		BindToSet(manager->GetPool(), layout);
 	}
 

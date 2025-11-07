@@ -54,18 +54,17 @@ namespace LegendEngine::Objects
         public Components::ComponentHolder, 
         public Scripts::ScriptHolder, 
         public NativeHolder<IObjectNative>,
-        public IApplicationHolder,
-        public IDisposable
+        public IApplicationHolder
     {
         friend Application;
         friend Scene;
         friend IObjectNative;
         friend LegendEngine::IRenderer;
     public:
-        LEGENDENGINE_DISPOSE_ON_DESTRUCT(Object);
         LEGENDENGINE_NO_COPY(Object);
         
         Object();
+        virtual ~Object();
 
         void AddPosition(Vector3f position);
         void AddScale(Vector3f scale);
@@ -102,8 +101,6 @@ namespace LegendEngine::Objects
 
         bool updateUniforms = false;
     private:
-        void OnDispose();
-
         void OnComponentAdd(const std::string& typeName, 
             Components::Component* pComponent);
         void OnComponentRemove(const std::string& typeName, 

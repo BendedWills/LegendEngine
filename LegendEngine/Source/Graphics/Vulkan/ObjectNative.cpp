@@ -11,12 +11,12 @@ namespace LegendEngine::Vulkan
 	using namespace LegendEngine::Objects;
 
 	ObjectNative::ObjectNative(TetherVulkan::GraphicsContext& context, 
-		VkDescriptorSetLayout objectSetLayout, Object* pObject)
+		uint32_t images, VkDescriptorSetLayout objectSetLayout, Object* pObject)
 		:
 		IObjectNative(pObject),
-		m_Images(context.GetFramesInFlight()),
-		m_Uniform(context, sizeof(ubo), m_Images),
-		m_UniformManager(context, 1, m_Images)
+		m_Images(images),
+		m_UniformManager(context, 1, m_Images),
+		m_Uniform(context, sizeof(ubo), m_Images)
 	{
 		m_Uniform.BindToSet(&m_UniformManager, objectSetLayout);
 		m_Uniform.Bind(0);

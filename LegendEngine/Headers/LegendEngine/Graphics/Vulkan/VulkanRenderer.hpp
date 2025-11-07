@@ -123,7 +123,6 @@ namespace LegendEngine::Vulkan
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
-		std::vector<VkFence> imagesInFlight;
 		std::vector<VkImage> swapchainImages;
 		std::vector<VkImageView> swapchainImageViews;
 		std::vector<VkCommandBuffer> commandBuffers;
@@ -143,7 +142,7 @@ namespace LegendEngine::Vulkan
 		bool RecreateSwapchain();
 
 		// Command buffers
-		bool RecreateCommandBuffers();
+		bool RecreateCommandBuffers(uint32_t imageIndex);
 		bool PopulateCommandBuffer(VkCommandBuffer buffer, VkFramebuffer framebuffer,
 			uint64_t commandBufferIndex);
 		void PopulateByScene(VkCommandBuffer buffer, VkFramebuffer framebuffer,

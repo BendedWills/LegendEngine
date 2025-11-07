@@ -8,7 +8,6 @@ namespace LegendEngine::Objects
     class Camera : public Object
     {
     public:
-        LEGENDENGINE_DISPOSE_ON_DESTRUCT(Camera);
         LEGENDENGINE_NO_COPY(Camera);
 
 		struct CameraUniforms

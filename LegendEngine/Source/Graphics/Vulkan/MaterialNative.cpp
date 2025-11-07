@@ -58,6 +58,10 @@ namespace LegendEngine::Vulkan
 	MaterialNative::~MaterialNative()
 	{
 		vkDeviceWaitIdle(m_Device);
+		
+		// Destroy the uniform before the pool since it would try to destroy
+		// the sets itself and create an error.
+		uniform.reset();
 
 		vkDestroyDescriptorPool(m_Device, pool, nullptr);
 	}

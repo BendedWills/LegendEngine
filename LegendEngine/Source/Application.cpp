@@ -60,11 +60,6 @@ namespace LegendEngine
 
 		// Dispose everything
 		{
-			// Objects are removed as they are disposed, so an original copy is required.
-			std::vector<Objects::Object*> oldObjects(objects);
-			for (uint64_t i = 0; i < oldObjects.size(); i++)
-				oldObjects[i]->Dispose();
-
 			// And same for resources
 			std::vector<Resources::IResource*> oldResources(resources);
 			for (uint64_t i = 0; i < oldResources.size(); i++)

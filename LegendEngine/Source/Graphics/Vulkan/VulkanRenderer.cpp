@@ -68,7 +68,7 @@ namespace LegendEngine::Vulkan
 		}
 
 		pObject->SetNative(std::make_shared<ObjectNative>(m_GraphicsContext, 
-			objectLayout, pObject));
+			m_Swapchain->GetImageCount(), objectLayout, pObject));
 		return true;
 	}
 
@@ -129,7 +129,7 @@ namespace LegendEngine::Vulkan
 		}
 
 		pMaterial->SetNative(std::make_shared<MaterialNative>(m_GraphicsContext, 
-			MAX_FRAMES_IN_FLIGHT, materialLayout, pMaterial));
+			m_Swapchain->GetImageCount(), materialLayout, pMaterial));
 
 		return true;
 	}
@@ -424,22 +424,15 @@ namespace LegendEngine::Vulkan
 		InitFramebuffers();
 		InitCommandBuffers();
 
-		imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
-
 		shouldRecreateSwapchain = false;
 		return true;
 	}
 
-	bool VulkanRenderer::RecreateCommandBuffers()
+	bool VulkanRenderer::RecreateCommandBuffers(uint32_t imageIndex)
 	{
-		// Wait for all frames to finish rendering.
-		// Command buffers cannot be reset during frame rendering.
-		
-		vkWaitForFences(m_Device, 1, &inFlightFences[currentFrame], true, UINT64_MAX);
 		vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-
 		return PopulateCommandBuffer(commandBuffers[currentFrame], 
-			framebuffers[currentFrame], currentFrame);
+			framebuffers[imageIndex], currentFrame);
 	}
 
 	bool VulkanRenderer::PopulateCommandBuffer(VkCommandBuffer buffer,
@@ -537,7 +530,7 @@ namespace LegendEngine::Vulkan
 
 			if (!object->IsEnabled())
 				continue;
-
+			
 			LegendEngine::VertexBuffer* pVertexBuffer =
 				component->GetVertexBuffer();
 			VertexBufferNative* pVkVertexBuffer =
@@ -547,16 +540,20 @@ namespace LegendEngine::Vulkan
 			sets[2] = native->GetUniform()->GetDescriptorSet(commandBufferIndex);
 
 			Resources::Material* pMaterial = component->GetMaterial();
-			if (pMaterial && pMaterial != lastMaterial 
-				&& pMaterial->GetTexture()->IsInitialized())
-			{
-				MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
-				sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
+			if (pMaterial != lastMaterial)
+				if (pMaterial && pMaterial->GetTexture()->IsInitialized())
+				{
+					MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
+					sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
+				}
+				else
+					sets[1] = m_DefaultMatUniform->GetDescriptorSet(commandBufferIndex);
 
-				lastMaterial = pMaterial;
-			}
-			else
-				sets[1] = m_DefaultMatUniform->GetDescriptorSet(commandBufferIndex);
+			lastMaterial = pMaterial;
+
+			// Most objects are fine, but the cube's materials aren't being found.
+			// The default material isn't working because it needs a texture.
+			// Eventually, change materials to also support solid colors.
 
 			vkCmdBindDescriptorSets(
 				buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -779,8 +776,8 @@ namespace LegendEngine::Vulkan
 		}
 
 		cameraManager.emplace(m_GraphicsContext, 1, swapchainImages);
-		cameraUniform.emplace(m_GraphicsContext, 
-			sizeof(Objects::Camera::CameraUniforms), m_Swapchain->GetImageCount());
+		cameraUniform.emplace(m_GraphicsContext,
+			sizeof(Objects::Camera::CameraUniforms), swapchainImages);
 
 		cameraUniform->BindToSet(&*cameraManager, cameraLayout);
 		cameraUniform->Bind(0);
@@ -906,7 +903,7 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::InitCommandBuffers()
 	{
-		commandBuffers.resize(framebuffers.size());
+		commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -927,8 +924,7 @@ namespace LegendEngine::Vulkan
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-		imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
-
+		
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -984,6 +980,7 @@ namespace LegendEngine::Vulkan
 
 		// Allocate the descriptor sets for the uniform
 		m_DefaultMatUniform->BindToSet(&pool, materialLayout);
+		m_DefaultMatUniform->Bind(0);
 
 		UpdateDefaultMaterialUniforms();
 	}
@@ -1082,19 +1079,10 @@ namespace LegendEngine::Vulkan
 				|| result == VK_ERROR_OUT_OF_DATE_KHR;
 		}
 
-		UpdateUniforms(imageIndex);
+		UpdateUniforms(currentFrame);
 
-		if (!RecreateCommandBuffers())
+		if (!RecreateCommandBuffers(imageIndex))
 			m_Application.Log("Failed to recreate command buffers!", LogType::ERROR);
-
-		// If images are acquired out of order, or MAX_FRAMES_IN_FLIGHT is higher
-		// than the number of swapchain images, we may start rendering to an
-		// image that is in flight.
-		// Check for that here.
-		if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-			vkWaitForFences(m_Device, 1, &imagesInFlight[imageIndex], VK_TRUE,
-				UINT64_MAX);
-		imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
 		// Wait for the image to be available before rendering the frame and
 		// signal the render finished semaphore once rendering is complete.
@@ -1108,7 +1096,7 @@ namespace LegendEngine::Vulkan
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+		submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 

@@ -25,8 +25,17 @@ Object::Object()
     transform = Matrix4x4f::MakeIdentity();
 
     CalculateTransformMatrix();
-	initialized = true;
-    singleDispose = true;
+}
+
+Object::~Object()
+{
+	if (nativeSet)
+		native->OnDispose();
+
+	ClearComponents();
+	ClearScripts();
+
+	pApplication->_OnObjectDispose(this);
 }
 
 void Object::AddPosition(Vector3f position)
@@ -132,17 +141,6 @@ void Object::RemoveFromScene(Scene* pScene)
     for (uint64_t i = 0; i < scenes.size(); i++)
         if (scenes[i] == pScene)
             scenes.erase(scenes.begin() + i);
-}
-
-void Object::OnDispose()
-{
-	if (nativeSet)
-		native->OnDispose();
-
-	ClearComponents();
-	ClearScripts();
-
-	pApplication->_OnObjectDispose(this);
 }
 
 void Object::OnComponentAdd(const std::string& typeName, 

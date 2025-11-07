@@ -26,8 +26,31 @@ namespace LegendEngine::Vulkan
 
 	UniformManager::~UniformManager()
 	{
+#if !defined(NDEBUG)
+		if (!pRegisteredUniforms.empty())
+		{
+			std::cerr << "All UniformBuffer objects must be destroyed before the UniformManager!\n";
+		}
+#endif
+
 		vkDeviceWaitIdle(m_Device);
 		vkDestroyDescriptorPool(m_Device, pool, nullptr);
+	}
+
+	void UniformManager::RegisterUniformBuffer(UniformBuffer* uniform)
+	{
+		if (std::find(pRegisteredUniforms.begin(), pRegisteredUniforms.end(), uniform)
+			!= pRegisteredUniforms.end())
+			return;
+
+		pRegisteredUniforms.push_back(uniform);
+	}
+
+	void UniformManager::UnregisterUniformBuffer(UniformBuffer* uniform)
+	{
+		for (size_t i = 0; i < pRegisteredUniforms.size(); i++)
+			if (pRegisteredUniforms[i] == uniform)
+				pRegisteredUniforms.erase(pRegisteredUniforms.begin() + i);
 	}
 
 	VkDescriptorPool* UniformManager::GetPool()
