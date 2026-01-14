@@ -12,7 +12,7 @@ file(GLOB_RECURSE SOURCES
 
 add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether)
+add_dependencies(${PROJECT_NAME} LegendEngine tether)
 
 target_include_directories(${PROJECT_NAME} 
 PUBLIC 

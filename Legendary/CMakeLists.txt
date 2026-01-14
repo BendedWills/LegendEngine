@@ -25,7 +25,7 @@ else()
         ${SOURCES} 
     )
 endif()
-add_dependencies(${PROJECT_NAME} LegendEngine VulkanMemoryAllocator tether tetherRendering)
+add_dependencies(${PROJECT_NAME} LegendEngine tether tetherRendering)
 
 if (MSVC)
 	target_compile_options(${PROJECT_NAME} 

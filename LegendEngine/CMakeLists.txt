@@ -55,8 +55,6 @@ if (LGENG_VULKAN_API)
 	find_package(Vulkan REQUIRED)
 
 	add_definitions(-D_VULKAN_API)
-	add_subdirectory("Vendor/VMA")
-	add_dependencies(${PROJECT_NAME} VulkanMemoryAllocator)
 
 	set(VK_LIBS ${VK_LIBS} ${Vulkan_LIBRARIES})
 	set(VK_INCLUDES ${VK_INCLUDES} ${Vulkan_INCLUDE_DIR})
