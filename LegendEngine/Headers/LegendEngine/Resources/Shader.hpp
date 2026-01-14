@@ -8,31 +8,30 @@
 #include <LegendEngine/Resources/IResource.hpp>
 
 #include <stdint.h>
+#include <vector>
 
 namespace LegendEngine::Resources
 {
     struct ShaderStage
     {
-		uint8_t* compiledShaderCode = nullptr;
-		bool compiled = false;
-
-        std::string shaderCode;
-        ShaderType type;
+    	ShaderType type;
+		const uint8_t* compiledShaderCode = nullptr;
+		size_t compiledShaderSize = 0;
     };
 
 	class Shader;
 	class IShaderNative
 	{
 	public:
+		virtual ~IShaderNative() = default;
+
 		LEGENDENGINE_NO_COPY(IShaderNative);
 
-        IShaderNative(Shader* pShader)
+        IShaderNative(Shader* pShader, std::span<Resources::ShaderStage>)
 			:
             pShader(pShader)
 		{}
 
-        virtual bool OnCreate(ShaderStage* pStages, uint64_t stageCount) 
-        { return false;  }
 		virtual void OnDispose() {}
 	private:
 		Shader* pShader = nullptr;
@@ -47,19 +46,7 @@ namespace LegendEngine::Resources
         LEGENDENGINE_DISPOSE_ON_DESTRUCT(Shader);
         LEGENDENGINE_NO_COPY(Shader);
 
-        Shader() = default;
-        
-        /**
-         * @brief Initializes the shader.
-         * 
-         * @param pStages An array of shader stages.
-         * @param stageCount The amount of stages in pStages.
-         * @param uniformCount The amount of uniforms in pDescs.
-         * 
-         * @returns True if the vertex buffer was successfully initialized;
-         *  otherwise, false.
-         */
-        bool Init(ShaderStage* pStages, uint64_t stageCount);
+    	Shader() = default;
     private:
         void OnResourceDispose();
     };

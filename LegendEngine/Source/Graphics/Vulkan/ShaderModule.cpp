@@ -2,16 +2,17 @@
 
 namespace LegendEngine::Vulkan
 {
-	ShaderModule::ShaderModule(TetherVulkan::GraphicsContext& context, ShaderType type,
-		uint32_t* spv, uint64_t spvSize)
+	ShaderModule::ShaderModule(const TetherVulkan::GraphicsContext& context,
+		const Resources::ShaderStage& stage)
 		:
 		m_Device(context.GetDevice()),
-		type(type)
+		type(stage.type)
 	{
 		VkShaderModuleCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		createInfo.codeSize = spvSize;
-		createInfo.pCode = spv;
+		createInfo.codeSize = stage.compiledShaderSize;
+		createInfo.pCode = reinterpret_cast<const uint32_t*>(
+			stage.compiledShaderCode);
 
 		if (vkCreateShaderModule(m_Device, &createInfo, nullptr,
 			&shaderModule) != VK_SUCCESS)

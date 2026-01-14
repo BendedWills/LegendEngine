@@ -4,6 +4,8 @@
 
 #include <Assets/CompiledShaders/solid.vert.spv.h>
 #include <Assets/CompiledShaders/solid.frag.spv.h>
+#include <Assets/CompiledShaders/textured.vert.spv.h>
+#include <Assets/CompiledShaders/textured.frag.spv.h>
 
 #include <set>
 #include <cmath>
@@ -23,22 +25,21 @@ namespace LegendEngine::Vulkan
 		IRenderer(application),
 		m_Application(application),
 		m_Window(window),
-		m_GraphicsContext(((Vulkan::GraphicsContext&)GraphicsContext::Get())
+		m_GraphicsContext(dynamic_cast<Vulkan::GraphicsContext&>(GraphicsContext::Get())
 			.GetTetherGraphicsContext()),
-		m_Allocator(m_GraphicsContext.GetAllocator()),
-		m_CommandPool(m_GraphicsContext.GetCommandPool()),
 		m_Instance(m_GraphicsContext.GetInstance()),
 		m_Device(m_GraphicsContext.GetDevice()),
 		m_PhysicalDevice(m_GraphicsContext.GetPhysicalDevice()),
 		m_Queue(m_GraphicsContext.GetQueue()),
-		m_Surface(m_GraphicsContext, window)
+		m_Surface(m_GraphicsContext, window),
+		m_CommandPool(m_GraphicsContext.GetCommandPool()),
+		m_Allocator(m_GraphicsContext.GetAllocator())
 	{
 		timer.Set();
 
 		InitSwapchain();
 		InitRenderPass();
 		InitUniforms();
-		InitPipeline();
 		InitDepthImages();
 		InitFramebuffers();
 		InitCommandBuffers();
@@ -47,14 +48,39 @@ namespace LegendEngine::Vulkan
 
 	VulkanRenderer::~VulkanRenderer()
 	{
+		m_Application.Log("Destroying renderer", LogType::DEBUG);
+
+		vkDeviceWaitIdle(m_Device);
+
+		cameraUniform.reset();
+		m_DefaultMatUniform.reset();
+		uniformManager.reset();
+
+		DisposeSwapchain();
+
+		vkDestroyDescriptorSetLayout(m_Device, objectLayout, nullptr);
+		vkDestroyDescriptorSetLayout(m_Device, cameraLayout, nullptr);
+		vkDestroyDescriptorSetLayout(m_Device, materialLayout, nullptr);
+
+		vkDestroyRenderPass(m_Device, renderPass, nullptr);
+
+		for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			vkDestroySemaphore(m_Device, renderFinishedSemaphores[i], nullptr);
+			vkDestroySemaphore(m_Device, imageAvailableSemaphores[i], nullptr);
+			vkDestroyFence(m_Device, inFlightFences[i], nullptr);
+		}
+
+		vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
 		vkDestroyDescriptorPool(m_Device, pool, nullptr);
+
+		m_Application.Log("Destroyed renderer", LogType::DEBUG);
 	}
 
 	void VulkanRenderer::SetVSyncEnabled(bool vsync)
 	{
 		this->enableVsync = vsync;
-
-		Reload();
+		RecreateSwapchain();
 	}
 
 	bool VulkanRenderer::CreateObjectNative(Objects::Object* pObject)
@@ -88,7 +114,8 @@ namespace LegendEngine::Vulkan
 		return true;
 	}
 
-	bool VulkanRenderer::CreateShaderNative(Resources::Shader* shader)
+	bool VulkanRenderer::CreateShaderNative(Resources::Shader* shader,
+		std::optional<std::span<Resources::ShaderStage>> stages)
 	{
 		if (!shader)
 		{
@@ -98,7 +125,7 @@ namespace LegendEngine::Vulkan
 			return false;
 		}
 
-		shader->SetNative(std::make_shared<ShaderNative>(this, shader));
+		shader->SetNative(std::make_shared<ShaderNative>(this, shader, stages.value()));
 
 		return true;
 	}
@@ -134,12 +161,7 @@ namespace LegendEngine::Vulkan
 		return true;
 	}
 
-	bool VulkanRenderer::Reload()
-	{
-		return RecreateSwapchain();
-	}
-
-	bool VulkanRenderer::BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer)
+	bool VulkanRenderer::BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer) const
 	{
 		VkCommandBufferAllocateInfo cmdAllocInfo{};
 		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -161,7 +183,7 @@ namespace LegendEngine::Vulkan
 		return true;
 	}
 
-	bool VulkanRenderer::EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer)
+	bool VulkanRenderer::EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer) const
 	{
 		vkEndCommandBuffer(commandBuffer);
 
@@ -187,14 +209,14 @@ namespace LegendEngine::Vulkan
 	}
 
 	void VulkanRenderer::CreateImageView(VkImageView* pImageView, VkImage image,
-		VkFormat format, VkImageViewType viewType, VkImageAspectFlags aspflags)
+		VkFormat format, VkImageViewType viewType, VkImageAspectFlags aspectFlags) const
 	{
 		VkImageViewCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = image;
 		createInfo.format = format;
 		createInfo.viewType = viewType;
-		createInfo.subresourceRange.aspectMask = aspflags;
+		createInfo.subresourceRange.aspectMask = aspectFlags;
 		createInfo.subresourceRange.baseMipLevel = 0;
 		createInfo.subresourceRange.levelCount = 1;
 		createInfo.subresourceRange.baseArrayLayer = 0;
@@ -206,7 +228,7 @@ namespace LegendEngine::Vulkan
 	}
 
 	bool VulkanRenderer::CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
-		VmaAllocationInfo* pAllocInfo, uint64_t size)
+		VmaAllocationInfo* pAllocInfo, uint64_t size) const
 	{
 		VkBufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -218,12 +240,18 @@ namespace LegendEngine::Vulkan
 		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 		// Create the staging buffer
-		return vmaCreateBuffer(m_Allocator, &createInfo,
-			&allocInfo, pBuffer, pAllocation, pAllocInfo) == VK_SUCCESS;
+		VkResult result = vmaCreateBuffer(m_Allocator, &createInfo,
+			&allocInfo, pBuffer, pAllocation, pAllocInfo);
+
+#if !defined(NDEBUG)
+		vmaSetAllocationName(m_Allocator, *pAllocation, "Staging buffer");
+#endif
+
+		return result == VK_SUCCESS;
 	}
 
 	void VulkanRenderer::ChangeImageLayout(VkImage image, VkFormat format, 
-		VkImageLayout oldLayout, VkImageLayout newLayout)
+		VkImageLayout oldLayout, VkImageLayout newLayout) const
 	{
 		VkCommandBuffer commandBuffer;
 		if (!BeginSingleUseCommandBuffer(&commandBuffer))
@@ -301,7 +329,7 @@ namespace LegendEngine::Vulkan
 	}
 
 	bool VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
-		uint64_t height)
+		uint64_t height) const
 	{
 		VkCommandBuffer commandBuffer;
 		if (!BeginSingleUseCommandBuffer(&commandBuffer))
@@ -333,7 +361,7 @@ namespace LegendEngine::Vulkan
 	}
 
 	VkFormat VulkanRenderer::FindSupportedFormat(const std::vector<VkFormat>& candidates,
-		VkImageTiling tiling, VkFormatFeatureFlags features)
+		VkImageTiling tiling, VkFormatFeatureFlags features) const
 	{
 		for (VkFormat format : candidates)
 		{
@@ -351,7 +379,7 @@ namespace LegendEngine::Vulkan
 		return candidates[0];
 	}
 
-	VkFormat VulkanRenderer::FindDepthFormat()
+	VkFormat VulkanRenderer::FindDepthFormat() const
 	{
 		return FindSupportedFormat(
 			{
@@ -464,8 +492,8 @@ namespace LegendEngine::Vulkan
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)swapchainExtent.width;
-		viewport.height = (float)swapchainExtent.height;
+		viewport.width = static_cast<float>(swapchainExtent.width);
+		viewport.height = static_cast<float>(swapchainExtent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
@@ -478,13 +506,10 @@ namespace LegendEngine::Vulkan
 		vkCmdBeginRenderPass(buffer, &renderPassInfo,
 			VK_SUBPASS_CONTENTS_INLINE);
 		{
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				shaderProgram->GetPipeline());
-
 			vkCmdSetViewport(buffer, 0, 1, &viewport);
 			vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-			sets[0] = cameraUniform->GetDescriptorSet(commandBufferIndex);
+			m_Sets[0] = cameraUniform->GetDescriptorSet(commandBufferIndex);
 
 			// This will probably be changed later on
 			// Eventually, objects will have to be rendered in order of distance
@@ -518,14 +543,15 @@ namespace LegendEngine::Vulkan
 		static const std::string meshCompName = TypeTools::GetTypeName<MeshComponent>();
 
 		auto* comps = pScene->GetObjectComponents();
-		if (comps->find(meshCompName) == comps->end())
+		if (!comps->contains(meshCompName))
 			return;
 		std::vector<Component*>* meshComps = &comps->at(meshCompName);
 
 		Resources::Material* lastMaterial = nullptr;
+		Resources::Shader* lastShader = nullptr;
 		for (uint64_t i = 0; i < meshComps->size(); i++)
 		{
-			MeshComponent* component = (MeshComponent*)meshComps->at(i);
+			MeshComponent* component = static_cast<MeshComponent*>(meshComps->at(i));
 			Object* object = component->GetObject();
 
 			if (!object->IsEnabled())
@@ -534,38 +560,52 @@ namespace LegendEngine::Vulkan
 			LegendEngine::VertexBuffer* pVertexBuffer =
 				component->GetVertexBuffer();
 			VertexBufferNative* pVkVertexBuffer =
-				(VertexBufferNative*)pVertexBuffer->GetNative();
+				static_cast<VertexBufferNative*>(pVertexBuffer->GetNative());
 
-			ObjectNative* native = (ObjectNative*)object->GetNative();
-			sets[2] = native->GetUniform()->GetDescriptorSet(commandBufferIndex);
+			ObjectNative* native = static_cast<ObjectNative*>(object->GetNative());
+			m_Sets[2] = native->GetUniform()->GetDescriptorSet(commandBufferIndex);
 
 			Resources::Material* pMaterial = component->GetMaterial();
+			Resources::Shader* pShader = solidShader.get();
+			Resources::Texture2D* pTexture = pMaterial->GetTexture();
 			if (pMaterial != lastMaterial)
-				if (pMaterial && pMaterial->GetTexture()->IsInitialized())
+			{
+				if (pMaterial && pTexture)
 				{
-					MaterialNative* matNative = (MaterialNative*)pMaterial->GetNative();
-					sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
+					MaterialNative* matNative = static_cast<MaterialNative*>(pMaterial->GetNative());
+					m_Sets[1] = matNative->uniform->GetDescriptorSet(commandBufferIndex);
+					pShader = texturedShader.get();
 				}
 				else
-					sets[1] = m_DefaultMatUniform->GetDescriptorSet(commandBufferIndex);
+					m_Sets[1] = m_DefaultMatUniform->GetDescriptorSet(commandBufferIndex);
 
-			lastMaterial = pMaterial;
+				lastMaterial = pMaterial;
+			}
 
 			// Most objects are fine, but the cube's materials aren't being found.
 			// The default material isn't working because it needs a texture.
 			// Eventually, change materials to also support solid colors.
 
+			ShaderNative* shaderNative = static_cast<ShaderNative*>(
+				pShader->GetNative());
+			if (pShader != lastShader)
+			{
+				vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+					shaderNative->GetPipeline().GetPipeline());
+				lastShader = pShader;
+			}
+
 			vkCmdBindDescriptorSets(
 				buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				shaderProgram->GetPipelineLayout(),
-				0, sizeof(sets) / sizeof(sets[0]),
-				sets,
+				shaderNative->GetPipeline().GetPipelineLayout(),
+				0, std::size(m_Sets),
+				m_Sets,
 				0, nullptr
 			);
 
-			VkBuffer vbuffers[] = { pVkVertexBuffer->vertexBuffer };
+			VkBuffer vBuffers[] = { pVkVertexBuffer->vertexBuffer };
 			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(buffer, 0, 1, vbuffers, offsets);
+			vkCmdBindVertexBuffers(buffer, 0, 1, vBuffers, offsets);
 
 			vkCmdBindIndexBuffer(
 				buffer,
@@ -583,38 +623,12 @@ namespace LegendEngine::Vulkan
 		return DrawFrame();
 	}
 
-	void VulkanRenderer::OnRendererDispose()
-	{
-		vkDeviceWaitIdle(m_Device);
-
-		DisposeSwapchain();
-
-		shaderProgram.reset();
-
-		vkDestroyDescriptorSetLayout(m_Device, objectLayout, nullptr);
-		vkDestroyDescriptorSetLayout(m_Device, cameraLayout, nullptr);
-		vkDestroyDescriptorSetLayout(m_Device, materialLayout, nullptr);
-		
-		vkDestroyRenderPass(m_Device, renderPass, nullptr);
-
-		for (uint64_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			vkDestroySemaphore(m_Device, renderFinishedSemaphores[i], nullptr);
-			vkDestroySemaphore(m_Device, imageAvailableSemaphores[i], nullptr);
-			vkDestroyFence(m_Device, inFlightFences[i], nullptr);
-		}
-
-		vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
-
-		vmaDestroyAllocator(m_Allocator);
-	}
-
 	void VulkanRenderer::OnWindowResize()
 	{
 		shouldRecreateSwapchain = true;
 	}
 
-	void VulkanRenderer::ChooseSurfaceFormat(TetherVulkan::SwapchainDetails details)
+	void VulkanRenderer::ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details)
 	{
 		for (const auto& availableFormat : details.formats)
 			if (availableFormat.format == VK_FORMAT_R32G32B32_UINT)
@@ -707,7 +721,7 @@ namespace LegendEngine::Vulkan
 
 	void VulkanRenderer::InitUniforms()
 	{
-		uint32_t swapchainImages = m_Swapchain->GetImageCount();
+		uint32_t imageCount = m_Swapchain->GetImageCount();
 
 		// Camera set
 		{
@@ -749,7 +763,7 @@ namespace LegendEngine::Vulkan
 
 			VkDescriptorSetLayoutCreateInfo setInfo{};
 			setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			setInfo.bindingCount = sizeof(bindings) / sizeof(bindings[0]);
+			setInfo.bindingCount = std::size(bindings);
 			setInfo.pBindings = bindings;
 
 			if (vkCreateDescriptorSetLayout(m_Device,
@@ -775,71 +789,42 @@ namespace LegendEngine::Vulkan
 				throw std::runtime_error("Failed to create descriptor set layout");
 		}
 
-		cameraManager.emplace(m_GraphicsContext, 1, swapchainImages);
+		uniformManager.emplace(m_GraphicsContext, 1, imageCount);
 		cameraUniform.emplace(m_GraphicsContext,
-			sizeof(Objects::Camera::CameraUniforms), swapchainImages);
+			sizeof(Objects::Camera::CameraUniforms), imageCount);
 
-		cameraUniform->BindToSet(&*cameraManager, cameraLayout);
+		cameraUniform->BindToSet(&*uniformManager, cameraLayout);
 		cameraUniform->Bind(0);
 
 		CreateDefaultMaterialUniforms();
 	}
 
-	void VulkanRenderer::InitPipeline()
+	void VulkanRenderer::CreateShaders()
 	{
 		using namespace Resources::VulkanShaders;
 
-		Vulkan::ShaderModule vertexModule(m_GraphicsContext, ShaderType::VERTEX,
-			(uint32_t*)_binary_solid_vert_spv, sizeof(_binary_solid_vert_spv));
-		Vulkan::ShaderModule fragmentModule(m_GraphicsContext, ShaderType::FRAG,
-			(uint32_t*)_binary_solid_frag_spv, sizeof(_binary_solid_frag_spv));
-
-		VkPipelineShaderStageCreateInfo vertexStage{};
-		vertexStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertexStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertexStage.module = vertexModule.Get();
-		vertexStage.pName = "main";
-
-		VkPipelineShaderStageCreateInfo fragmentStage{};
-		fragmentStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragmentStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragmentStage.module = fragmentModule.Get();
-		fragmentStage.pName = "main";
-
-		VkPipelineShaderStageCreateInfo stages[] =
+		Resources::ShaderStage solidStages[] =
 		{
-			vertexStage, fragmentStage
+			{ ShaderType::VERTEX, _binary_solid_vert_spv,
+				sizeof(_binary_solid_vert_spv) },
+				{ ShaderType::FRAG, _binary_solid_frag_spv,
+					sizeof(_binary_solid_frag_spv) }
 		};
 
-		VkDynamicState dynamicStates[] =
+		Resources::ShaderStage texturedStages[] =
 		{
-			VK_DYNAMIC_STATE_VIEWPORT,
-			VK_DYNAMIC_STATE_SCISSOR
+			{ ShaderType::VERTEX, _binary_textured_vert_spv,
+				sizeof(_binary_textured_vert_spv) },
+				{ ShaderType::FRAG, _binary_textured_frag_spv,
+					sizeof(_binary_textured_frag_spv) }
 		};
 
-		VkDescriptorSetLayout sets[] =
-		{
-			cameraLayout,
-			materialLayout,
-			objectLayout
-		};
-
-		PipelineInfo pipelineInfo{};
-		pipelineInfo.stageCount = sizeof(stages) / sizeof(stages[0]);
-		pipelineInfo.pStages = stages;
-		pipelineInfo.pDynamicStates = dynamicStates;
-		pipelineInfo.dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]);
-		pipelineInfo.pDynamicStates = dynamicStates;
-		pipelineInfo.setCount = sizeof(sets) / sizeof(sets[0]);
-		pipelineInfo.pSetLayouts = sets;
-
-		shaderProgram.emplace(m_GraphicsContext, m_Swapchain->GetExtent(),
-			renderPass, pipelineInfo);
+		solidShader = m_Application.CreateResource<Resources::Shader>(solidStages);
+		texturedShader = m_Application.CreateResource<Resources::Shader>(texturedStages);
 	}
 
 	void VulkanRenderer::InitDepthImages()
 	{
-		uint64_t swapImageCount = swapchainImageViews.size();
 		VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
 
 		VkImageCreateInfo imageInfo{};
@@ -863,6 +848,10 @@ namespace LegendEngine::Vulkan
 		if (vmaCreateImage(m_Allocator, &imageInfo, &allocInfo,
 			&depthImage, &depthAlloc, nullptr) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create depth image");
+
+#if !defined(NDEBUG)
+		vmaSetAllocationName(m_Allocator, depthAlloc, "Depth image");
+#endif
 
 		CreateImageView(&depthImageView, depthImage, imageInfo.format,
 			VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -909,14 +898,14 @@ namespace LegendEngine::Vulkan
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = m_CommandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
 		if (vkAllocateCommandBuffers(m_Device, &allocInfo,
 			commandBuffers.data()) != VK_SUCCESS)
 			throw std::runtime_error("Failed to allocate command buffers");
 
-		for (uint64_t i = 0; i < commandBuffers.size(); i++)
-			PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i);
+		// for (uint64_t i = 0; i < commandBuffers.size(); i++)
+		// 	PopulateCommandBuffer(commandBuffers[i], framebuffers[i], i);
 	}
 
 	void VulkanRenderer::InitSyncObjects()
@@ -967,7 +956,7 @@ namespace LegendEngine::Vulkan
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		poolInfo.poolSizeCount = sizeof(sizes) / sizeof(sizes[0]);
+		poolInfo.poolSizeCount = std::size(sizes);
 		poolInfo.pPoolSizes = sizes;
 		poolInfo.maxSets = poolInfo.poolSizeCount * imageCount;
 
@@ -994,8 +983,7 @@ namespace LegendEngine::Vulkan
 	{
 		UpdateDefaultMaterialUniforms();
 
-		Objects::Camera* pCamera = m_Application.GetActiveCamera();
-		if (pCamera)
+		if (Objects::Camera* pCamera = m_Application.GetActiveCamera())
 			if (pCamera->IsEnabled())
 			{
 				// Upload camera matrices
@@ -1022,22 +1010,22 @@ namespace LegendEngine::Vulkan
 
 		// Get the list of mesh components for every object in the scene
 		auto* comps = pScene->GetObjectComponents();
-		if (comps->find(meshCompName) == comps->end())
+		if (!comps->contains(meshCompName))
 			return;
 		std::vector<Component*>* meshComps = &comps->at(meshCompName);
 
 		// For every mesh component, find its object (if it is enabled) and update the
-		// uniforms for that object (position, rotation, scale, etc), then get its material
+		// uniforms for that object (position, rotation, scale, etc.), then get its material
 		// and update it (if it has one).
 		for (uint64_t i = 0; i < meshComps->size(); i++)
 		{
-			MeshComponent* component = (MeshComponent*)meshComps->at(i);
+			MeshComponent* component = static_cast<MeshComponent*>(meshComps->at(i));
 			Object* object = component->GetObject();
 
 			if (!object->IsEnabled())
 				continue;
 
-			ObjectNative* vkNative = (ObjectNative*)object->GetNative();
+			ObjectNative* vkNative = static_cast<ObjectNative*>(object->GetNative());
 			vkNative->SetCurrentImage(imageIndex);
 			vkNative->OnUniformsUpdate();
 

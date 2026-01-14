@@ -53,6 +53,10 @@ namespace LegendEngine::Vulkan
 			if (vmaCreateBuffer(m_Allocator, &createInfo,
 				&allocInfo, &vertexBuffer, &allocation, nullptr) != VK_SUCCESS)
 				return false;
+
+#if !defined(NDEBUG)
+			vmaSetAllocationName(m_Allocator, allocation, "Vertex buffer");
+#endif
 		}
 
 		// Create index buffer
@@ -74,6 +78,10 @@ namespace LegendEngine::Vulkan
 			if (vmaCreateBuffer(m_Allocator, &createInfo,
 				&allocInfo, &indexBuffer, &indexAlloc, nullptr) != VK_SUCCESS)
 				return false;
+
+#if !defined(NDEBUG)
+			vmaSetAllocationName(m_Allocator, indexAlloc, "Index buffer");
+#endif
 		}
 
 		TetherVulkan::BufferStager verticesStager(m_Context, vertexBuffer, verticesSize);

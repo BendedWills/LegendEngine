@@ -44,3 +44,5 @@ add_definitions(-DFEATURE_HERE)
 
 If you are compiling LegendEngine with -DVULKAN_API, you will also need:
 * glslc
+
+If you wish to generate documentation with Doxygen, Graphviz might be required.

@@ -30,3 +30,13 @@ The -C option tells make that the makefile is located in the "Build" directory.
 The -j8 option tells make to use 8 threads to build the executable. Replace the 8 with however many cores you have on your computer.
 
 And there you go! All projects and tests will now be compiled and can be run by their executables in the build directory.
+
+Something to note is that if you are compiling this with Tether in an external directory, you'll want to set these cmake options:
+```
+-DTETHER_BIN2CPP_DIR=""
+-DOPENMC_TETHER_DIR=""
+-DTETHER_BUILD_RENDERING=ON
+-DLGENG_VULKAN_API=True
+-DTETHER_RENDERING_VULKAN_API=ON
+-DTETHER_VMA_DIR=""
+```

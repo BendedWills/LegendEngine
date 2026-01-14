@@ -18,8 +18,8 @@ namespace LegendEngine::Vulkan
     class ShaderModule
     {
     public:
-        ShaderModule(TetherVulkan::GraphicsContext& context, ShaderType type,
-            uint32_t* spv, uint64_t spvSize);
+        ShaderModule(const TetherVulkan::GraphicsContext& context,
+            const Resources::ShaderStage& stage);
         ~ShaderModule();
         LEGENDENGINE_NO_COPY(ShaderModule);
 

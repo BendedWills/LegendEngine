@@ -24,21 +24,26 @@ namespace LegendEngine::Resources
 		);
 	}
 
-	void Material::SetTexture(Texture2D* pTexture)
+	void Material::SetTexture(Texture2D* toSet)
 	{
-		this->pTexture = pTexture;
+		this->pTexture = toSet;
 		shouldUpdateUniforms = true;
 	}
 
-	void Material::SetBrightness(float brightness)
+	void Material::SetColor(const Color &toSet)
 	{
-		uniforms.brightness = brightness;
+		uniforms.color = toSet;
 		shouldUpdateUniforms = true;
 	}
 
-	Texture2D* Material::GetTexture()
+	Texture2D* Material::GetTexture() const
 	{
 		return pTexture;
+	}
+
+	Color Material::GetColor()
+	{
+		return color;
 	}
 
 	Material::MaterialUniforms* Material::GetUniforms()

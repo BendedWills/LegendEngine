@@ -9,6 +9,8 @@ namespace LegendEngine
 	class NativeHolder
 	{
 	public:
+		virtual ~NativeHolder() = default;
+
 		NativeHolder() {}
 		NativeHolder(const NativeHolder& ref)
 		{

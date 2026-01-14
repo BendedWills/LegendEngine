@@ -37,15 +37,18 @@ namespace LegendEngine
 		logging(logging),
 		debug(debug)
 	{
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		std::wstring title(applicationName.size(), L' ');
+		std::mbstowcs(title.data(), applicationName.data(),
+			applicationName.size());
 
 		Log("Creating window", LogType::DEBUG);
 		m_Window = Tether::Window::Create(1280, 720, 
-			converter.from_bytes(applicationName), false);
+			title, false);
 		
 		GraphicsContext::Create(api, debug);
 		GraphicsContext& graphicsContext = GraphicsContext::Get();
 		m_Renderer = graphicsContext.CreateRenderer(*this, *m_Window);
+		m_Renderer->CreateShaders();
 
 		InitScene(defaultScene);
 	}

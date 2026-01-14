@@ -184,7 +184,7 @@ public:
 			texture->Init("Assets/planks.png");
 			texture2 = CreateResource<Texture2D>();
 			texture2->Init("Assets/tiles.png");
-			
+
 			material->SetTexture(texture.get());
 			material2->SetTexture(texture2.get());
 		}
@@ -198,7 +198,7 @@ public:
 			cube2 = CreateObject<Object>();
 			cube2->AddScript<TestScript>(material.get());
 			cube2->SetPosition(Vector3f(3, 0.5f, 0));
-			
+
 			floor = CreateObject<Object>();
 			floor->AddScript<TestScript>(material2.get());
 			floor->SetScale(Vector3f(10));
@@ -247,7 +247,7 @@ private:
 	Ref<Object> cube1;
 	Ref<Object> cube2;
 	Ref<Object> floor;
-	
+
 	Ref<Material> material;
 	Ref<Material> material2;
 	Ref<Texture2D> texture;

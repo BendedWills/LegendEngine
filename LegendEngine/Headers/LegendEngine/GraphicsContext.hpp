@@ -14,6 +14,8 @@ namespace LegendEngine
 	{
 		friend class Application;
 	public:
+		virtual ~GraphicsContext() = default;
+
 		static GraphicsContext& Create(RenderingAPI api, bool debug);
 		static GraphicsContext& Get();
 	protected:

@@ -61,6 +61,9 @@ namespace LegendEngine::Vulkan
 			&imageAllocation, nullptr) != VK_SUCCESS)
 			return false;
 
+#if !defined(NDEBUG)
+		vmaSetAllocationName(m_Context.GetAllocator(), imageAllocation, "Texture2D image");
+#endif
 
 		VkImageViewCreateInfo viewCreateInfo{};
 		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

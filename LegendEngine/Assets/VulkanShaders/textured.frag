@@ -10,7 +10,12 @@ layout(set = 1, binding = 0) uniform Material
     vec4 color;
 } mat;
 
-void main() 
+layout(set = 1, binding = 1) uniform sampler2D albedoSampler;
+
+void main()
 {
-    fragColor = vec4(mat.color.xyz, 1.0);
+    vec3 finalColor = texture(albedoSampler, inCoord.xy).xyz;
+    finalColor *= mat.color.xyz;
+
+    fragColor = vec4(finalColor.xyz, 1.0);
 }

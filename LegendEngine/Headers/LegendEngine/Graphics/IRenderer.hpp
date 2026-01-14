@@ -37,7 +37,8 @@ namespace LegendEngine
         friend Resources::Material;
     public:
         IRenderer(Application& application);
-        ~IRenderer();
+
+        virtual ~IRenderer();
         LEGENDENGINE_NO_COPY(IRenderer);
 
         /**
@@ -62,7 +63,8 @@ namespace LegendEngine
          *
          */
         virtual bool CreateObjectNative(Objects::Object* pObject) = 0;
-        virtual bool CreateShaderNative(Resources::Shader* pShader) 
+        virtual bool CreateShaderNative(Resources::Shader* pShader,
+        	std::optional<std::span<Resources::ShaderStage>> stages = std::nullopt)
         { return false;  }
 		virtual bool CreateTexture2DNative(Resources::Texture2D* pTexture)
 		{ return false; }
@@ -84,6 +86,8 @@ namespace LegendEngine
         Application* GetApplication();
     protected:
         bool RenderFrame() { return OnRenderFrame(); }
+
+    	virtual void CreateShaders() {}
 
         /**
          * @brief Called when a frame should be rendered
@@ -130,8 +134,6 @@ namespace LegendEngine
          *  present when an object is added or removed from the scene
          */
         virtual void OnSceneChange(Scene* pScene, Objects::Object* pObject) {}
-
-        virtual void OnRendererDispose() {}
     private:
         void OnDispose();
 

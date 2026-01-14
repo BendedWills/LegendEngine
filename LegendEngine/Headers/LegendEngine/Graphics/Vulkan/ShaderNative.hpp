@@ -9,6 +9,8 @@
 
 #include <vk_mem_alloc.h>
 
+#include "Pipeline.hpp"
+
 namespace LegendEngine::Vulkan
 {
     class VulkanRenderer;
@@ -18,16 +20,14 @@ namespace LegendEngine::Vulkan
     public:
         LEGENDENGINE_NO_COPY(ShaderNative);
 
-        ShaderNative(VulkanRenderer* pRenderer, Resources::Shader* pShader)
-            :
-            pVulkanRenderer(pRenderer),
-            IShaderNative(pShader)
-        {}
+        ShaderNative(VulkanRenderer* pRenderer, Resources::Shader* pShader,
+            std::span<Resources::ShaderStage> stages);
+
+        Pipeline& GetPipeline();
     protected:
-        bool OnCreate(Resources::ShaderStage* pStages, uint64_t stageCount);
         void OnDispose();
 
-        // TODO
+        std::optional<Pipeline> shaderProgram;
 
         uint64_t verticesSize = 0;
         

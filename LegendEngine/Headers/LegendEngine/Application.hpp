@@ -6,6 +6,7 @@
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Graphics/IRenderer.hpp>
+#include <LegendEngine/GraphicsContext.hpp>
 #include <LegendEngine/Scene.hpp>
 
 #include <Tether/Tether.hpp>
@@ -56,10 +57,8 @@ namespace LegendEngine
 			if (!std::is_base_of<Application, T>::value)
 				throw std::runtime_error("T is not derived from Application");
 
-			GraphicsContext::Create(api, debug);
-
 			m_Instance = std::make_unique<T>(args...);
-			m_Instance->Run();
+			return !m_Instance->Run();
 		}
 
 		/**
@@ -80,7 +79,7 @@ namespace LegendEngine
 		 * @brief Same as CreateObject but creates a resource instead.
 		 */
 		template<typename T, typename... Args>
-		Ref<T> CreateResource(Args... args);
+		Ref<T> CreateResource(Args&&... args);
 
 		Ref<VertexBuffer> CreateVertexBuffer();
 
@@ -220,7 +219,7 @@ namespace LegendEngine
 	}
 
 	template<typename T, typename... Args>
-	Ref<T> Application::CreateResource(Args... args)
+	Ref<T> Application::CreateResource(Args&&... args)
 	{
 		if (!std::is_base_of<Resources::IResource, T>())
 		{
@@ -229,11 +228,12 @@ namespace LegendEngine
 			return nullptr;
 		}
 
-		Ref<T> resource = std::make_shared<T>(args...);
+		Ref<T> resource = std::make_shared<T>();
 		resource->pApplication = this;
 
 		if (std::is_same<Resources::Shader, T>())
-			m_Renderer->CreateShaderNative((Resources::Shader*)resource.get());
+			m_Renderer->CreateShaderNative((Resources::Shader*)resource.get(),
+				std::forward<Args>(args)...);
 		else if (std::is_same<Resources::Texture2D, T>())
 			m_Renderer->CreateTexture2DNative((Resources::Texture2D*)resource.get());
 		else if (std::is_same<Resources::Material, T>())

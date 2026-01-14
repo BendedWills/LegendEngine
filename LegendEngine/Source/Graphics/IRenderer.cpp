@@ -21,13 +21,7 @@ namespace LegendEngine
     }
 
 	IRenderer::~IRenderer()
-	{
-		m_Application.Log("Disposing renderer", LogType::DEBUG);
-		{
-			OnRendererDispose();
-		}
-		m_Application.Log("Disposed renderer", LogType::DEBUG);
-	}
+	{}
 
 	Application* IRenderer::GetApplication()
 	{

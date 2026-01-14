@@ -18,7 +18,7 @@ namespace LegendEngine::Vulkan
 		using Instance = TetherVulkan::Instance;
 
 		GraphicsContext(std::string_view applicationName, bool debug);
-		~GraphicsContext();
+		~GraphicsContext() override;
 		
 		TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
 	private:

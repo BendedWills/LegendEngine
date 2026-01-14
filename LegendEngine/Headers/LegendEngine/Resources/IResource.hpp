@@ -15,7 +15,7 @@ namespace LegendEngine::Resources
 	{
 	public:
 		IResource();
-		LEGENDENGINE_DISPOSE_ON_DESTRUCT(IResource);
+		virtual LEGENDENGINE_DISPOSE_ON_DESTRUCT(IResource);
 		LEGENDENGINE_NO_COPY(IResource);
 	protected:
 		void OnInit();

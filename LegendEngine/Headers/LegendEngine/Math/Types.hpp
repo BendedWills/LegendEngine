@@ -10,6 +10,7 @@ namespace LegendEngine
 	using Matrix4x4f = Matrix4x4<float>;
 
 	// Vector types
+	using Color = Vector4<float>;
 	using Vector2f = Vector2<float>;
 	using Vector3f = Vector3<float>;
 	using Vector4f = Vector4<float>;

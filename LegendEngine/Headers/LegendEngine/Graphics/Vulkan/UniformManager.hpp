@@ -5,6 +5,7 @@
 
 namespace LegendEngine::Vulkan
 {
+	class UniformBuffer;
 	class UniformManager
 	{
 		friend class UniformBuffer;

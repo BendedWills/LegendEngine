@@ -31,9 +31,16 @@ namespace LegendEngine::Vulkan
 		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 		for (uint64_t i = 0; i < images; i++)
+		{
 			if (vmaCreateBuffer(m_GraphicsContext.GetAllocator(), &createInfo,
 				&allocInfo, &uniformBuffers[i], &allocations[i], &allocInfos[i]) != VK_SUCCESS)
 				throw std::runtime_error("Failed to create uniform buffer");
+
+#if !defined(NDEBUG)
+			vmaSetAllocationName(m_GraphicsContext.GetAllocator(), allocations[i],
+				"UniformBuffer allocation");
+#endif
+		}
 	}
 
 	UniformBuffer::~UniformBuffer()

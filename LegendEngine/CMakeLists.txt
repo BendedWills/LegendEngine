@@ -14,7 +14,9 @@ message(STATUS "LGENG_TWO_DIM = ${LGENG_TWO_DIM}")
 message(STATUS "LGENG_TETHER_EXTERN = ${LGENG_TETHER_EXTERN}")
 
 # Config
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
+set(TETHER_RENDERING_VULKAN_API ON)
+set(TETHER_VMA_DIR "")
 
 # Tests
 add_subdirectory(Tests/Math)
@@ -50,6 +52,8 @@ set(VK_LIBS)
 set(VK_INCLUDES)
 
 if (LGENG_VULKAN_API)
+	find_package(Vulkan REQUIRED)
+
 	add_definitions(-D_VULKAN_API)
 	add_subdirectory("Vendor/VMA")
 	add_dependencies(${PROJECT_NAME} VulkanMemoryAllocator)

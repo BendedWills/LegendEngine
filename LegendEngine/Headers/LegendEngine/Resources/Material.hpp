@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "LegendEngine/Math/Types.hpp"
+
 namespace LegendEngine::Resources
 {
 	class Material;
@@ -30,22 +32,24 @@ namespace LegendEngine::Resources
 	public:
 		struct MaterialUniforms
 		{
-			float brightness = 1.0f;
+			Color color = Color(1.0f);
 		};
 
 		Material();
 		~Material();
 		LEGENDENGINE_NO_COPY(Material);
 
-		void SetTexture(Texture2D* pTexture);
-		void SetBrightness(float brightness);
-		Texture2D* GetTexture();
+		void SetTexture(Texture2D* toSet);
+		void SetColor(const Color& toSet);
+		Texture2D* GetTexture() const;
+		Color GetColor();
 
 		MaterialUniforms* GetUniforms();
 
 		void Update();
 	private:
 		Texture2D* pTexture = nullptr;
+		Color color = Color(1.0f);
 		MaterialUniforms uniforms;
 
 		bool shouldUpdateUniforms = false;
