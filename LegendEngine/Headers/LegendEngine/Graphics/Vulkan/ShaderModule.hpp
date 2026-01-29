@@ -1,36 +1,24 @@
 #pragma once
 
-#include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Resources/Shader.hpp>
+#include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 
-#include <LegendEngine/Common/Types.hpp>
-#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
-
-#include <vulkan/vulkan.h>
-
-#include <vector>
-
-#ifdef SHADER_COMPILATION
-#include <glslang/SPIRV/GlslangToSpv.h>
-#endif
-
-namespace LegendEngine::Vulkan
+namespace LegendEngine::Graphics::Vulkan
 {
-    class ShaderModule
+    class ShaderModule final
     {
     public:
-        ShaderModule(const TetherVulkan::GraphicsContext& context,
-            const Resources::ShaderStage& stage);
+        ShaderModule(Tether::Rendering::Vulkan::GraphicsContext& context,
+            const Resources::Shader::Stage& stage);
+        ShaderModule(ShaderModule&& other) noexcept;
+        ShaderModule(const ShaderModule&) = delete;
         ~ShaderModule();
-        LEGENDENGINE_NO_COPY(ShaderModule);
 
-        ShaderType GetType();
-        VkShaderModule Get();
-    protected:
-        void OnDispose();
+        VkShaderModule Get() const;
     private:
-        VkDevice m_Device = nullptr;
+        bool m_Moved = false;
 
-        ShaderType type;
-        VkShaderModule shaderModule;
+        Tether::Rendering::Vulkan::GraphicsContext& m_Context;
+        VkShaderModule m_ShaderModule = nullptr;
     };
 }

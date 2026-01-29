@@ -1,3 +1,7 @@
+#pragma once
+
+#include <stdexcept>
+
 namespace LegendEngine
 {
 	template<typename T>
@@ -56,10 +60,8 @@ namespace LegendEngine
 			case 1: return y;
 			case 2: return z;
 			case 3: return w;
+			default: throw std::runtime_error("Vector index out of range!");
 		}
-
-		throw "Vector index out of range!";
-		return x;
 	}
 
 	template<typename T>

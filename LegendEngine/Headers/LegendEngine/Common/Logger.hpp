@@ -15,12 +15,20 @@ namespace LegendEngine
 			ERROR
 		};
 
-		Logger(std::string_view name);
+		explicit Logger(std::string_view name, bool enabled = true,
+			bool debug = false);
 
-		void Log(Level level, std::string_view message);
+		void Log(Level level, std::string_view message) const;
+		void SetEnabled(bool enabled);
+		void SetDebug(bool debug);
+
+		bool IsEnabled() const;
+		bool IsDebugEnabled() const;
 	private:
-		std::string GetFormattedTime();
+		static std::string GetFormattedTime();
 
 		std::string m_Name;
+		bool m_Enabled;
+		bool m_Debug;
 	};
 }

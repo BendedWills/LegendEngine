@@ -1,17 +1,16 @@
-#ifndef _LEGENDENGINE_TYPES_HPP
-#define _LEGENDENGINE_TYPES_HPP
+#pragma once
+
+#include <memory>
 
 namespace LegendEngine
 {
-    enum class LogType
-    {
-        DEBUG,
-        INFO,
-        WARN,
-        ERROR
-    };
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
 
-    enum class RenderingAPI
+    template<typename T>
+    using Scope = std::unique_ptr<T>;
+
+    enum class GraphicsAPI
     {
         VULKAN,
     };
@@ -24,5 +23,3 @@ namespace LegendEngine
         FRAG
     };
 }
-
-#endif //_LEGENDENGINE_TYPES_HPP

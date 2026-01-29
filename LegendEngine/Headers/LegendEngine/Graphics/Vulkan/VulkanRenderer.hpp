@@ -1,186 +1,108 @@
 #pragma once
 
-#include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Graphics/Renderer.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
+#include <Tether/Rendering/Vulkan/DescriptorSet.hpp>
+#include <Tether/Rendering/Vulkan/Surface.hpp>
 
-#include <iostream>
-#include <vector>
-
-#include <LegendEngine/Common/Stopwatch.hpp>
-#include <LegendEngine/Objects/Object.hpp>
-#include <LegendEngine/Objects/Camera.hpp>
-#include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/Graphics/Vulkan/GraphicsContextVk.hpp>
-#include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
-#include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
-#include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
-
-#include <LegendEngine/Graphics/Vulkan/VertexBufferNative.hpp>
-#include <LegendEngine/Graphics/Vulkan/ShaderNative.hpp>
-#include <LegendEngine/Graphics/Vulkan/ObjectNative.hpp>
-#include <LegendEngine/Graphics/Vulkan/Texture2DNative.hpp>
-#include <LegendEngine/Graphics/Vulkan/MaterialNative.hpp>
-
-#include <Tether/Tether.hpp>
-#include <Tether/Rendering/Vulkan/Device.hpp>
 #include <Tether/Rendering/Vulkan/Swapchain.hpp>
+#include <Tether/Rendering/Vulkan/UniformBuffer.hpp>
+#include <Tether/Rendering/Vulkan/Resources/BufferedImage.hpp>
 
-#include <vk_mem_alloc.h>
-
-namespace LegendEngine::Vulkan
+namespace LegendEngine::Graphics::Vulkan
 {
-	class VulkanRenderer : public IRenderer
-	{
-		// Why
-		friend VertexBufferNative;
-		// Are
-		friend ShaderNative;
-		// There
-		friend ObjectNative;
-		// So
-		friend Texture2DNative;
-		// Many
-		friend MaterialNative;
-		// Friend
-		friend Pipeline;
-		// Classes
-		friend UniformBuffer;
-	public:
-		VulkanRenderer(Application& application, Tether::Window& window);
-		~VulkanRenderer() override;
-		
-		VulkanRenderer(const VulkanRenderer&) = delete;
-		VulkanRenderer(VulkanRenderer&&) = delete;
-		VulkanRenderer& operator=(const VulkanRenderer&) = delete;
-		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
-		
-		// Setting changing
-		void SetVSyncEnabled(bool vsync) override;
+    namespace TetherVulkan = Tether::Rendering::Vulkan;
 
-		// Native creation
-		bool CreateObjectNative(Objects::Object* pObject) override;
-		bool CreateVertexBufferNative(LegendEngine::VertexBuffer* buffer) override;
-		bool CreateShaderNative(Resources::Shader* pShader,
-			std::optional<std::span<Resources::ShaderStage>> stages) override;
-		bool CreateTexture2DNative(Resources::Texture2D* pTexture) override;
-		bool CreateMaterialNative(Resources::Material* pMaterial) override;
-	protected:
-		// Vulkan utility functions
-		bool BeginSingleUseCommandBuffer(VkCommandBuffer* pCommandBuffer) const;
-		bool EndSingleUseCommandBuffer(VkCommandBuffer commandBuffer) const;
-		void CreateImageView(VkImageView* pImageView, VkImage image, 
-			VkFormat format, VkImageViewType viewType, VkImageAspectFlags aspectFlags) const;
-		bool CreateStagingBuffer(VkBuffer* pBuffer, VmaAllocation* pAllocation,
-			VmaAllocationInfo* pAllocInfo, uint64_t size) const;
-		void ChangeImageLayout(VkImage image, VkFormat format, 
-			VkImageLayout oldLayout, VkImageLayout newLayout) const;
-		bool CopyBufferToImage(VkBuffer buffer, VkImage image, uint64_t width,
-			uint64_t height) const;
-		[[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
-			VkImageTiling tiling, VkFormatFeatureFlags features) const;
-		[[nodiscard]] VkFormat FindDepthFormat() const;
-		TetherVulkan::SwapchainDetails QuerySwapchainSupport();
+    class VulkanRenderer final : public Renderer
+    {
+    public:
+        explicit VulkanRenderer(
+            Application& app,
+            TetherVulkan::GraphicsContext& tetherCtx
+        );
+        ~VulkanRenderer() override;
 
-		Application& m_Application;
-		Tether::Window& m_Window;
+        Scope<Resources::Shader> CreateShader(
+            std::span<Resources::Shader::Stage> stages) override;
 
-		TetherVulkan::GraphicsContext& m_GraphicsContext;
+        void SetVSyncEnabled(bool vsync) override;
+        void NotifyWindowResized() override;
+    private:
+        struct CameraUniforms
+        {
+            Matrix4x4f view;
+            Matrix4x4f projection;
+        };
 
-		VkInstance m_Instance;
-		VkDevice m_Device;
-		VkPhysicalDevice m_PhysicalDevice;
-		VkQueue m_Queue = nullptr;
+        bool StartFrame() override;
+        void BeginCommandBuffer();
+        void UseMaterial(Resources::Material* pMaterial) override;
+        void DrawMesh(const Components::MeshComponent& mesh) override;
+        void EndFrame() override;
 
-		TetherVulkan::Surface m_Surface;
+        void UpdateCameraUniforms(const Objects::Camera& camera) override;
 
-		std::optional<TetherVulkan::Swapchain> m_Swapchain;
+        void CreateSwapchain();
+        void CreateRenderPass();
+        void CreateUniforms();
+        void CreateShaders();
+        void CreateDepthImages();
+        void CreateFramebuffers();
+        void CreateCommandBuffers();
+        void CreateSyncObjects();
 
-		// Descriptor set stuff
-		VkDescriptorSetLayout objectLayout{};
-		VkDescriptorSetLayout cameraLayout{};
-		VkDescriptorSetLayout materialLayout{};
-		std::optional<Vulkan::UniformManager> uniformManager;
-		std::optional<Vulkan::UniformBuffer> cameraUniform;
+        void CreateCameraDescriptorSetLayout();
+        void CreateMaterialDescriptorSetLayout();
 
-		VkRenderPass renderPass{};
-		VkCommandPool m_CommandPool = nullptr;
+        TetherVulkan::SwapchainDetails QuerySwapchainSupport();
+        void ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details);
+        [[nodiscard]] VkFormat FindDepthFormat() const;
+        [[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
+            VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
-		// Shader stuff
-		Ref<Resources::Shader> solidShader;
-		Ref<Resources::Shader> texturedShader;
+        void RecreateSwapchain();
+        void DestroySwapchain();
 
-		VmaAllocator m_Allocator = nullptr;
+        bool m_VSync = false;
+        bool m_ShouldRecreateSwapchain = false;
 
-		VkImage depthImage{};
-		VmaAllocation depthAlloc{};
-		VkImageView depthImageView{};
+        TetherVulkan::GraphicsContext& m_Context;
+        Tether::Window& m_Window;
+        TetherVulkan::Surface m_Surface;
 
-		std::vector<VkFramebuffer> framebuffers;
-		std::vector<VkSemaphore> imageAvailableSemaphores;
-		std::vector<VkSemaphore> renderFinishedSemaphores;
-		std::vector<VkFence> inFlightFences;
-		std::vector<VkImage> swapchainImages;
-		std::vector<VkImageView> swapchainImageViews;
-		std::vector<VkCommandBuffer> commandBuffers;
+        std::optional<TetherVulkan::Swapchain> m_Swapchain;
+        VkRenderPass m_RenderPass;
+        VkDescriptorSetLayout m_CameraLayout = nullptr;
+        VkDescriptorSetLayout m_MaterialLayout = nullptr;
+        std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
+        std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
+        std::optional<TetherVulkan::DescriptorSet> m_DefaultMatSet;
+        std::optional<TetherVulkan::UniformBuffer> m_CameraUniforms;
+        std::optional<TetherVulkan::UniformBuffer> m_DefaultMatUniforms;
 
-		VkSurfaceFormatKHR m_SurfaceFormat{};
+        std::optional<VulkanShader> m_SolidShader;
+        std::optional<VulkanShader> m_TexturedShader;
 
-		const int MAX_FRAMES_IN_FLIGHT = 2;
-		uint64_t currentFrame = 0;
+        std::optional<TetherVulkan::BufferedImage> m_DepthImage;
+        VkImageView m_DepthImageView;
 
-		const std::vector<const char*> deviceExtensions =
-		{
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
+        std::vector<VkImage> m_SwapchainImages;
+        std::vector<VkImageView> m_SwapchainImageViews;
+        std::vector<VkFramebuffer> m_Framebuffers;
+        std::vector<VkCommandBuffer> m_CommandBuffers;
+        std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+        std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+        std::vector<VkFence> m_InFlightFences;
 
-		Stopwatch timer;
-	private:
-		bool RecreateSwapchain();
+        VkDevice m_Device;
+        VkPhysicalDevice m_PhysicalDevice;
 
-		// Command buffers
-		bool RecreateCommandBuffers(uint32_t imageIndex);
-		bool PopulateCommandBuffer(VkCommandBuffer buffer, VkFramebuffer framebuffer,
-			uint64_t commandBufferIndex);
-		void PopulateByScene(VkCommandBuffer buffer, VkFramebuffer framebuffer,
-			uint64_t commandBufferIndex, Scene* pScene);
+        VkSurfaceFormatKHR m_SurfaceFormat{};
 
-		void CreateShaders() override;
+        uint32_t m_CurrentFrame = 0;
+        uint32_t m_CurrentImageIndex = 0;
 
-		// Renderer virtual functions
-		void OnWindowResize();
-		bool OnRenderFrame() override;
-
-		// Device helper functions
-		void ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details);
-		
-		// Init functions
-		void InitSwapchain();
-		void InitRenderPass();
-		void InitUniforms();
-		void InitDepthImages();
-		void InitFramebuffers();
-		void InitCommandBuffers();
-		void InitSyncObjects();
-
-		void CreateDefaultMaterialUniforms();
-
-		static void UpdateDefaultMaterialUniforms();
-
-		// Uniforms
-		void UpdateUniforms(uint64_t imageIndex);
-
-		static void UpdateSceneUniforms(uint64_t imageIndex, Scene* pScene);
-
-		bool DrawFrame();
-
-		// Disposal functions (lol there's just one)
-		void DisposeSwapchain();
-
-		VkDescriptorSet m_Sets[3] = {};
-
-		bool shouldRecreateSwapchain = false;
-		bool enableVsync = false;
-
-		std::optional<Vulkan::UniformBuffer> m_DefaultMatUniform;
-		VkDescriptorPool pool{};
-	};
+        VkDescriptorSet m_Sets[2] = {};
+        VulkanShader* m_pCurrentShader = &m_SolidShader.value();
+    };
 }

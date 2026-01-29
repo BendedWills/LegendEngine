@@ -1,115 +1,60 @@
-// A base object class to then be inherited by other types of objects.
+#pragma once
 
-#ifndef _LEGENDENGINE_OBJECT_HPP
-#define _LEGENDENGINE_OBJECT_HPP
-
+#include <LegendEngine/ScriptHolder.hpp>
+#include <LegendEngine/Components/ComponentHolder.hpp>
 #include <LegendEngine/Math/Math.hpp>
-#include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Common/IDisposable.hpp>
-#include <LegendEngine/Common/IApplicationHolder.hpp>
-#include <LegendEngine/Common/Ref.hpp>
-#include <LegendEngine/Common/NativeHolder.hpp>
-#include <LegendEngine/Objects/Components/ComponentHolder.hpp>
-#include <LegendEngine/Objects/Scripts/ScriptHolder.hpp>
-
-#include <string>
-#include <vector>
 
 namespace LegendEngine
 {
-    class Application;
     class Scene;
-    class IRenderer;
 }
 
 namespace LegendEngine::Objects
 {
-    class Object;
-    class IObjectNative
+    class Object : public ScriptHolder, public Components::ComponentHolder
     {
-        friend Object;
     public:
-        LEGENDENGINE_NO_COPY(IObjectNative);
+        using ScriptsType = std::unordered_map<std::type_index,
+            Scope<Script>>;
 
-        IObjectNative(Object* pObject)
-            :
-            pObject(pObject)
-        {}
-
-		struct ObjectUniforms
-		{
-			Matrix4x4f transform;
-            // Material material;
-		};
-
-        void UpdateUniforms();
-    protected:
-		virtual void OnUniformsUpdate() {}
-		virtual void OnDispose() {}
-
-        Object* pObject = nullptr;
-    };
-
-    class Object : 
-        public Components::ComponentHolder, 
-        public Scripts::ScriptHolder, 
-        public NativeHolder<IObjectNative>,
-        public IApplicationHolder
-    {
-        friend Application;
-        friend Scene;
-        friend IObjectNative;
-        friend LegendEngine::IRenderer;
-    public:
+        explicit Object(bool calculatesMatrices = true);
+        ~Object() override;
         LEGENDENGINE_NO_COPY(Object);
-        
-        Object();
-        virtual ~Object();
 
-        void AddPosition(Vector3f position);
-        void AddScale(Vector3f scale);
-        void SetPosition(Vector3f position);
-        void SetScale(Vector3f scale);
+        void Enable();
+        void Disable();
+
+        void AddPosition(const Vector3f& position);
+        void AddScale(const Vector3f& scale);
+        void SetPosition(const Vector3f& position);
+        void SetScale(const Vector3f& scale);
         Vector3f GetPosition();
         Vector3f GetScale();
 
-		void SetRotation(Vector3f rotation);
-		void SetRotation(Quaternion q);
-		Quaternion GetRotation();
+        void SetRotation(const Vector3f& rotation);
+        void SetRotation(const Quaternion& q);
+        Quaternion GetRotation();
 
-        void SetEnabled(bool enabled);
-        bool IsEnabled();
+        bool IsEnabled() const;
+        bool IsDirty() const;
 
-        Matrix4x4f& GetTransformationMatrix();
-    protected:
-        void AddToScene(Scene* pScene);
-        void RemoveFromScene(Scene* pScene);
-
-        virtual void OnPositionChange() {}
-        virtual void OnRotationChange() {}
-		virtual void OnScaleChange() {}
-
-		Vector3f position;
-		Vector3f scale;
-
-		Quaternion rotation;
-
-        Matrix4x4f transform;
-
-        bool objCalculateMatrices = true;
-        bool enabled = true;
-
-        bool updateUniforms = false;
-    private:
-        void OnComponentAdd(const std::string& typeName, 
-            Components::Component* pComponent);
-        void OnComponentRemove(const std::string& typeName, 
-            Components::Component* pComponent);
-        
         void CalculateTransformMatrix();
-        
-        std::vector<Scene*> scenes;
+        Matrix4x4f GetTransformationMatrix() const;
+    protected:
+        virtual void TransformChanged() {}
+
+        Vector3f m_Position;
+        Vector3f m_Scale;
+
+        Quaternion m_Rotation;
+
+        Matrix4x4f m_Transform;
+    private:
+        void SpawnAddEvent(std::type_index type, Components::Component& component) override;
+        void SpawnRemoveEvent(std::type_index type, Components::Component& component) override;
+
+        bool m_Enabled = true;
+        bool m_Dirty = false;
+        bool m_CalculatesMatrices;
     };
 }
-
-#endif //_LEGENDENGINE_OBJECT_HPP

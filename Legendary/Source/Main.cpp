@@ -3,6 +3,7 @@
 #include <thread>
 
 #include <LegendEngine/LegendEngine.hpp>
+#include <LegendEngine/Common/Logger.hpp>
 
 using namespace LegendEngine;
 using namespace Objects;
@@ -11,22 +12,16 @@ using namespace Components;
 
 using namespace std::literals::chrono_literals;
 
-class TestScript : public Scripts::Script
+class TestScript final : public Script
 {
 public:
-	TestScript(Material* pMaterial) 
+	explicit TestScript(Object* pObject, Material* material)
 		:
-		pMaterial(pMaterial)
-	{}
-
-	void OnInit()
+		Script(*pObject),
+		m_Material(*material)
 	{
 		// Add the mesh component
 		{
-			float r = (float)rand() / RAND_MAX;
-			float g = (float)rand() / RAND_MAX;
-			float b = (float)rand() / RAND_MAX;
-			
 			VertexTypes::Vertex3 testVertices[] =
 			{
 				{  0.5f,  0.5f, 0.0f,  1.0f, 1.0f },
@@ -41,38 +36,34 @@ public:
 				1, 2, 3
 			};
 
-			MeshComponent* mesh = pObject->AddComponent<Components::MeshComponent>();
-			mesh->Init(testVertices, 4, indices, 6);
-			mesh->SetMaterial(pMaterial);
+			auto& mesh = m_Object.AddComponent<MeshComponent>(testVertices, 4, indices, 6);
+			mesh.SetMaterial(&m_Material);
 		}
 
-		pObject->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
+		m_Object.SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
 	}
 private:
-	Material* pMaterial = nullptr;
+	Material& m_Material;
 };
 
-class CameraScript : public Scripts::Script, Input::InputListener
+class CameraScript final : public Script, Input::InputListener
 {
 public:
-	CameraScript(Camera* pCamera) 
+	explicit CameraScript(Camera* camera)
 		:
-		pCamera(pCamera)
-	{}
-
-	void OnInit()
+		Script(*camera),
+		m_Camera(*camera)
 	{
-		SetRecieveUpdates(true);
-		GetApplication()->GetWindow().AddInputListener(*this, Input::InputType::KEY);
-		GetApplication()->GetWindow().AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
+		Application& app = Application::Get();
+		Utils::Window& window = app.GetWindow();
+		window.AddInputListener(*this, Input::InputType::KEY);
+		window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
+
+		ListenForUpdates();
 	}
 
-	void OnUpdate(float delta)
+	void OnUpdate(const float delta) override
 	{
-		float x = (float)rand() / RAND_MAX * 2 - 1;
-		float y = (float)rand() / RAND_MAX * 2 - 1;
-		float z = (float)rand() / RAND_MAX * 2 - 1;
-
 		Vector2f moveDir;
 		if (keys.w)
 			moveDir += Vector2f(1, 0);
@@ -87,23 +78,23 @@ public:
 		if (keys.ctrl)
 			normMoveDir *= 3.0f;
 
-		Vector3f forward = pCamera->GetForwardVector();
+		Vector3f forward = m_Camera.GetForwardVector();
 		forward.y = 0;
 		forward = Math::Normalize(forward);
 
-		pObject->AddPosition(forward * normMoveDir.x * delta);
-		pObject->AddPosition(pCamera->GetRightVector() * normMoveDir.y * delta);
+		m_Object.AddPosition(forward * normMoveDir.x * delta);
+		m_Object.AddPosition(m_Camera.GetRightVector() * normMoveDir.y * delta);
 
 		// Vertical movement
 		if (keys.space)
-			pObject->AddPosition(Vector3f(0, 1, 0) * delta);
+			m_Object.AddPosition(Vector3f(0, 1, 0) * delta);
 		if (keys.shift)
-			pObject->AddPosition(Vector3f(0, -1, 0) * delta);
+			m_Object.AddPosition(Vector3f(0, -1, 0) * delta);
 	}
 
-	void OnKey(Input::KeyInfo& info)
+	void OnKey(Input::KeyInfo& info) override
 	{
-		bool pressed = info.IsPressed();
+		const bool pressed = info.IsPressed();
 		switch (info.GetKey())
 		{
 			case Utils::Keycodes::KEY_W: keys.w = pressed; break;
@@ -114,14 +105,16 @@ public:
 			case Utils::Keycodes::KEY_SPACE: keys.space = pressed; break;
 			case Utils::Keycodes::KEY_LEFT_SHIFT: keys.shift = pressed; break;
 			case Utils::Keycodes::KEY_LEFT_CONTROL: keys.ctrl = pressed; break;
+
+			default: break;
 		}
 	}
 
 	const float sense = 0.04f;
-	void OnRawMouseMove(Input::RawMouseMoveInfo& info)
+	void OnRawMouseMove(Input::RawMouseMoveInfo& info) override
 	{
-		horz += info.GetRawX() * sense;
-		vert += info.GetRawY() * sense;
+		horz += static_cast<float>(info.GetRawX()) * sense;
+		vert += static_cast<float>(info.GetRawY()) * sense;
 
 		if (vert > 89.9f)
 			vert = 89.9f;
@@ -131,7 +124,7 @@ public:
 		Quaternion q = Math::AngleAxis(Math::Radians(vert), Vector3f(1, 0, 0));
 		q *= Math::AngleAxis(Math::Radians(horz), Vector3f(0, 1, 0));
 		
-		pObject->SetRotation(q);
+		m_Object.SetRotation(q);
 	}
 
 	struct Keys
@@ -149,109 +142,105 @@ public:
 	float horz = 0.0f;
 	float vert = 0.0f;
 private:
-	Camera* pCamera;
+	Camera& m_Camera;
 };
 
-class Triangle : public Application
+class Legendary final : public Application
 {
 public:
-	Triangle()
+	Legendary()
 		:
 #if !defined(NDEBUG)
-		Application("Legendary", true, true, RenderingAPI::VULKAN)
+		Application("Legendary", true, true, GraphicsAPI::VULKAN),
 #else
-		Application("Legendary", false, false, RenderingAPI::VULKAN)
+		Application("Legendary", false, false, RenderingAPI::VULKAN),
 #endif
+		m_Logger(GetLogger())
 	{
-		GetWindow().SetCursorMode(Utils::Window::CursorMode::DISABLED);
+		SetupApplication();
+	}
+
+	void OnUpdate(const float delta) override
+	{
+		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
+		{
+			m_Logger.Log(Logger::Level::INFO,
+				"FPS: " + std::to_string(1.0f / delta));
+			fpsTimer.Set();
+		}
+	}
+private:
+	void OnSetup() override
+	{
+		GetWindow().SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		GetWindow().SetRawInputEnabled(true);
 
-		InitScene(testScene);
-
 		// Create the camera
-		camera = CreateObject<Camera>();
+		camera = Objects::Create<Camera>();
 		camera->AddScript<CameraScript>(camera.get());
 		camera->SetNearZ(0.01f);
 
 		SetActiveCamera(camera.get());
 
-		// Create the materials
-		{
-			material = CreateResource<Material>();
-			material2 = CreateResource<Material>();
+		CreateMaterials();
+		CreateObjects();
 
-			texture = CreateResource<Texture2D>();
-			texture->Init("Assets/planks.png");
-			texture2 = CreateResource<Texture2D>();
-			texture2->Init("Assets/tiles.png");
-
-			material->SetTexture(texture.get());
-			material2->SetTexture(texture2.get());
-		}
-
-		// Create the objects
-		{
-			cube1 = CreateObject<Object>();
-			cube1->AddScript<TestScript>(material.get());
-			cube1->SetPosition(Vector3f(0, 0.5f, 0));
-
-			cube2 = CreateObject<Object>();
-			cube2->AddScript<TestScript>(material.get());
-			cube2->SetPosition(Vector3f(3, 0.5f, 0));
-
-			floor = CreateObject<Object>();
-			floor->AddScript<TestScript>(material2.get());
-			floor->SetScale(Vector3f(10));
-			floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
-
-			// Add the objects to the scene
-			testScene.AddObject(cube1.get());
-			testScene.AddObject(cube2.get());
-			GetDefaultScene()->AddObject(floor.get());
-		}
-
-		// Lastly, set the active scene.
-		// Setting the active scene once everything is initialized gains some
-		// performance since objects notify the scene when they are added for misc
-		// init tasks.
 		SetActiveScene(testScene);
-
-		FinishCreation();
 	}
 
-	~Triangle()
+	void CreateMaterials()
 	{
-		testScene.ClearObjects();
+		material = Material::Create();
+		material2 = Material::Create();
 
-		material->Dispose();
-		material2->Dispose();
-		texture->Dispose();
-		texture2->Dispose();
+		IO::TextureLoader planksLoader;
+		IO::TextureLoader tilesLoader;
+		planksLoader.FromFile("Assets/planks.png");
+		tilesLoader.FromFile("Assets/tiles.png");
+
+		texture = Texture2D::Create(planksLoader);
+		texture2 = Texture2D::Create(tilesLoader);
+
+		material->SetTexture(texture.get());
+		material2->SetTexture(texture2.get());
 	}
 
-	void OnUpdate(float delta)
+	void CreateObjects()
 	{
-		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
-		{
-			Log("FPS: " + std::to_string(1.0f / delta), LogType::INFO);
-			fpsTimer.Set();
-		}
+		cube1 = Objects::Create<Object>();
+		cube1->AddScript<TestScript>(cube1.get(), material.get());
+		cube1->SetPosition(Vector3f(0, 0.5f, 0));
+
+		cube2 = Objects::Create<Object>();
+		cube2->AddScript<TestScript>(cube2.get(), material.get());
+		cube2->SetPosition(Vector3f(3, 0.5f, 0));
+
+		floor = Objects::Create<Object>();
+		floor->AddScript<TestScript>(floor.get(), material2.get());
+		floor->SetScale(Vector3f(10));
+		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
+
+		testScene.AddObject(*cube1.get());
+		testScene.AddObject(*cube2.get());
+		GetGlobalScene().AddObject(*floor.get());
 	}
-private:
+
 	Stopwatch fpsTimer;
 	Stopwatch timer;
 
 	Scene testScene;
 
-	Ref<Camera> camera;
-	Ref<Object> cube1;
-	Ref<Object> cube2;
-	Ref<Object> floor;
+	std::unique_ptr<Camera> camera;
+	std::unique_ptr<Object> cube1;
+	std::unique_ptr<Object> cube2;
+	std::unique_ptr<Object> floor;
 
-	Ref<Material> material;
-	Ref<Material> material2;
-	Ref<Texture2D> texture;
-	Ref<Texture2D> texture2;
+	std::unique_ptr<Material> material;
+	std::unique_ptr<Material> material2;
+	std::unique_ptr<Texture2D> texture;
+	std::unique_ptr<Texture2D> texture2;
+
+	Logger& m_Logger;
 };
 
 #if defined(_WIN32) && !defined(_DEBUG)
@@ -262,5 +251,5 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 int main()
 #endif
 {
-	return Application::RunApplication<Triangle>(RenderingAPI::VULKAN, true);
+	return Application::RunApplication<Legendary>();
 }

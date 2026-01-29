@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform Camera
     mat4 projection;
 } cam;
 
-layout(set = 2, binding = 0) uniform Object
+layout(push_constant) uniform Object
 {
     mat4 transform;
 } obj;

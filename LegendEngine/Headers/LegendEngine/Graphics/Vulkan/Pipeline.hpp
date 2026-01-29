@@ -1,38 +1,42 @@
-/*
- * The shader program class wraps the pipeline, pipeline layout, and descriptor set
- * layout.
- */
-
 #pragma once
 
 #include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Math/Types.hpp>
+#include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 
-#include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
-#include <LegendEngine/Graphics/Vulkan/UniformBuffer.hpp>
-#include <LegendEngine/Graphics/Vulkan/Common/PipelineInfo.hpp>
+#include <vulkan/vulkan.h>
 
-#include <vector>
-
-namespace LegendEngine::Vulkan
+namespace LegendEngine::Graphics::Vulkan
 {
-	class VulkanRenderer;
-	class Pipeline
-	{
-	public:
-		Pipeline(
-			TetherVulkan::GraphicsContext& context, 
-			VkExtent2D swapchainExtent,
-			VkRenderPass renderPass,
-			const PipelineInfo& pipelineInfo);
-		~Pipeline();
-		LEGENDENGINE_NO_COPY(Pipeline);
+    class Pipeline final
+    {
+    public:
+        struct Info
+        {
+            uint32_t stageCount;
+            VkPipelineShaderStageCreateInfo* pStages;
+            uint32_t setCount;
+            VkDescriptorSetLayout* pSetLayouts;
+            uint32_t dynamicStateCount;
+            VkDynamicState* pDynamicStates;
+        };
 
-		VkPipeline GetPipeline();
-		VkPipelineLayout GetPipelineLayout();
-	private:
-		VkDevice m_Device = nullptr;
-		
-		VkPipeline pipeline;
-		VkPipelineLayout pipelineLayout;
-	};
+        struct ObjectTransform
+        {
+            Matrix4x4f transform;
+        };
+
+        Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context,
+            const Info& info, VkRenderPass renderPass);
+        ~Pipeline();
+        LEGENDENGINE_NO_COPY(Pipeline);
+
+        VkPipeline Get() const;
+        VkPipelineLayout GetPipelineLayout() const;
+    private:
+        Tether::Rendering::Vulkan::GraphicsContext& m_Context;
+
+        VkPipelineLayout m_PipelineLayout = nullptr;
+        VkPipeline m_Pipeline = nullptr;
+    };
 }

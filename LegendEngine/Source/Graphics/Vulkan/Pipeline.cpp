@@ -1,27 +1,30 @@
-#include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
 
-#include <stdlib.h>
-
-namespace LegendEngine::Vulkan
+namespace LegendEngine::Graphics::Vulkan
 {
-	Pipeline::Pipeline(
-		TetherVulkan::GraphicsContext& context,
-		VkExtent2D swapchainExtent,
-		VkRenderPass renderPass,
-		const PipelineInfo& pipelineInfo
-	)
-		:
-		m_Device(context.GetDevice())
-	{
-		VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
-		pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutDesc.setLayoutCount = pipelineInfo.setCount;
-		pipelineLayoutDesc.pSetLayouts = pipelineInfo.pSetLayouts;
+    Pipeline::Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context, const Info& info,
+        VkRenderPass renderPass)
+        :
+        m_Context(context)
+    {
+        // This updates every frame so it literally doesn't matter
+        VkExtent2D extent = { 1280, 720 };
 
-		if (vkCreatePipelineLayout(m_Device, &pipelineLayoutDesc,
-			nullptr, &pipelineLayout) != VK_SUCCESS)
+        VkPushConstantRange pushConstant{};
+        pushConstant.size = sizeof(ObjectTransform);
+        pushConstant.offset = 0;
+        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
+		pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutDesc.setLayoutCount = info.setCount;
+		pipelineLayoutDesc.pSetLayouts = info.pSetLayouts;
+        pipelineLayoutDesc.pushConstantRangeCount = 1;
+        pipelineLayoutDesc.pPushConstantRanges = &pushConstant;
+
+		if (vkCreatePipelineLayout(m_Context.GetDevice(), &pipelineLayoutDesc,
+			nullptr, &m_PipelineLayout) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create pipeline layout");
 
 		std::vector<VkVertexInputBindingDescription> bindingDescs;
@@ -67,16 +70,16 @@ namespace LegendEngine::Vulkan
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)swapchainExtent.width;
-		viewport.height = (float)swapchainExtent.height;
+		viewport.width = static_cast<float>(extent.width);
+		viewport.height = static_cast<float>(extent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor{};
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		scissor.extent.width = swapchainExtent.width;
-		scissor.extent.height = swapchainExtent.height;
+		scissor.extent.width = extent.width;
+		scissor.extent.height = extent.height;
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -135,8 +138,8 @@ namespace LegendEngine::Vulkan
 
 		VkPipelineDynamicStateCreateInfo dynamicState{};
 		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		dynamicState.dynamicStateCount = pipelineInfo.dynamicStateCount;
-		dynamicState.pDynamicStates = pipelineInfo.pDynamicStates;
+		dynamicState.dynamicStateCount = info.dynamicStateCount;
+		dynamicState.pDynamicStates = info.pDynamicStates;
 
 		// Oh, yes, cool thing about Vulkan, you can actually have multiple shader
 		// stages for one shader module. That means that you can have a VSMain and
@@ -144,41 +147,41 @@ namespace LegendEngine::Vulkan
 
 		VkGraphicsPipelineCreateInfo pipelineDesc{};
 		pipelineDesc.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineDesc.stageCount = pipelineInfo.stageCount;
-		pipelineDesc.pStages = pipelineInfo.pStages;
+		pipelineDesc.stageCount = info.stageCount;
+		pipelineDesc.pStages = info.pStages;
 		pipelineDesc.pVertexInputState = &vertexInputInfo;
 		pipelineDesc.pInputAssemblyState = &inputAssembly;
 		pipelineDesc.pViewportState = &viewportState;
 		pipelineDesc.pRasterizationState = &rasterizer;
 		pipelineDesc.pMultisampleState = &multisampleState;
 		pipelineDesc.pColorBlendState = &colorBlending;
-		pipelineDesc.layout = pipelineLayout;
+		pipelineDesc.layout = m_PipelineLayout;
 		pipelineDesc.renderPass = renderPass;
 		pipelineDesc.subpass = 0;
 		pipelineDesc.basePipelineHandle = VK_NULL_HANDLE;
 		pipelineDesc.pDepthStencilState = &depthStencil;
 
-		if (pipelineInfo.pDynamicStates && pipelineInfo.dynamicStateCount > 0)
+		if (info.pDynamicStates && info.dynamicStateCount > 0)
 			pipelineDesc.pDynamicState = &dynamicState;
 
-		if (vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE,
-			1, &pipelineDesc, nullptr, &pipeline) != VK_SUCCESS)
+		if (vkCreateGraphicsPipelines(m_Context.GetDevice(), VK_NULL_HANDLE,
+			1, &pipelineDesc, nullptr, &m_Pipeline) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create graphics pipeline");
-	}
+    }
 
-	Pipeline::~Pipeline()
-	{
-		vkDestroyPipeline(m_Device, pipeline, nullptr);
-		vkDestroyPipelineLayout(m_Device, pipelineLayout, nullptr);
-	}
+    Pipeline::~Pipeline()
+    {
+        vkDestroyPipeline(m_Context.GetDevice(), m_Pipeline, nullptr);
+        vkDestroyPipelineLayout(m_Context.GetDevice(), m_PipelineLayout, nullptr);
+    }
 
-	VkPipeline Pipeline::GetPipeline()
-	{
-		return pipeline;
-	}
+    VkPipeline Pipeline::Get() const
+    {
+        return m_Pipeline;
+    }
 
-	VkPipelineLayout Pipeline::GetPipelineLayout()
-	{
-		return pipelineLayout;
-	}
+    VkPipelineLayout Pipeline::GetPipelineLayout() const
+    {
+        return m_PipelineLayout;
+    }
 }

@@ -1,158 +1,121 @@
 #include <LegendEngine/Objects/Object.hpp>
-#include <LegendEngine/Scene.hpp>
+
 #include <LegendEngine/Application.hpp>
-#include <Tether/Common/VectorUtils.hpp>
 
-using namespace LegendEngine;
-using namespace LegendEngine::Objects;
+#include <LegendEngine/Events/ComponentAddedEvent.hpp>
+#include <LegendEngine/Events/ComponentRemovedEvent.hpp>
+#include <LegendEngine/Events/ObjectDestroyedEvent.hpp>
 
-void IObjectNative::UpdateUniforms()
+namespace LegendEngine::Objects
 {
-    if (!pObject->updateUniforms)
-        return;
+    Object::Object(const bool calculatesMatrices)
+        :
+        m_Transform(Matrix4x4f::MakeIdentity()),
+        m_CalculatesMatrices(calculatesMatrices)
+    {
+        SetObject(this);
+        CalculateTransformMatrix();
 
-    OnUniformsUpdate();
+        std::stringstream str;
+        str << "Created Object (" << reinterpret_cast<uint64_t>(this) << ")";
 
-    pObject->updateUniforms = false;
-}
+        Application::Get().GetLogger().Log(Logger::Level::DEBUG, str.str());
+    }
 
-Object::Object()
-	:
-	scale(1.0f),
-	Components::ComponentHolder(this),
-    Scripts::ScriptHolder(this)
-{
-    transform = Matrix4x4f::MakeIdentity();
+    Object::~Object()
+    {
+        Application::Get().GetEventBus().DispatchEvent<Events::ObjectDestroyedEvent>(
+            Events::ObjectDestroyedEvent(*this));
+    }
 
-    CalculateTransformMatrix();
-}
+    void Object::AddPosition(const Vector3f& position)
+    {
+        m_Position += position;
+        m_Dirty = true;
+    }
 
-Object::~Object()
-{
-	if (nativeSet)
-		native->OnDispose();
+    void Object::AddScale(const Vector3f& scale)
+    {
+        m_Scale += scale;
+        m_Dirty = true;
+    }
 
-	ClearComponents();
-	ClearScripts();
+    void Object::SetPosition(const Vector3f& position)
+    {
+        m_Position = position;
+        m_Dirty = true;
+    }
 
-	pApplication->_OnObjectDispose(this);
-}
+    void Object::SetScale(const Vector3f& scale)
+    {
+        m_Scale = scale;
+        m_Dirty = true;
+    }
 
-void Object::AddPosition(Vector3f position)
-{
-    this->position += position;
-    CalculateTransformMatrix();
-    OnPositionChange();
-}
+    Vector3f Object::GetPosition()
+    {
+        return m_Position;
+    }
 
-void Object::AddScale(Vector3f scale)
-{
-    this->scale += scale;
-    CalculateTransformMatrix();
-    OnScaleChange();
-}
+    Vector3f Object::GetScale()
+    {
+        return m_Scale;
+    }
 
-void Object::SetPosition(Vector3f position)
-{
-	this->position = position;
-	CalculateTransformMatrix();
-	OnPositionChange();
-}
+    void Object::SetRotation(const Vector3f& rotation)
+    {
+        m_Rotation = Math::Euler(rotation);
+        m_Dirty = true;
+    }
 
-void Object::SetScale(Vector3f scale)
-{
-	this->scale = scale;
-	CalculateTransformMatrix();
-	OnScaleChange();
-}
+    void Object::SetRotation(const Quaternion& q)
+    {
+        m_Rotation = q;
+        m_Dirty = true;
+    }
 
-Vector3f Object::GetPosition()
-{
-	return position;
-}
+    Quaternion Object::GetRotation()
+    {
+        return m_Rotation;
+    }
 
-Vector3f Object::GetScale()
-{
-    return scale;
-}
+    bool Object::IsDirty() const
+    {
+        return m_Dirty;
+    }
 
-void Object::SetRotation(Vector3f rot)
-{
-	this->rotation = Math::Euler(rot);
-	CalculateTransformMatrix();
-	OnRotationChange();
-}
+    Matrix4x4f Object::GetTransformationMatrix() const
+    {
+        return m_Transform;
+    }
 
-void Object::SetRotation(Quaternion rotation)
-{
-	this->rotation = rotation;
-	CalculateTransformMatrix();
-	OnRotationChange();
-}
+    void Object::CalculateTransformMatrix()
+    {
+        if (!m_CalculatesMatrices)
+            return;
 
-Quaternion Object::GetRotation()
-{
-	return rotation;
-}
+        m_Transform = Matrix4x4f::MakeIdentity();
+        m_Transform = Math::Translate(m_Transform, m_Position);
+        m_Transform = Math::Scale(m_Transform, m_Scale);
+        m_Transform *= Matrix4x4f(m_Rotation);
 
-void Object::SetEnabled(bool enabled)
-{
-    if (this->enabled != enabled)
-		if (enabled)
-			for (Scene* pScene : scenes)
-				pScene->OnObjectEnable(this);
-		else
-			for (Scene* pScene : scenes)
-				pScene->OnObjectDisable(this);
+        TransformChanged();
+        m_Dirty = false;
+    }
 
-    this->enabled = enabled;
-}
+    void Object::SpawnAddEvent(const std::type_index type,
+        Components::Component& component)
+    {
+        OnComponentAdd(type, component);
+        Application::Get().GetEventBus().DispatchEvent<Events::ComponentAddedEvent>(
+            Events::ComponentAddedEvent(*this, component, type));
+    }
 
-bool Object::IsEnabled()
-{
-    return enabled;
-}
-
-Matrix4x4f& Object::GetTransformationMatrix()
-{
-    return transform;
-}
-
-void Object::CalculateTransformMatrix()
-{
-    if (!objCalculateMatrices)
-        return;
-
-    transform = Matrix4x4f::MakeIdentity();
-    transform = Math::Translate(transform, position);
-    transform = Math::Scale(transform, scale);
-    transform *= Matrix4x4f(rotation);
-	
-    updateUniforms = true;
-}
-
-void Object::AddToScene(Scene* pScene)
-{
-    scenes.push_back(pScene);
-}
-
-void Object::RemoveFromScene(Scene* pScene)
-{
-    for (uint64_t i = 0; i < scenes.size(); i++)
-        if (scenes[i] == pScene)
-            scenes.erase(scenes.begin() + i);
-}
-
-void Object::OnComponentAdd(const std::string& typeName, 
-    Components::Component* pComponent)
-{
-    for (Scene* pScene : scenes)
-        pScene->OnObjectComponentAdd(this, typeName, pComponent);
-}
-
-void Object::OnComponentRemove(const std::string& typeName, 
-    Components::Component* pComponent)
-{
-    for (Scene* pScene : scenes)
-        pScene->OnObjectComponentRemove(this, typeName, pComponent);
+    void Object::SpawnRemoveEvent(const std::type_index type,
+        Components::Component& component)
+    {
+        OnComponentRemove(type, component);
+        Application::Get().GetEventBus().DispatchEvent<Events::ComponentRemovedEvent>(
+            Events::ComponentRemovedEvent(*this, component, type));
+    }
 }

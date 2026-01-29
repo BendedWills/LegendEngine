@@ -25,20 +25,72 @@ if (NOT LGENG_TETHER_EXTERN)
 	add_subdirectory(Vendor/Tether)
 endif()
 
-# Collect all sources
-file(GLOB_RECURSE SOURCES 
-	"Vendor/stb_image/*.cpp" 
-	"Source/*.cpp" 
-	"Source/*.c" 
-	"Headers/*.hpp" 
-	"Headers/*.h" 
-	"Assets/Compiled/*.h" 
-	"Vendor/stb_image/*.h" 
-)
-
 add_subdirectory(Assets)
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES} "Source/Common/Logger.cpp")
+add_library(${PROJECT_NAME} STATIC Source/Application.cpp
+		Headers/LegendEngine/Application.hpp
+		Headers/LegendEngine/Graphics/Renderer.hpp
+		Headers/LegendEngine/Graphics/GraphicsContext.hpp
+		Source/Graphics/GraphicsContext.cpp
+		Source/Graphics/Vulkan/VulkanGraphicsContext.cpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp
+		Source/Graphics/Vulkan/VulkanRenderer.cpp
+		Source/Common/Stopwatch.cpp
+		Headers/LegendEngine/Objects/Camera.hpp
+		Headers/LegendEngine/Objects/Object.hpp
+		Headers/LegendEngine/Resources/Resource.hpp
+		Headers/LegendEngine/Components/Component.hpp
+		Headers/LegendEngine/Components/ComponentHolder.hpp
+		Headers/LegendEngine/Resources/Texture2D.hpp
+		Headers/LegendEngine/Resources/Material.hpp
+		Headers/LegendEngine/Script.hpp
+		Headers/LegendEngine/Scene.hpp
+		Headers/LegendEngine/Common/Logger.hpp
+		Headers/LegendEngine/Graphics/VertexBuffer.hpp
+		Headers/LegendEngine/Objects/ObjectCreator.hpp
+		Headers/LegendEngine/Objects/Object.hpp
+		Headers/LegendEngine/Components/MeshComponent.hpp
+		Source/Common/Logger.cpp
+		Source/Script.cpp
+		Headers/LegendEngine/Events/EventBus.hpp
+		Headers/LegendEngine/Events/EventBusSubscriber.hpp
+		Source/Events/EventBusSubscriber.cpp
+		Source/Events/EventBus.cpp
+		Source/Events/Event.cpp
+		Source/Scene.cpp
+		Source/Events/ComponentAddedEvent.cpp
+		Source/Events/ComponentRemovedEvent.cpp
+		Source/Components/ComponentHolder.cpp
+		Source/Objects/Object.cpp
+		Source/ScriptHolder.cpp
+		Headers/LegendEngine/Events/ObjectDestroyedEvent.hpp
+		Source/Events/ObjectDestroyedEvent.cpp
+		Source/Objects/Camera.cpp
+		Headers/LegendEngine/Events/RenderEvent.hpp
+		Headers/LegendEngine/Events/UpdateEvent.hpp
+		Source/Events/UpdateEvent.cpp
+		Source/Events/RenderEvent.cpp
+		Source/IO/TextureLoader.cpp
+		Headers/LegendEngine/IO/TextureLoader.hpp
+		Source/Resources/Resource.cpp
+		Source/Resources/Texture2D.cpp
+		Source/Resources/Material.cpp
+		Source/Resources/Shader.cpp
+		Source/Components/MeshComponent.cpp
+		Headers/LegendEngine/Resources/Shader.hpp
+		Source/Graphics/Renderer.cpp
+		Source/Graphics/Vulkan/VulkanTexture2D.cpp
+		Source/Graphics/Vulkan/VulkanShader.cpp
+		Source/Graphics/Vulkan/VulkanMaterial.cpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanShader.hpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp
+		Source/Components/Component.cpp
+		Source/Graphics/Vulkan/VulkanVertexBuffer.cpp
+		Source/Graphics/Vulkan/ShaderModule.cpp
+		Headers/LegendEngine/Graphics/Vulkan/ShaderModule.hpp
+		Source/Graphics/Vulkan/Pipeline.cpp)
 add_dependencies(${PROJECT_NAME} tether tetherRendering compileLegendEngineAssets)
 
 if (MSVC)

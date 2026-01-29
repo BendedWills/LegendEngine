@@ -1,36 +1,43 @@
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 
-namespace LegendEngine::Vulkan
+namespace LegendEngine::Graphics::Vulkan
 {
-	ShaderModule::ShaderModule(const TetherVulkan::GraphicsContext& context,
-		const Resources::ShaderStage& stage)
-		:
-		m_Device(context.GetDevice()),
-		type(stage.type)
-	{
-		VkShaderModuleCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		createInfo.codeSize = stage.compiledShaderSize;
-		createInfo.pCode = reinterpret_cast<const uint32_t*>(
-			stage.compiledShaderCode);
+    using namespace Tether::Rendering::Vulkan;
 
-		if (vkCreateShaderModule(m_Device, &createInfo, nullptr,
-			&shaderModule) != VK_SUCCESS)
-			throw std::runtime_error("Failed to create shader module");
-	}
+    ShaderModule::ShaderModule(GraphicsContext& context,
+        const Resources::Shader::Stage& stage)
+        :
+        m_Context(context)
+    {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = stage.compiledShaderSize;
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(
+            stage.compiledShaderCode);
 
-	ShaderModule::~ShaderModule()
-	{
-		vkDestroyShaderModule(m_Device, shaderModule, nullptr);
-	}
+        if (vkCreateShaderModule(m_Context.GetDevice(), &createInfo, nullptr,
+            &m_ShaderModule) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create shader module");
+    }
 
-	LegendEngine::ShaderType ShaderModule::GetType()
-	{
-		return type;
-	}
+    ShaderModule::ShaderModule(ShaderModule&& other) noexcept
+        :
+        m_Context(other.m_Context),
+        m_ShaderModule(other.m_ShaderModule)
+    {
+        other.m_Moved = true;
+    }
 
-	VkShaderModule ShaderModule::Get()
-	{
-		return shaderModule;
-	}
+    ShaderModule::~ShaderModule()
+    {
+        if (m_Moved)
+            return;
+
+        vkDestroyShaderModule(m_Context.GetDevice(), m_ShaderModule, nullptr);
+    }
+
+    VkShaderModule ShaderModule::Get() const
+    {
+        return m_ShaderModule;
+    }
 }

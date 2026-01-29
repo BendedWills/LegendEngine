@@ -17,13 +17,18 @@ namespace LegendEngine
 		static const std::string RESET = "\x1b[0m";
 	}
 
-	Logger::Logger(std::string_view name)
+	Logger::Logger(const std::string_view name, const bool enabled, const bool debug)
 		:
-		m_Name(name)
+		m_Name(name),
+		m_Enabled(enabled),
+		m_Debug(debug)
 	{}
 
-	void Logger::Log(Level level, std::string_view message)
+	void Logger::Log(const Level level, const std::string_view message) const
 	{
+		if ((level == Level::DEBUG && !m_Debug) || !m_Enabled)
+			return;
+
 		const std::string reset = "\x1b[0m";
 
 		std::string severity = "";
@@ -75,23 +80,43 @@ namespace LegendEngine
 			// Severity
 			<< "[" << severity << "] => "
 			<< message << ConsoleColor::RESET
-		<< std::endl;
+		<< '\n';
+	}
+
+	void Logger::SetEnabled(const bool enabled)
+	{
+		m_Enabled = enabled;
+	}
+
+	void Logger::SetDebug(const bool debug)
+	{
+		m_Debug = debug;
+	}
+
+	bool Logger::IsEnabled() const
+	{
+		return m_Enabled;
+	}
+
+	bool Logger::IsDebugEnabled() const
+	{
+		return m_Debug;
 	}
 
 	std::string Logger::GetFormattedTime()
 	{
-		auto now = std::chrono::system_clock::now();
+		const auto now = std::chrono::system_clock::now();
 
-		std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-		std::tm* orgtimePtr = gmtime(&currentTime);
+		const std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+		const std::tm* gmtimePtr = gmtime(&currentTime);
 
 		// Time format is HH:MM:SS
 		std::string time = "";
-		time += std::to_string(orgtimePtr->tm_hour);
+		time += std::to_string(gmtimePtr->tm_hour);
 		time += ":";
-		time += std::to_string(orgtimePtr->tm_min);
+		time += std::to_string(gmtimePtr->tm_min);
 		time += ":";
-		time += std::to_string(orgtimePtr->tm_sec);
+		time += std::to_string(gmtimePtr->tm_sec);
 
 		return time;
 	}

@@ -1,59 +1,33 @@
-#ifndef _LEGENDENGINE_RESOURCES_MATERIAL_HPP
-#define _LEGENDENGINE_RESOURCES_MATERIAL_HPP
+#pragma once
 
-#include <LegendEngine/Common/NativeHolder.hpp>
 #include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Resources/IResource.hpp>
 #include <LegendEngine/Resources/Texture2D.hpp>
+#include <LegendEngine/Math/Types.hpp>
 
-#include <string>
-
-#include "LegendEngine/Math/Types.hpp"
+#include <memory>
 
 namespace LegendEngine::Resources
 {
-	class Material;
-	class IMaterialNative
+	class Material : public Resource
 	{
 	public:
-		LEGENDENGINE_NO_COPY(IMaterialNative);
-
-		IMaterialNative(Material* pMaterial);
-
-		virtual void OnUpdate() {}
-	protected:
-		Material* pMaterial;
-	};
-
-	class Material : 
-		public IResource,
-		public NativeHolder<IMaterialNative>
-	{
-	public:
-		struct MaterialUniforms
-		{
-			Color color = Color(1.0f);
-		};
-
-		Material();
-		~Material();
+		Material() = default;
 		LEGENDENGINE_NO_COPY(Material);
 
 		void SetTexture(Texture2D* toSet);
 		void SetColor(const Color& toSet);
-		Texture2D* GetTexture() const;
-		Color GetColor();
+		[[nodiscard]] Texture2D* GetTexture() const;
+		[[nodiscard]] Color GetColor() const;
 
-		MaterialUniforms* GetUniforms();
+		void SetChanged(bool changed);
+		bool HasChanged() const;
+	    virtual void UpdateIfChanged() = 0;
 
-		void Update();
+		static Scope<Material> Create();
 	private:
-		Texture2D* pTexture = nullptr;
-		Color color = Color(1.0f);
-		MaterialUniforms uniforms;
+		Texture2D* m_pTexture = nullptr;
+		Color m_Color = Color(1.0f);
 
-		bool shouldUpdateUniforms = false;
+		bool m_Changed = false;
 	};
 }
-
-#endif //_LEGENDENGINE_RESOURCES_MATERIAL_HPP

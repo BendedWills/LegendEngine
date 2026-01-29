@@ -1,92 +1,35 @@
-#include <LegendEngine/Resources/Texture2D.hpp>
 #include <LegendEngine/Application.hpp>
+#include <LegendEngine/Resources/Texture2D.hpp>
 
-#include <Tether/Common/VectorUtils.hpp>
-
-#include <stdio.h>
-#include <stb_image.h>
-
-using namespace LegendEngine::Resources;
-
-ITexture2DNative::ITexture2DNative(Texture2D* pTexture)
-	:
-	pTexture(pTexture)
-{}
-
-bool Texture2D::Init(const std::string& path)
+namespace LegendEngine::Resources
 {
-	if (initialized)
-		return false;
-	OnInit();
+    Texture2D::Texture2D(const IO::TextureLoader& loader)
+        :
+        m_Width(loader.GetWidth()),
+        m_Height(loader.GetHeight()),
+        m_Channels(loader.GetChannels())
+    {
+        if (!loader.HasLoaded())
+            throw std::runtime_error("Tried to create texture with uninitialized loader");
+    }
 
-	int width, height, channels;
-	uint8_t* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-	if (!data)
-	{
-		pApplication->Log("Failed to load texture (path = \"" + path + "\")", 
-			LogType::ERROR);
-		return false;
-	}
-	
-	channels = 4;
+    uint64_t Texture2D::GetWidth() const
+    {
+        return m_Width;
+    }
 
-	if (!Init(static_cast<uint64_t>(width), static_cast<uint64_t>(height),
-		static_cast<uint32_t>(channels),
-		data))
-	{
-		pApplication->Log(
-			"Failed to load texture. Native returned false. (path = \"" + path
-			+ "\")",
-			LogType::ERROR
-		);
+    uint64_t Texture2D::GetHeight() const
+    {
+        return m_Height;
+    }
 
-		stbi_image_free(data);
-		return false;
-	}
+    uint8_t Texture2D::GetChannels() const
+    {
+        return m_Channels;
+    }
 
-	stbi_image_free(data);
-
-	initialized = true;
-	return true;
-}
-
-bool Texture2D::Init(uint64_t width, uint64_t height, uint32_t channels,
-	uint8_t* data)
-{
-	if (initialized)
-		return false;
-
-	this->width = width;
-	this->height = height;
-	this->channels = channels;
-
-	if (nativeSet)
-		if (!native->OnCreate(width, height, channels, data))
-		{
-			stbi_image_free(data);
-			return false;
-		}
-
-	initialized = true;
-	return true;
-}
-
-uint64_t Texture2D::GetWidth()
-{
-	return width;
-}
-
-uint64_t Texture2D::GetHeight()
-{
-	return height;
-}
-
-uint32_t Texture2D::GetChannels()
-{
-	return channels;
-}
-
-void Texture2D::OnResourceDispose()
-{
-	native->OnDispose();
+    Scope<Texture2D> Texture2D::Create(IO::TextureLoader& loader)
+    {
+        return Application::Get().GetGraphicsContext().CreateTexture2D(loader);
+    }
 }

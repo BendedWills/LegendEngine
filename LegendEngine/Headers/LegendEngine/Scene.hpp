@@ -1,102 +1,51 @@
-#ifndef _LEGENDENGINE_SCENE3D_HPP
-#define _LEGENDENGINE_SCENE3D_HPP
+#pragma once
 
-#include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Common/IApplicationHolder.hpp>
 #include <LegendEngine/Objects/Object.hpp>
-#include <LegendEngine/Objects/Components/MeshComponent.hpp>
+#include <LegendEngine/Events/EventBus.hpp>
+#include <LegendEngine/Events/ComponentAddedEvent.hpp>
+#include <LegendEngine/Events/ComponentRemovedEvent.hpp>
+
+#include <memory>
+#include <typeindex>
+#include <vector>
 
 namespace LegendEngine
 {
-    class Scene : public IApplicationHolder
+    class Scene final
     {
-        friend Objects::Object;
     public:
+        using ObjectsVecType = std::vector<Objects::Object*>;
+        using ComponentsVecType = std::unordered_map<std::type_index,
+            std::vector<Components::Component*>>;
+
+        Scene();
+
+        explicit Scene(Events::EventBus& eventBus);
+        ~Scene();
+
         LEGENDENGINE_NO_COPY(Scene);
-        
-        Scene() {}
 
-        /**
-         * @brief Adds an object to the scene.
-         *
-         * @param object The object to add.
-         */
-        void AddObject(Ref<Objects::Object>& object);
-        /**
-         * @brief Adds an object to the scene.
-         * 
-         * @param object The object to add.
-         */
         void AddObject(Objects::Object& object);
-        /**
-         * @brief Adds an object to the scene.
-         * 
-         * @param pObject The object to add.
-         */
-        void AddObject(Objects::Object* pObject);
+        bool HasObject(const Objects::Object& object);
+        void RemoveObject(Objects::Object& object);
 
-        /**
-         * @returns True if an object is in the scene; otherwise, false.
-         */
-        bool HasObject(Ref<Objects::Object>& object);
-        /**
-         * @returns True if an object is in the scene; otherwise, false.
-         */
-        bool HasObject(Objects::Object& object);
-        /**
-         * @returns True if an object is in the scene; otherwise, false.
-         */
-        bool HasObject(Objects::Object* pObject);
+        void Clear();
 
-        /**
-         * @brief Removes an object from the scene.
-         *
-         * @param object The object to remove.
-         *
-         * @returns True if the object was successfully removed;
-         *  otherwise, false.
-         */
-        bool RemoveObject(Ref<Objects::Object>& object);
-        /**
-         * @brief Removes an object from the scene.
-         * 
-         * @param object The object to remove.
-         * 
-         * @returns True if the object was successfully removed;
-         *  otherwise, false.
-         */
-        bool RemoveObject(Objects::Object& object);
-        /**
-         * @brief Removes an object from the scene.
-         * 
-         * @param pObject The object to remove.
-         * 
-         * @returns True if the object was successfully removed;
-         *  otherwise, false.
-         */
-        bool RemoveObject(Objects::Object* pObject);
-
-        void ClearObjects();
-
-        std::vector<Objects::Object*>* GetObjects();
-		std::unordered_map<std::string,
-			std::vector<Objects::Components::Component*>>* GetObjectComponents();
-    protected:
-        void OnObjectComponentAdd(Objects::Object* pObject, std::string typeName, 
-            Objects::Components::Component* pComponent);
-        void OnObjectComponentRemove(Objects::Object* pObject, std::string typeName,
-            Objects::Components::Component* pComponent);
-		void OnObjectEnable(Objects::Object* pObject);
-		void OnObjectDisable(Objects::Object* pObject);
+        ObjectsVecType& GetObjects();
+        ComponentsVecType& GetObjectComponents();
     private:
-        void AddObjectComponents(Objects::Object* pObject);
-        void RemoveObjectComponents(Objects::Object* pObject);
+        void ListenForEvents();
 
-        std::vector<Objects::Object*> objects;
-		std::unordered_map<std::string,
-std::vector<Objects::Components::Component*>>
-			components;
+        void AddObjectComponents(Objects::Object& object);
+        void RemoveObjectComponents(Objects::Object& object);
+
+        void OnComponentAdd(const Events::ComponentAddedEvent& event);
+        void OnComponentRemove(const Events::ComponentRemovedEvent& event);
+
+        ObjectsVecType m_Objects;
+        ComponentsVecType m_Components;
+
+        Events::EventBus& m_EventBus;
+        Events::EventBusSubscriber m_EventSubscriber;
     };
 }
-
-#endif //_LEGENDENGINE_SCENE3D_HPP

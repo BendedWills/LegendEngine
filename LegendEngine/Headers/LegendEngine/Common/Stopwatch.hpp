@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_STOPWATCH_HPP
-#define _LEGENDENGINE_STOPWATCH_HPP
+#pragma once
 
 #include <chrono>
 
@@ -8,10 +7,7 @@ namespace LegendEngine
 	class Stopwatch 
 	{
 	public:
-		Stopwatch()
-			:
-			startTime(std::chrono::high_resolution_clock::now())
-		{}
+		Stopwatch();
 
 		/**
 		 * @brief Sets the clock to the current time.
@@ -22,10 +18,8 @@ namespace LegendEngine
 		/**
 		 * @returns The time (in milliseconds) since the last time Set was called.
 		 */
-		float GetElapsedMillis();
+		float GetElapsedMillis() const;
 	private:
-		std::chrono::high_resolution_clock::time_point startTime;
+		std::chrono::high_resolution_clock::time_point m_StartTime;
 	};
 }
-
-#endif //_LEGENDENGINE_STOPWATCH_HPP

@@ -1,250 +1,120 @@
 #pragma once
 
-#include <string>
+#include <memory>
 
-#include <LegendEngine/Common/Types.hpp>
-#include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Common/Stopwatch.hpp>
-#include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/GraphicsContext.hpp>
+#include "Common/Types.hpp"
+#include <LegendEngine/Graphics/Renderer.hpp>
+#include <LegendEngine/Objects/Camera.hpp>
+#include <Tether/Window.hpp>
+
 #include <LegendEngine/Scene.hpp>
-
-#include <Tether/Tether.hpp>
+#include <LegendEngine/Common/Logger.hpp>
+#include <LegendEngine/Events/EventBus.hpp>
+#include <LegendEngine/Graphics/GraphicsContext.hpp>
 
 namespace LegendEngine
 {
-	namespace Input = Tether::Input;
-	namespace Utils = Tether;
-	
-	namespace Objects
-	{
-		class Object;
-		class Camera;
+    namespace Input = Tether::Input;
+    namespace Utils = Tether;
 
-		namespace Components
-		{
-			class Component;
-		}
+    class Application
+    {
+    public:
+        Application(
+            std::string_view applicationName,
+            bool logging,
+            bool debug,
+            GraphicsAPI api);
+        virtual ~Application() = 0;
 
-		namespace Scripts
-		{
-			class Script;
-		}
-	}
+        LEGENDENGINE_NO_COPY(Application);
 
-	class IRenderer;
-	class Application
-	{
-		friend Scene;
-		friend Objects::Object;
-		friend Objects::Scripts::Script;
-		friend VertexBuffer;
-		friend Resources::IResource;
-	public:
-		LEGENDENGINE_NO_COPY(Application);
-		
-		Application(
-			const std::string& applicationName,
-			bool logging,
-			bool debug,
-			RenderingAPI api
-		);
-		virtual ~Application() = 0;
+        void SetupApplication();
 
-		template<typename T, typename... Args>
-		static int RunApplication(RenderingAPI api, bool debug, Args... args)
-		{
-			if (!std::is_base_of<Application, T>::value)
-				throw std::runtime_error("T is not derived from Application");
+        void SetActiveCamera(Objects::Camera* pCamera);
+        void SetActiveScene(Scene& scene);
 
-			m_Instance = std::make_unique<T>(args...);
-			return !m_Instance->Run();
-		}
+        void ClearActiveScene();
 
-		/**
-		 * @param message The message to log
-		 * @param type The type of log.
-		 */
-		void Log(const std::string& message, LogType type);
+        Graphics::GraphicsContext& GetGraphicsContext() const;
+        Events::EventBus& GetEventBus();
+        Scene& GetGlobalScene();
+        [[nodiscard]] Tether::Window& GetWindow() const;
+        [[nodiscard]] Graphics::Renderer& GetRenderer() const;
+        Objects::Camera* GetActiveCamera() const;
+        Scene* GetActiveScene() const;
+        Logger& GetLogger();
 
-		/**
-		 * @brief Creates an object.
-		 *
-		 * @returns The created object. A "Ref" (std::shared_ptr)
-		 */
-		template<typename T>
-		Ref<T> CreateObject();
+        bool IsCloseRequested() const;
 
-		/**
-		 * @brief Same as CreateObject but creates a resource instead.
-		 */
-		template<typename T, typename... Args>
-		Ref<T> CreateResource(Args&&... args);
+        template<typename T, typename... Args>
+            requires std::is_base_of_v<Application, T>
+        static int RunApplication(Args... args)
+        {
+            m_Instance = std::make_unique<T>(args...);
 
-		Ref<VertexBuffer> CreateVertexBuffer();
+            try
+            {
+                m_Instance->Run();
+            }
+            catch (const std::exception& e)
+            {
+                m_Instance->m_Logger.Log(Logger::Level::ERROR,
+                    "Uncaught exception!");
+                m_Instance->m_Logger.Log(Logger::Level::ERROR,
+                    e.what());
+                return EXIT_FAILURE;
+            }
 
-		/**
-		 * @brief Initializes a scene to this application.
-		 *
-		 * @param scene The scene to initialize.
-		 *
-		 * @returns True if the scene was successfully initialized,
-		 *  false if the scene is already initialized.
-		 */
-		bool InitScene(Scene& scene);
-		/**
-		 * @brief Initializes a scene to this application.
-		 *
-		 * @param pScene A pointer to the scene to initialize.
-		 *
-		 * @returns True if the object was successfully initialized,
-		 *  false if the object is already initialized.
-		 */
-		bool InitScene(Scene* pScene);
+            return EXIT_SUCCESS;
+        }
 
-		void SetActiveCamera(Objects::Camera* pCamera);
-		Objects::Camera* GetActiveCamera();
+        static Application& Get();
+    protected:
+        virtual void OnSetup() = 0;
 
-		void SetActiveScene(Scene& scene);
-		void SetActiveScene(Scene* pScene);
-		void RemoveActiveScene();
-		Scene* GetActiveScene();
-		Scene* GetDefaultScene();
+        virtual void OnUpdate(float deltaTime) {}
+        virtual void OnRender(float deltaTime) {}
+        virtual void OnResize(int width, int height) {}
+    private:
+        void Run();
 
-		bool IsCloseRequested();
+        // Must be called on the main thread
+        void RenderFrame(float delta = 1.0f);
 
-		std::string GetName();
-		IRenderer& GetRenderer();
-		Tether::Window& GetWindow();
+        void Update(float delta, bool updateWindow = true);
+        void Render(float delta);
 
-		static Application& Get();
-	protected:
-		void FinishCreation();
+        static void RecalculateTransforms(Scene& scene);
 
-		/**
-		 * @brief Called every frame
-		 */
-		virtual void OnUpdate(float delta) {}
-		/**
-		 * @brief Called after every frame
-		 */
-		virtual void OnRendered(float delta) {}
-		
-		/**
-		 * @brief Called when the window is resized.
-		 */
-		virtual void OnResize(uint64_t width, uint64_t height)
-		{}
+        void ReceiveResize(uint64_t width, uint64_t height);
 
-		
-		// Receiver functions (later will be used for synchronization)
-		void _OnObjectDispose(Objects::Object* pObject);
-		void SetScriptRecieveUpdates(
-			bool enabled, Objects::Scripts::Script* pScript
-		);
-		void SetScriptRecieveRenderUpdates(
-			bool enabled, Objects::Scripts::Script* pScript
-		);
+        class EventHandler final : public Utils::Events::EventHandler
+        {
+        public:
+            explicit EventHandler(Application& application);
+            void OnWindowResize(Utils::Events::WindowResizeEvent event) const;
+        private:
+            Application& m_Application;
+        };
+        EventHandler m_EventHandler;
 
-		std::vector<VertexBuffer*> vertexBuffers;
-		std::vector<Resources::IResource*> resources;
-	private:
-		bool Run();
+        Events::EventBus m_EventBus;
 
-		// Must be called on the main thread
-		void RenderFrame(float delta = 1.0f);
+        Scope<Graphics::GraphicsContext> m_GraphicsContext;
+        Scope<Graphics::Renderer> m_Renderer = nullptr;
+        Scope<Tether::Window> m_Window = nullptr;
 
-		void Update(float delta, bool updateWindow = true);
-		void Render(float delta);
+        Logger m_Logger;
 
-		void RecieveResize(uint64_t width, uint64_t height);
+        Scene m_GlobalScene;
+        Scene* m_pActiveScene = nullptr;
 
-		class EventHandler : public Utils::Events::EventHandler
-		{
-		public:
-			EventHandler(Application* pApplication);
-			void OnWindowResize(Utils::Events::WindowResizeEvent event);
-		private:
-			Application* pApplication;
-		};
-		EventHandler eventHandler;
+        Objects::Camera* m_pActiveCamera = nullptr;
 
-		// Every application has a default scene. This scene contains objects
-		// that are always rendered, no matter what the current set scene is.
-		Scene defaultScene;
-		Scene* activeScene = nullptr;
+        bool m_Debug = false;
+        bool m_IsSetUp = false;
 
-		std::vector<Objects::Object*> objects;
-		std::vector<Objects::Scripts::Script*> updateScripts;
-		std::vector<Objects::Scripts::Script*> renderUpdateScripts;
-
-		// This will be changed later since there will be multiple cameras that can
-		// be active at once
-		Objects::Camera* pActiveCamera = nullptr;
-
-		std::string applicationName = "";
-		bool logging = false;
-		bool debug = false;
-
-		Scope<Tether::Window> m_Window;
-		Scope<IRenderer> m_Renderer;
-
-		inline static Scope<Application> m_Instance = nullptr;
-	};
-
-	template<typename T>
-	Ref<T> Application::CreateObject()
-	{
-		if (!std::is_base_of<Objects::Object, T>())
-		{
-			Log("In Application::CreateObject: T is not of base class Object!",
-				LogType::ERROR);
-			return nullptr;
-		}
-
-		Ref<T> object = RefTools::Create<T>();
-		object->pApplication = this;
-
-		m_Renderer->CreateObjectNative(object.get());
-
-		objects.push_back(object.get());
-
-		std::stringstream str;
-		str << "Created Object (" << (uint64_t)object.get() << ")";
-		str << " (" << (uint64_t)this << ")";
-
-		Log(str.str(), LogType::DEBUG);
-
-		return object;
-	}
-
-	template<typename T, typename... Args>
-	Ref<T> Application::CreateResource(Args&&... args)
-	{
-		if (!std::is_base_of<Resources::IResource, T>())
-		{
-			Log("In Application::CreateResource: T is not of base class IResource!",
-				LogType::ERROR);
-			return nullptr;
-		}
-
-		Ref<T> resource = std::make_shared<T>();
-		resource->pApplication = this;
-
-		if (std::is_same<Resources::Shader, T>())
-			m_Renderer->CreateShaderNative((Resources::Shader*)resource.get(),
-				std::forward<Args>(args)...);
-		else if (std::is_same<Resources::Texture2D, T>())
-			m_Renderer->CreateTexture2DNative((Resources::Texture2D*)resource.get());
-		else if (std::is_same<Resources::Material, T>())
-			m_Renderer->CreateMaterialNative((Resources::Material*)resource.get());
-
-		std::stringstream str;
-		str << "Created Resource (" << (uint64_t)resource.get() << ")";
-		str << " (" << (uint64_t)this << ")";
-
-		Log(str.str(), LogType::DEBUG);
-
-		return resource;
-	}
+        static Scope<Application> m_Instance;
+    };
 }

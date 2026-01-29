@@ -1,7 +1,7 @@
-#ifndef _LEGENDENGINE_DEFS_HPP
-#define _LEGENDENGINE_DEFS_HPP
+#pragma once
 
 #include <sstream>
+#include <cassert>
 
 #ifdef __INTELLISENSE__
     #ifndef VULKAN_API
@@ -21,26 +21,3 @@
     typename(typename&&) = delete; \
     typename& operator=(const typename&) = delete; \
     typename& operator=(typename&&) = delete;
-
-/**
- * @brief Logs to an application as an object.
- */
-#define LEGENDENGINE_OBJECT_LOG(application, object, message, logType) \
-    { \
-        std::stringstream objlogstream; \
-        objlogstream << (object); \
-        objlogstream << " (" << (uint64_t)this << "): "; \
-        objlogstream << (message); \
-        application->Log(objlogstream.str(), (logType)); \
-    }
-
-#define LEGENDENGINE_OBJECT_LOG_AS(application, object, pObject, message, logType) \
-    { \
-        std::stringstream objlogstream; \
-        objlogstream << (object); \
-        objlogstream << " (" << (uint64_t)(pObject) << "): "; \
-        objlogstream << (message); \
-        application->Log(objlogstream.str(), (logType)); \
-    }
-
-#endif //_LEGENDENGINE_DEFS_HPP

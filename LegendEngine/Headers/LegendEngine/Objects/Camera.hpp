@@ -1,25 +1,15 @@
-#ifndef _LEGENDENGINE_CAMERA_HPP
-#define _LEGENDENGINE_CAMERA_HPP
+#pragma once
 
 #include <LegendEngine/Objects/Object.hpp>
 
 namespace LegendEngine::Objects
 {
-    class Camera : public Object
+    class Camera final : public Object
     {
     public:
-        LEGENDENGINE_NO_COPY(Camera);
-
-		struct CameraUniforms
-		{
-            Matrix4x4f view;
-            Matrix4x4f projection;
-		};
-        
         Camera();
 
-		// This function is automatically called on window resize
-		void SetAspectRatio(float aspect);
+        void SetAspectRatio(float aspect);
 
         void SetFov(float fov);
         void SetNearZ(float nearZ);
@@ -28,28 +18,29 @@ namespace LegendEngine::Objects
         Vector3f GetForwardVector();
         Vector3f GetRightVector();
 
-        Matrix4x4f& GetViewMatrix();
-		Matrix4x4f& GetProjectionMatrix();
-        CameraUniforms* GetUniforms();
+        Matrix4x4f GetViewMatrix() const;
+        Matrix4x4f GetProjectionMatrix() const;
 
-        const Vector3f UP = Vector3f(0, 1, 0);
-    private:
+        bool IsCameraDirty() const;
+
         void CalculateViewMatrix();
         void CalculateProjectionMatrix();
 
-		void OnPositionChange();
-		void OnRotationChange();
-        void OnScaleChange();
+        const Vector3f UP = Vector3f(0, 1, 0);
+    private:
+        void TransformChanged() override;
 
-        float fov = 90.0f;
-        float aspect = 1920.0f / 1080.0f;
-        float nearZ = 0.1f;
-        float farZ = 1000.0f;
+        float m_Fov = 90.0f;
+        float m_Aspect = 16.0f / 9.0f;
+        float m_NearZ = 0.1f;
+        float m_FarZ = 1000.0f;
 
-        CameraUniforms ubo;
-        Vector3f forwardVector;
-        Vector3f rightVector;
+        Vector3f m_ForwardVector;
+        Vector3f m_RightVector;
+
+        Matrix4x4f m_View;
+        Matrix4x4f m_Projection;
+
+        bool m_CameraDirty = false;
     };
 }
-
-#endif //_LEGENDENGINE_CAMERA_HPP

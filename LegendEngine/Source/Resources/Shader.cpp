@@ -1,18 +1,10 @@
-#include <LegendEngine/Resources/Shader.hpp>
 #include <LegendEngine/Application.hpp>
-#include <LegendEngine/Common/Defs.hpp>
+#include <LegendEngine/Resources/Shader.hpp>
 
-using namespace LegendEngine;
-using namespace LegendEngine::Resources;
-
-void Shader::OnResourceDispose()
+namespace LegendEngine::Resources
 {
-    if (nativeSet)
-        native->OnDispose();
-
-    LEGENDENGINE_OBJECT_LOG(
-        pApplication, "Shader", 
-        "Disposed shader", 
-        LogType::DEBUG
-    );
+    Scope<Shader> Shader::Create(const std::span<Stage> stages)
+    {
+        return Application::Get().GetRenderer().CreateShader(stages);
+    }
 }

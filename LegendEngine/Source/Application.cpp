@@ -1,396 +1,206 @@
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/GraphicsContext.hpp>
-#include <LegendEngine/Graphics/IRenderer.hpp>
-#include <LegendEngine/Objects/Camera.hpp>
-#include <LegendEngine/Objects/Scripts/Script.hpp>
+#include "LegendEngine/Application.hpp"
 
-#include <iostream>
-#include <chrono>
-#include <sstream>
-#include <codecvt>
-#include <locale>
-#include <algorithm>
+#include <LegendEngine/Common/Stopwatch.hpp>
+#include <LegendEngine/Graphics/GraphicsContext.hpp>
+#include <LegendEngine/Events/RenderEvent.hpp>
+#include <LegendEngine/Events/UpdateEvent.hpp>
 
 namespace LegendEngine
 {
-	Application::EventHandler::EventHandler(Application* pApplication)
-	{
-		this->pApplication = pApplication;
-	}
-
-	void Application::EventHandler::OnWindowResize(
-		Tether::Events::WindowResizeEvent event
-	)
-	{
-		this->pApplication->RecieveResize(event.GetNewWidth(), event.GetNewHeight());
-	}
-
-	Application::Application(
-		const std::string& applicationName,
-		bool logging,
-		bool debug,
-		RenderingAPI api
-	)
-		:
-		eventHandler(this),
-		applicationName(applicationName),
-		logging(logging),
-		debug(debug)
-	{
-		std::wstring title(applicationName.size(), L' ');
-		std::mbstowcs(title.data(), applicationName.data(),
-			applicationName.size());
-
-		Log("Creating window", LogType::DEBUG);
-		m_Window = Tether::Window::Create(1280, 720, 
-			title, false);
-		
-		GraphicsContext::Create(api, debug);
-		GraphicsContext& graphicsContext = GraphicsContext::Get();
-		m_Renderer = graphicsContext.CreateRenderer(*this, *m_Window);
-		m_Renderer->CreateShaders();
-
-		InitScene(defaultScene);
-	}
-
-	Application::~Application()
-	{
-		Log("Disposing application", LogType::INFO);
-
-		m_Window->SetVisible(false);
-
-		RemoveActiveScene();
-
-		// Dispose everything
-		{
-			// And same for resources
-			std::vector<Resources::IResource*> oldResources(resources);
-			for (uint64_t i = 0; i < oldResources.size(); i++)
-				oldResources[i]->Dispose();
-
-			// You get the idea
-			std::vector<VertexBuffer*> oldVertexBuffers(vertexBuffers);
-			for (uint64_t i = 0; i < oldVertexBuffers.size(); i++)
-				oldVertexBuffers[i]->Dispose();
-		}
-
-		defaultScene.ClearObjects();
-	}
-
-	bool Application::Run()
-	{
-		Stopwatch deltaTimer;
-		while (!IsCloseRequested())
-		{
-			float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
-			deltaTimer.Set();
-
-			RenderFrame(delta);
-		}
-
-		return true;
-	}
-
-	IRenderer& Application::GetRenderer()
-	{
-		return *m_Renderer;
-	}
-
-	std::string Application::GetName()
-	{
-		return applicationName;
-	}
-
-	Tether::Window& Application::GetWindow()
-	{
-		return *m_Window;
-	}
-
-	Application& Application::Get()
-	{
-		return *m_Instance;
-	}
-
-	bool Application::IsCloseRequested()
-	{
-		return m_Window->IsCloseRequested();
-	}
-
-	void Application::Update(float delta, bool updateWindow)
-	{
-		if (updateWindow)
-			Tether::Application::Get().PollEvents();
-
-		OnUpdate(delta);
-
-		for (uint64_t i = 0; i < updateScripts.size(); i++)
-			updateScripts[i]->OnUpdate(delta);
-	}
-
-	void Application::Render(float delta)
-	{
-		if (!m_Renderer)
-			return;
-
-		for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
-			renderUpdateScripts[i]->OnRender();
-
-		m_Renderer->RenderFrame();
-
-		OnRendered(delta);
-	}
-
-	void Application::Log(const std::string& message, LogType type)
-	{
-		// If debug isn't enabled, disable debug logs.
-		if ((type == LogType::DEBUG && !debug) || !logging)
-			return;
-
-		const std::string reset = "\x1b[0m";
-
-		std::string severity = "";
-		std::string color = "";
-		switch (type)
-		{
-			case LogType::INFO:
-			{
-				severity = "INFO";
-				color = "\x1b[38;2;0;120;220m"; // Blue
-			}
-			break;
-
-			case LogType::WARN:
-			{
-				severity = "WARN";
-				color = "\x1b[38;2;255;213;0m"; // Gold
-			}
-			break;
-
-			case LogType::DEBUG:
-			{
-				severity = "DEBUG";
-				color = "\x1b[38;2;0;150;60m"; // Green
-			}
-			break;
-
-			case LogType::ERROR:
-			{
-				severity = "ERROR";
-				color = "\x1b[38;2;255;0;0m"; // Red
-			}
-			break;
-		}
-
-		// Time format is HH:MM:SS
-		std::string time = "";
-		{
-			auto now = std::chrono::system_clock::now();
-			std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-
-			std::tm* orgtimePtr;
-#if defined(__linux__)
-			orgtimePtr = gmtime(&currentTime);
-#elif defined(_WIN32)
-			std::tm organizedTime;
-			gmtime_s(&organizedTime, &currentTime);
-
-			orgtimePtr = &organizedTime;
-#endif
-
-			time += std::to_string(orgtimePtr->tm_hour > 12 ?
-				orgtimePtr->tm_hour - 12 : orgtimePtr->tm_hour);
-			time += ":";
-			time += std::to_string(orgtimePtr->tm_min);
-			time += ":";
-			time += std::to_string(orgtimePtr->tm_sec);
-		}
-
-		std::cout
-			// Time
-			<< "\x1b[38;2;118;118;118m[\x1b[38;2;148;148;148m"
-			<< time
-			<< "\x1b[38;2;118;118;118m] "
-			// Application name
-			<< "\x1b[38;2;118;118;118m[\x1b[38;2;148;148;148m"
-			<< applicationName
-			<< "\x1b[38;2;118;118;118m] "
-			<< reset
-			<< ": " << color
-			// Severity
-			<< "[" << severity << "] => "
-			<< message << reset
-			<< std::endl;
-	}
-
-	Ref<VertexBuffer> Application::CreateVertexBuffer()
-	{
-		Ref<VertexBuffer> vbuffer = RefTools::Create<VertexBuffer>();
-		vbuffer->pApplication = this;
-
-		if (!m_Renderer->CreateVertexBufferNative(vbuffer.get()))
-		{
-			Log("Failed to create vertex buffer!", LogType::ERROR);
-			return nullptr;
-		}
-
-		return vbuffer;
-	}
-
-	bool Application::InitScene(Scene& scene)
-	{
-		return InitScene(&scene);
-	}
-
-	bool Application::InitScene(Scene* pScene)
-	{
-		if (!pScene)
-		{
-			Log("Initializing scene: Scene is nullptr. Returning.",
-				LogType::WARN);
-			return false;
-		}
-
-		if (pScene->pApplication != nullptr)
-		{
-			std::stringstream str;
-			str << "Scene (" << (uint64_t)pScene << ") has already been initialized";
-			str << " (initialized with pApplication = "
-				<< (uint64_t)pScene->pApplication;
-			str << ")";
-
-			Log(str.str(), LogType::WARN);
-
-			return false;
-		}
-
-		pScene->pApplication = this;
-
-		std::stringstream str;
-		str << "Scene (" << (uint64_t)pScene << ") initialized to Application";
-		str << " (" << (uint64_t)this << ")";
-
-		Log(str.str(), LogType::DEBUG);
-
-		return true;
-	}
-
-	void Application::RenderFrame(float delta)
-	{
-		Update(delta);
-		Render(delta);
-	}
-
-	void Application::SetActiveCamera(Objects::Camera* pCamera)
-	{
-		if (pCamera)
-		{
-			float aspect = (float)m_Window->GetWidth() / (float)m_Window->GetHeight();
-			pCamera->SetAspectRatio(aspect);
-		}
-
-		pActiveCamera = pCamera;
-	}
-
-	Objects::Camera* Application::GetActiveCamera()
-	{
-		return pActiveCamera;
-	}
-
-	Scene* Application::GetDefaultScene()
-	{
-		return &defaultScene;
-	}
-
-	void Application::SetActiveScene(Scene& scene)
-	{
-		SetActiveScene(&scene);
-	}
-
-	void Application::SetActiveScene(Scene* pScene)
-	{
-		if (pScene)
-			if (pScene->pApplication != this)
-				return;
-
-		m_Renderer->OnSceneChange(pScene, nullptr);
-		this->activeScene = pScene;
-	}
-
-	void Application::RemoveActiveScene()
-	{
-		SetActiveScene(nullptr);
-	}
-
-	Scene* Application::GetActiveScene()
-	{
-		return activeScene;
-	}
-
-	void Application::RecieveResize(uint64_t width, uint64_t height)
-	{
-		m_Renderer->OnWindowResize(width, height);
-
-		float aspect = (float)width / (float)height;
-		if (pActiveCamera)
-			pActiveCamera->SetAspectRatio(aspect);
-
-		OnResize(width, height);
-	}
-
-	void Application::FinishCreation()
-	{
-		m_Window->SetVisible(true);
-		m_Window->AddEventHandler(eventHandler, Utils::Events::EventType::WINDOW_RESIZE);
-
-		Log("Initialized application", LogType::INFO);
-	}
-
-	void Application::_OnObjectDispose(Objects::Object* pObject)
-	{
-		for (uint64_t i = 0; i < objects.size(); i++)
-			if (objects[i] == pObject)
-			{
-				objects.erase(objects.begin() + i);
-				break;
-			}
-	}
-
-	void Application::SetScriptRecieveUpdates(
-		bool enabled, Objects::Scripts::Script* pScript
-	)
-	{
-		if (enabled)
-		{
-			for (uint64_t i = 0; i < updateScripts.size(); i++)
-				if (updateScripts[i] == pScript)
-					return;
-
-			updateScripts.push_back(pScript);
-			return;
-		}
-
-		for (uint64_t i = 0; i < updateScripts.size(); i++)
-			if (updateScripts[i] == pScript)
-				updateScripts.erase(updateScripts.begin() + i);
-	}
-
-	void Application::SetScriptRecieveRenderUpdates(
-		bool enabled, Objects::Scripts::Script* pScript
-	)
-	{
-		if (enabled)
-		{
-			for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
-				if (renderUpdateScripts[i] == pScript)
-					return;
-
-			renderUpdateScripts.push_back(pScript);
-
-			return;
-		}
-
-		for (uint64_t i = 0; i < renderUpdateScripts.size(); i++)
-			if (renderUpdateScripts[i] == pScript)
-				renderUpdateScripts.erase(renderUpdateScripts.begin() + i);
-	}
+    Application::EventHandler::EventHandler(Application& application)
+        : m_Application(application)
+    {}
+
+    void Application::EventHandler::OnWindowResize(
+        const Tether::Events::WindowResizeEvent event
+    ) const
+    {
+        m_Application.ReceiveResize(event.GetNewWidth(), event.GetNewHeight());
+    }
+
+    Application::Application(
+        const std::string_view applicationName,
+        const bool logging,
+        const bool debug,
+        const GraphicsAPI api)
+        :
+        m_EventHandler(*this),
+        m_Logger(applicationName, logging),
+        m_GlobalScene(m_EventBus),
+        m_Debug(debug)
+    {
+        std::wstring title(applicationName.size(), L' ');
+        std::mbstowcs(title.data(), applicationName.data(),
+            applicationName.size());
+
+        m_Logger.Log(Logger::Level::INFO, "Creating window");
+        m_Window = Tether::Window::Create(1280, 720,
+            title, false);
+        m_GraphicsContext = Graphics::GraphicsContext::Create(api, applicationName,
+            debug, m_Logger);
+        m_Renderer = m_GraphicsContext->CreateRenderer(*this);
+
+        m_Logger.Log(Logger::Level::INFO, "Application created");
+    }
+
+    Application::~Application()
+    {
+        m_Logger.Log(Logger::Level::INFO, "Destroying application");
+        m_Window->SetVisible(false);
+    }
+
+    void Application::SetupApplication()
+    {
+        m_IsSetUp = true;
+
+        OnSetup();
+
+        m_Window->SetVisible(true);
+        m_Window->AddEventHandler(m_EventHandler, Utils::Events::EventType::WINDOW_RESIZE);
+
+        m_Logger.Log(Logger::Level::INFO, "Application setup complete");
+    }
+
+    void Application::SetActiveCamera(Objects::Camera* pCamera)
+    {
+        if (pCamera)
+        {
+            const float aspect =
+                static_cast<float>(m_Window->GetWidth()) /
+                    static_cast<float>(m_Window->GetHeight());
+            pCamera->SetAspectRatio(aspect);
+        }
+
+        m_pActiveCamera = pCamera;
+    }
+
+    void Application::SetActiveScene(Scene& scene)
+    {
+        m_pActiveScene = &scene;
+    }
+
+    void Application::ClearActiveScene()
+    {
+        m_pActiveScene = nullptr;
+    }
+
+    Graphics::GraphicsContext& Application::GetGraphicsContext() const
+    {
+        return *m_GraphicsContext;
+    }
+
+    Events::EventBus& Application::GetEventBus()
+    {
+        return m_EventBus;
+    }
+
+    Scene& Application::GetGlobalScene()
+    {
+        return m_GlobalScene;
+    }
+
+    Tether::Window& Application::GetWindow() const
+    {
+        return *m_Window;
+    }
+
+    Graphics::Renderer& Application::GetRenderer() const
+    {
+        return *m_Renderer;
+    }
+
+    Objects::Camera* Application::GetActiveCamera() const
+    {
+        return m_pActiveCamera;
+    }
+
+    Scene* Application::GetActiveScene() const
+    {
+        return m_pActiveScene;
+    }
+
+    Logger& Application::GetLogger()
+    {
+        return m_Logger;
+    }
+
+    bool Application::IsCloseRequested() const
+    {
+        return m_Window->IsCloseRequested();
+    }
+
+    Application& Application::Get()
+    {
+        if (!m_Instance)
+            throw std::runtime_error(
+                "Application::Get() called before it was constructed. "
+                "No LegendEngine objects may be used before Application::Run()");
+
+        if (!m_Instance->m_IsSetUp)
+            throw std::runtime_error(
+                "Application not set up"
+                "No LegendEngine objects may be used before SetupApplication()");
+
+        return *m_Instance;
+    }
+
+    void Application::Run()
+    {
+        Stopwatch deltaTimer;
+        while (!IsCloseRequested())
+        {
+            const float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
+            deltaTimer.Set();
+
+            RenderFrame(delta);
+        }
+    }
+
+    void Application::RenderFrame(const float delta)
+    {
+        Update(delta);
+        Render(delta);
+    }
+
+    void Application::Update(const float delta, const bool updateWindow)
+    {
+        if (updateWindow)
+            Tether::Application::Get().PollEvents();
+
+        RecalculateTransforms(m_GlobalScene);
+        if (m_pActiveScene)
+            RecalculateTransforms(*m_pActiveScene);
+
+        OnUpdate(delta);
+        m_EventBus.DispatchEvent<Events::UpdateEvent>(Events::UpdateEvent(delta));
+    }
+
+    void Application::Render(const float delta)
+    {
+        if (!m_Renderer)
+            return;
+
+        m_Renderer->RenderFrame();
+
+        OnRender(delta);
+        m_EventBus.DispatchEvent<Events::RenderEvent>(Events::RenderEvent(delta));
+    }
+
+    void Application::RecalculateTransforms(Scene& scene)
+    {
+        for (Objects::Object* object : scene.GetObjects())
+            if (object->IsDirty())
+                object->CalculateTransformMatrix();
+    }
+
+    void Application::ReceiveResize(const uint64_t width, const uint64_t height)
+    {
+        m_Renderer->NotifyWindowResized();
+
+        const float aspect = static_cast<float>(width) / static_cast<float>(height);
+        if (m_pActiveCamera)
+            m_pActiveCamera->SetAspectRatio(aspect);
+
+        OnResize(width, height);
+    }
 }
