@@ -42,6 +42,7 @@ namespace LegendEngine::Graphics::Vulkan
         void EndFrame() override;
 
         void UpdateCameraUniforms(const Objects::Camera& camera) override;
+        void UpdateDefaultMaterialUniforms();
 
         void CreateSwapchain();
         void CreateRenderPass();

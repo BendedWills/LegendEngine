@@ -309,6 +309,16 @@ namespace LegendEngine::Graphics::Vulkan
         }
     }
 
+    void VulkanRenderer::UpdateDefaultMaterialUniforms()
+    {
+        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        {
+            VulkanMaterial::Uniforms uniforms;
+            void* data = m_DefaultMatUniforms->GetMappedData(i);
+            *static_cast<VulkanMaterial::Uniforms*>(data) = uniforms;
+        }
+    }
+
     void VulkanRenderer::CreateSwapchain()
     {
         TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
@@ -420,6 +430,8 @@ namespace LegendEngine::Graphics::Vulkan
 
         m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
         m_DefaultMatUniforms.emplace(m_Context, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
+
+        UpdateDefaultMaterialUniforms();
     }
 
     void VulkanRenderer::CreateShaders()
