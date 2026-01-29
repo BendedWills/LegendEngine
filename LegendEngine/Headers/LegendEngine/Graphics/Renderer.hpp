@@ -24,6 +24,7 @@ namespace LegendEngine::Graphics
 
         virtual Scope<Resources::Shader> CreateShader(
             std::span<Resources::Shader::Stage> stages) = 0;
+        virtual Scope<Resources::Material> CreateMaterial() = 0;
 
         virtual void SetVSyncEnabled(bool vsync) {}
         virtual void NotifyWindowResized() {}

@@ -62,10 +62,25 @@ namespace LegendEngine::Graphics::Vulkan
         vmaDestroyImage(m_Context.GetAllocator(), m_Image, m_ImageAllocation);
     }
 
+    VkDescriptorType VulkanTexture2D::GetDescriptorType()
+    {
+        return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+
+    VkDescriptorImageInfo VulkanTexture2D::GetImageInfo(uint32_t setIndex)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = m_ImageView;
+        imageInfo.sampler = m_Sampler;
+
+        return imageInfo;
+    }
+
     VkFormat VulkanTexture2D::FindImageFormat(uint32_t channels) const
     {
         VkFormat format;
-        switch (GetChannels())
+        switch (channels)
         {
             case 1: format = VK_FORMAT_R8_SRGB; break;
             case 3: format = VK_FORMAT_R8G8B8_SRGB; break;

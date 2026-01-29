@@ -6,6 +6,7 @@
 
 namespace LegendEngine::Graphics
 {
+    GraphicsContext::~GraphicsContext() {}
 
     Scope<GraphicsContext> GraphicsContext::Create(const GraphicsAPI api,
         std::string_view applicationName, bool debug, Logger& logger)

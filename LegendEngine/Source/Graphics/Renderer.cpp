@@ -24,14 +24,20 @@ namespace LegendEngine::Graphics
             return;
         }
 
+        if (pCamera->IsDirty())
+        {
+            pCamera->CalculateViewMatrix();
+            UpdateCameraUniforms(*pCamera);
+        }
+
         if (pCamera->IsCameraDirty())
         {
-            UpdateCameraUniforms(*pCamera);
             pCamera->CalculateProjectionMatrix();
+            UpdateCameraUniforms(*pCamera);
         }
 
         RenderScene(m_App.GetGlobalScene());
-        if (Scene* pScene = m_App.GetActiveScene())
+        if (Scene* pScene = m_App.GetActiveScene(); pScene)
             RenderScene(*pScene);
 
         EndFrame();
@@ -45,7 +51,7 @@ namespace LegendEngine::Graphics
 
         const std::type_index meshType = typeid(MeshComponent);
         const auto& components = scene.GetObjectComponents();
-        if (components.contains(meshType))
+        if (!components.contains(meshType))
             return;
         const std::vector<Component*>* meshComponents = &components.at(meshType);
 
@@ -60,13 +66,15 @@ namespace LegendEngine::Graphics
             Material* pMaterial = component.GetMaterial();
             if (pMaterial != lastMaterial)
             {
-                pMaterial->UpdateIfChanged();
+                if (pMaterial && pMaterial->HasChanged())
+                {
+                    pMaterial->UpdateMaterial();
+                    pMaterial->SetChanged(false);
+                }
+
                 UseMaterial(pMaterial);
                 lastMaterial = pMaterial;
             }
-
-            if (!pMaterial)
-                continue;
 
             DrawMesh(component);
         }

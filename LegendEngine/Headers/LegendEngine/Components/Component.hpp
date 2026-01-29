@@ -14,7 +14,7 @@ namespace LegendEngine::Components
         friend class ComponentHolder;
     public:
         Component() = default;
-        virtual ~Component() = default;
+        virtual ~Component();
         LEGENDENGINE_NO_COPY(Component);
 
         Objects::Object& GetObject() const;

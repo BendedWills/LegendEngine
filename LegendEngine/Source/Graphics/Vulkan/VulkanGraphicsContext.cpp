@@ -40,6 +40,7 @@ namespace LegendEngine::Graphics::Vulkan
         }
 
         m_Context.m_Logger.Log(level, ss.str());
+
     }
 
     VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName,
@@ -69,11 +70,6 @@ namespace LegendEngine::Graphics::Vulkan
         )
     {
         return std::make_unique<VulkanVertexBuffer>(m_GraphicsContext, vertices, indices);
-    }
-
-    Scope<Resources::Material> VulkanGraphicsContext::CreateMaterial()
-    {
-        return std::make_unique<VulkanMaterial>();
     }
 
     Scope<Resources::Texture2D> VulkanGraphicsContext::CreateTexture2D(IO::TextureLoader& loader)

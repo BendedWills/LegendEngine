@@ -72,7 +72,6 @@ add_library(${PROJECT_NAME} STATIC Source/Application.cpp
 		Source/Events/RenderEvent.cpp
 		Source/IO/TextureLoader.cpp
 		Headers/LegendEngine/IO/TextureLoader.hpp
-		Source/Resources/Resource.cpp
 		Source/Resources/Texture2D.cpp
 		Source/Resources/Material.cpp
 		Source/Resources/Shader.cpp
@@ -90,7 +89,11 @@ add_library(${PROJECT_NAME} STATIC Source/Application.cpp
 		Source/Graphics/Vulkan/VulkanVertexBuffer.cpp
 		Source/Graphics/Vulkan/ShaderModule.cpp
 		Headers/LegendEngine/Graphics/Vulkan/ShaderModule.hpp
-		Source/Graphics/Vulkan/Pipeline.cpp)
+		Source/Graphics/Vulkan/Pipeline.cpp
+		Source/Resources/Resource.cpp
+		Source/Graphics/VertexBuffer.cpp
+		Source/Graphics/Vulkan/VmaImplementation.cpp
+		Source/IO/StbImageImplementation.cpp)
 add_dependencies(${PROJECT_NAME} tether tetherRendering compileLegendEngineAssets)
 
 if (MSVC)

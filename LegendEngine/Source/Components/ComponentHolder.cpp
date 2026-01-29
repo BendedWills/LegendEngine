@@ -3,9 +3,7 @@
 namespace LegendEngine::Components
 {
     ComponentHolder::~ComponentHolder()
-    {
-        ClearComponents();
-    }
+    {}
 
     ComponentHolder::HolderType& ComponentHolder::GetComponents()
     {
@@ -20,7 +18,7 @@ namespace LegendEngine::Components
     void ComponentHolder::ClearComponents()
     {
         for (auto& [key, val] : m_Components)
-            SpawnRemoveEvent(key, *val.get());
+            SpawnRemoveEvent(key, *val);
 
         m_Components.clear();
     }

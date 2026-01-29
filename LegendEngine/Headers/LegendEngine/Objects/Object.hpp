@@ -44,17 +44,18 @@ namespace LegendEngine::Objects
         virtual void TransformChanged() {}
 
         Vector3f m_Position;
-        Vector3f m_Scale;
+        Vector3f m_Scale = Vector3f(1.0f);
 
         Quaternion m_Rotation;
 
         Matrix4x4f m_Transform;
+
+        bool m_Dirty = false;
     private:
         void SpawnAddEvent(std::type_index type, Components::Component& component) override;
         void SpawnRemoveEvent(std::type_index type, Components::Component& component) override;
 
         bool m_Enabled = true;
-        bool m_Dirty = false;
         bool m_CalculatesMatrices;
     };
 }

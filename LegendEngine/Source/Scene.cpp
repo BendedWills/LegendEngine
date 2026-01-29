@@ -50,6 +50,11 @@ namespace LegendEngine
         m_Objects.clear();
     }
 
+    Scope<Scene> Scene::Create()
+    {
+        return std::make_unique<Scene>();
+    }
+
     Scene::ObjectsVecType& Scene::GetObjects()
     {
         return m_Objects;

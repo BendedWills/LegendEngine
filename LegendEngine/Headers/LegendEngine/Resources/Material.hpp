@@ -21,7 +21,7 @@ namespace LegendEngine::Resources
 
 		void SetChanged(bool changed);
 		bool HasChanged() const;
-	    virtual void UpdateIfChanged() = 0;
+	    virtual void UpdateMaterial() = 0;
 
 		static Scope<Material> Create();
 	private:

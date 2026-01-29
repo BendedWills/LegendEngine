@@ -52,6 +52,7 @@ namespace LegendEngine
         static int RunApplication(Args... args)
         {
             m_Instance = std::make_unique<T>(args...);
+            m_Instance->SetupApplication();
 
             try
             {

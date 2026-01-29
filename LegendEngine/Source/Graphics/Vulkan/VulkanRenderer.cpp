@@ -88,6 +88,11 @@ namespace LegendEngine::Graphics::Vulkan
         return std::make_unique<VulkanShader>(m_Context, stages, sets, m_RenderPass);
     }
 
+    Scope<Material> VulkanRenderer::CreateMaterial()
+    {
+        return std::make_unique<VulkanMaterial>(m_Context, m_MaterialLayout);
+    }
+
     void VulkanRenderer::SetVSyncEnabled(const bool vsync)
     {
         m_VSync = vsync;
@@ -181,15 +186,18 @@ namespace LegendEngine::Graphics::Vulkan
         m_Sets[0] = *m_CameraSet->GetSetAtIndex(m_CurrentFrame);
         m_Sets[1] = *m_DefaultMatSet->GetSetAtIndex(m_CurrentFrame);
         m_pCurrentShader = &m_SolidShader.value();
+
+        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_pCurrentShader->GetPipeline());
     }
 
-    void VulkanRenderer::UseMaterial(Resources::Material* pMaterial)
+    void VulkanRenderer::UseMaterial(Material* pMaterial)
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
         const auto pVkMat = static_cast<VulkanMaterial*>(pMaterial);
 
         VulkanShader* pShader = &m_SolidShader.value();
-        if (const Resources::Texture2D* pTexture = pMaterial->GetTexture();
+        if (const Texture2D* pTexture = pMaterial->GetTexture();
             pMaterial && pTexture)
         {
             m_Sets[1] = pVkMat->GetSetAtIndex(m_CurrentFrame);
@@ -213,9 +221,11 @@ namespace LegendEngine::Graphics::Vulkan
         auto& vertexBuffer = static_cast<VulkanVertexBuffer&>(
             mesh.GetVertexBuffer());
 
-        const Matrix4x4f transform = object.GetTransformationMatrix();
+        Pipeline::ObjectTransform transform;
+        transform.transform = object.GetTransformationMatrix();
+
         vkCmdPushConstants(buffer, m_pCurrentShader->GetPipelineLayout(),
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Matrix4x4f),
+            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform),
             &transform);
 
         vkCmdBindDescriptorSets(
@@ -237,7 +247,7 @@ namespace LegendEngine::Graphics::Vulkan
             VK_INDEX_TYPE_UINT32
         );
 
-        vkCmdDrawIndexed(buffer, mesh.GetVertexCount(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(buffer, mesh.GetIndexCount(), 1, 0, 0, 0);
     }
 
     void VulkanRenderer::EndFrame()
@@ -292,8 +302,11 @@ namespace LegendEngine::Graphics::Vulkan
         uniforms.projection = camera.GetProjectionMatrix();
         uniforms.view = camera.GetViewMatrix();
 
-        void* data = m_CameraUniforms->GetMappedData(m_CurrentImageIndex);
-        *static_cast<CameraUniforms*>(data) = uniforms;
+        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        {
+            void* data = m_CameraUniforms->GetMappedData(i);
+            *static_cast<CameraUniforms*>(data) = uniforms;
+        }
     }
 
     void VulkanRenderer::CreateSwapchain()
@@ -406,7 +419,7 @@ namespace LegendEngine::Graphics::Vulkan
             0);
 
         m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
-        m_DefaultMatUniforms.emplace(m_Context, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 1);
+        m_DefaultMatUniforms.emplace(m_Context, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
     }
 
     void VulkanRenderer::CreateShaders()
@@ -454,7 +467,8 @@ namespace LegendEngine::Graphics::Vulkan
         cmdBuffer.Begin();
         cmdBuffer.TransitionImageLayout(m_DepthImage->Get(), depthFormat,
             VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_ASPECT_DEPTH_BIT);
         cmdBuffer.End();
         cmdBuffer.Submit();
     }

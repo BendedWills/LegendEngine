@@ -21,7 +21,7 @@ namespace LegendEngine::Components
 		LEGENDENGINE_NO_COPY(ComponentHolder);
 
 		template<typename T, typename... Args>
-		T& AddComponent(Args... args)
+		T& AddComponent(Args&&... args)
 		{
 			AssureComponent<T>(args...);
 			return *static_cast<T*>(m_Components[typeid(T)].get());
@@ -63,7 +63,7 @@ namespace LegendEngine::Components
 
 		// Returns true if the component was created
 		template<typename T, typename... Args>
-		bool AssureComponent(Args... args)
+		bool AssureComponent(Args&&... args)
 		{
 			const std::type_index index(typeid(T));
 			if (m_Components.contains(index))

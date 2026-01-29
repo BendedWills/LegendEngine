@@ -26,6 +26,25 @@ namespace LegendEngine::Objects
     {
         Application::Get().GetEventBus().DispatchEvent<Events::ObjectDestroyedEvent>(
             Events::ObjectDestroyedEvent(*this));
+
+        // Calls a virtual function, so the components must be cleared before
+        // destruction of this object class
+        ClearComponents();
+    }
+
+    void Object::Enable()
+    {
+        m_Enabled = true;
+    }
+
+    void Object::Disable()
+    {
+        m_Enabled = false;
+    }
+
+    bool Object::IsEnabled() const
+    {
+        return m_Enabled;
     }
 
     void Object::AddPosition(const Vector3f& position)

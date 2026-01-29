@@ -1,4 +1,5 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 
 namespace LegendEngine::Graphics::Vulkan
 {
@@ -10,10 +11,10 @@ namespace LegendEngine::Graphics::Vulkan
         m_Context(context),
         m_Pool(CreatePool()),
         m_Set(m_Pool, layout, m_Context.GetFramesInFlight()),
-        m_Uniforms(m_Context, sizeof(Uniforms), m_Set, 1)
+        m_Uniforms(m_Context, sizeof(Uniforms), m_Set, 0)
     {}
 
-    void VulkanMaterial::UpdateIfChanged()
+    void VulkanMaterial::UpdateMaterial()
     {
         Uniforms uniforms;
         uniforms.color = GetColor();
@@ -22,9 +23,9 @@ namespace LegendEngine::Graphics::Vulkan
             *static_cast<Uniforms*>(m_Uniforms.GetMappedData(i)) = uniforms;
 
         m_Set.UpdateSets(&m_Uniforms, 0);
-        // TODO: update texture
-
-        SetChanged(false);
+        if (const auto pTexture = static_cast<VulkanTexture2D*>(GetTexture());
+            pTexture)
+            m_Set.UpdateSets(pTexture, 1);
     }
 
     VkDescriptorSet VulkanMaterial::GetSetAtIndex(const uint32_t index)

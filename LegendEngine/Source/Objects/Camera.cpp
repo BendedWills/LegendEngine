@@ -69,6 +69,8 @@ namespace LegendEngine::Objects
         auto rot = Matrix4x4f(q);
         const Matrix4x4f pos = Math::Translate(Matrix4x4f::MakeIdentity(), -m_Position);
         m_View = rot * pos;
+
+        m_Dirty = false;
     }
 
     void Camera::CalculateProjectionMatrix()

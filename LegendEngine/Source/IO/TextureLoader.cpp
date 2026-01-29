@@ -51,7 +51,7 @@ namespace LegendEngine::IO
 
     uint8_t TextureLoader::GetChannels() const
     {
-        return m_Width;
+        return m_Channels;
     }
 
     uint8_t* TextureLoader::GetData() const

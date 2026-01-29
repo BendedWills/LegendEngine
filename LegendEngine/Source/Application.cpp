@@ -7,6 +7,8 @@
 
 namespace LegendEngine
 {
+    Scope<Application> Application::m_Instance = nullptr;
+
     Application::EventHandler::EventHandler(Application& application)
         : m_Application(application)
     {}

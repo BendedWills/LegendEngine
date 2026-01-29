@@ -13,6 +13,7 @@ namespace LegendEngine::Resources
 	{
 	public:
 		explicit Texture2D(const IO::TextureLoader& loader);
+	    ~Texture2D() override = default;
 		LEGENDENGINE_NO_COPY(Texture2D);
 
 		uint64_t GetWidth() const;

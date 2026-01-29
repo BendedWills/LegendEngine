@@ -80,7 +80,7 @@ namespace LegendEngine
 			// Severity
 			<< "[" << severity << "] => "
 			<< message << ConsoleColor::RESET
-		<< '\n';
+		<< std::endl;
 	}
 
 	void Logger::SetEnabled(const bool enabled)

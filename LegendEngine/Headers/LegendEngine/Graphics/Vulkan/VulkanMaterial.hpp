@@ -9,8 +9,6 @@
 
 namespace LegendEngine::Graphics::Vulkan
 {
-    using namespace Tether::Rendering::Vulkan;
-
     class VulkanMaterial final : public Resources::Material
     {
     public:
@@ -19,19 +17,19 @@ namespace LegendEngine::Graphics::Vulkan
             Color color = Color(1.0f);
         };
 
-        VulkanMaterial(GraphicsContext& context,
+        VulkanMaterial(Tether::Rendering::Vulkan::GraphicsContext& context,
             VkDescriptorSetLayout layout);
 
-        void UpdateIfChanged() override;
+        void UpdateMaterial() override;
 
         VkDescriptorSet GetSetAtIndex(uint32_t index);
     private:
-        DescriptorPool CreatePool() const;
+        Tether::Rendering::Vulkan::DescriptorPool CreatePool() const;
 
-        GraphicsContext& m_Context;
+        Tether::Rendering::Vulkan::GraphicsContext& m_Context;
 
-        DescriptorPool m_Pool;
-        DescriptorSet m_Set;
-        UniformBuffer m_Uniforms;
+        Tether::Rendering::Vulkan::DescriptorPool m_Pool;
+        Tether::Rendering::Vulkan::DescriptorSet m_Set;
+        Tether::Rendering::Vulkan::UniformBuffer m_Uniforms;
     };
 }

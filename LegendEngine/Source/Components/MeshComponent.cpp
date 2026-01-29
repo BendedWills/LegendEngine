@@ -3,11 +3,12 @@
 
 namespace LegendEngine::Components
 {
-    MeshComponent::MeshComponent(VertexTypes::Vertex3* pVertices,
-        const uint64_t vertexCount, uint32_t* pIndices, const uint64_t indexCount)
+    MeshComponent::MeshComponent(const std::span<VertexTypes::Vertex3> vertices,
+            const std::span<uint32_t> indices)
         :
         m_VertexBuffer(Application::Get().GetGraphicsContext().CreateVertexBuffer(
-            pVertices, vertexCount, pIndices, indexCount))
+            vertices, indices)),
+        m_IndexCount(indices.size())
     {}
 
     void MeshComponent::SetMaterial(Resources::Material* pMaterial)
@@ -25,8 +26,8 @@ namespace LegendEngine::Components
         return *m_VertexBuffer;
     }
 
-    uint32_t MeshComponent::GetVertexCount() const
+    uint32_t MeshComponent::GetIndexCount() const
     {
-        return m_VertexCount;
+        return m_IndexCount;
     }
 }

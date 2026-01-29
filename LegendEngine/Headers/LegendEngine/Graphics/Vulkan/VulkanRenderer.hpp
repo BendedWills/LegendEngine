@@ -24,6 +24,7 @@ namespace LegendEngine::Graphics::Vulkan
 
         Scope<Resources::Shader> CreateShader(
             std::span<Resources::Shader::Stage> stages) override;
+        Scope<Resources::Material> CreateMaterial() override;
 
         void SetVSyncEnabled(bool vsync) override;
         void NotifyWindowResized() override;
@@ -103,6 +104,6 @@ namespace LegendEngine::Graphics::Vulkan
         uint32_t m_CurrentImageIndex = 0;
 
         VkDescriptorSet m_Sets[2] = {};
-        VulkanShader* m_pCurrentShader = &m_SolidShader.value();
+        VulkanShader* m_pCurrentShader = nullptr;
     };
 }

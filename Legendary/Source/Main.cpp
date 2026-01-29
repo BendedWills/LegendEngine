@@ -36,7 +36,9 @@ public:
 				1, 2, 3
 			};
 
-			auto& mesh = m_Object.AddComponent<MeshComponent>(testVertices, 4, indices, 6);
+			auto& mesh = m_Object.AddComponent<MeshComponent>(
+			    std::span<VertexTypes::Vertex3>(testVertices),
+			    std::span<uint32_t>(indices));
 			mesh.SetMaterial(&m_Material);
 		}
 
@@ -156,9 +158,7 @@ public:
 		Application("Legendary", false, false, RenderingAPI::VULKAN),
 #endif
 		m_Logger(GetLogger())
-	{
-		SetupApplication();
-	}
+	{}
 
 	void OnUpdate(const float delta) override
 	{
@@ -175,17 +175,20 @@ private:
 		GetWindow().SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		GetWindow().SetRawInputEnabled(true);
 
+	    testScene = Scene::Create();
+
 		// Create the camera
 		camera = Objects::Create<Camera>();
 		camera->AddScript<CameraScript>(camera.get());
 		camera->SetNearZ(0.01f);
+	    testScene->AddObject(*camera);
 
 		SetActiveCamera(camera.get());
 
 		CreateMaterials();
 		CreateObjects();
 
-		SetActiveScene(testScene);
+		SetActiveScene(*testScene);
 	}
 
 	void CreateMaterials()
@@ -220,15 +223,15 @@ private:
 		floor->SetScale(Vector3f(10));
 		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 
-		testScene.AddObject(*cube1.get());
-		testScene.AddObject(*cube2.get());
+		testScene->AddObject(*cube1.get());
+		testScene->AddObject(*cube2.get());
 		GetGlobalScene().AddObject(*floor.get());
 	}
 
 	Stopwatch fpsTimer;
 	Stopwatch timer;
 
-	Scene testScene;
+	Scope<Scene> testScene;
 
 	std::unique_ptr<Camera> camera;
 	std::unique_ptr<Object> cube1;

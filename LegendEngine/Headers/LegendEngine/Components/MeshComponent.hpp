@@ -11,16 +11,16 @@ namespace LegendEngine::Components
     class MeshComponent : public Component
     {
     public:
-        MeshComponent(VertexTypes::Vertex3* pVertices, uint64_t vertexCount,
-            uint32_t* pIndices, uint64_t indexCount);
+        MeshComponent(std::span<VertexTypes::Vertex3> vertices,
+            std::span<uint32_t> indices);
 
         void SetMaterial(Resources::Material* pMaterial);
         Resources::Material* GetMaterial() const;
         VertexBuffer& GetVertexBuffer() const;
-        uint32_t GetVertexCount() const;
+        uint32_t GetIndexCount() const;
     private:
         Resources::Material* m_pMaterial = nullptr;
         Scope<VertexBuffer> m_VertexBuffer;
-        uint64_t m_VertexCount = 0;
+        uint64_t m_IndexCount = 0;
     };
 }

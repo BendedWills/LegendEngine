@@ -11,7 +11,7 @@ namespace LegendEngine::Graphics::Vulkan
         )
         :
         m_Context(context),
-        m_VertexBuffer(context, vertices.size(), indices.size())
+        m_VertexBuffer(context, vertices.size() * sizeof(VertexTypes::Vertex3), indices.size())
     {
         m_VertexBuffer.UploadData(vertices.data(), indices.data());
 		m_VertexBuffer.FinishDataUpload();

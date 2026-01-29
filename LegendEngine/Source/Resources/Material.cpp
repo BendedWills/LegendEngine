@@ -37,6 +37,6 @@ namespace LegendEngine::Resources
 
     Scope<Material> Material::Create()
     {
-        return Application::Get().GetGraphicsContext().CreateMaterial();
+        return Application::Get().GetRenderer().CreateMaterial();
     }
 }

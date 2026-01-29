@@ -25,7 +25,6 @@ namespace LegendEngine::Graphics
         virtual Scope<VertexBuffer> CreateVertexBuffer(
             std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices) = 0;
-        virtual Scope<Resources::Material> CreateMaterial() = 0;
         virtual Scope<Resources::Texture2D> CreateTexture2D(IO::TextureLoader& loader) = 0;
 
         static Scope<GraphicsContext> Create(GraphicsAPI api,

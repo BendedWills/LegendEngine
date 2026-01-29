@@ -19,7 +19,6 @@ namespace LegendEngine
             std::vector<Components::Component*>>;
 
         Scene();
-
         explicit Scene(Events::EventBus& eventBus);
         ~Scene();
 
@@ -33,6 +32,8 @@ namespace LegendEngine
 
         ObjectsVecType& GetObjects();
         ComponentsVecType& GetObjectComponents();
+
+        static Scope<Scene> Create();
     private:
         void ListenForEvents();
 

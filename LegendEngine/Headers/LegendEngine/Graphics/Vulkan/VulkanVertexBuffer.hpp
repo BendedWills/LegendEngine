@@ -16,6 +16,7 @@ namespace LegendEngine::Graphics::Vulkan
             std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices
         );
+        ~VulkanVertexBuffer() override = default;
 
         VkBuffer GetVertexBuffer();
         VkBuffer GetIndexBuffer();
