@@ -32,9 +32,6 @@ add_library(${PROJECT_NAME} STATIC Source/Application.cpp
 		Headers/LegendEngine/Graphics/Renderer.hpp
 		Headers/LegendEngine/Graphics/GraphicsContext.hpp
 		Source/Graphics/GraphicsContext.cpp
-		Source/Graphics/Vulkan/VulkanGraphicsContext.cpp
-		Headers/LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp
-		Source/Graphics/Vulkan/VulkanRenderer.cpp
 		Source/Common/Stopwatch.cpp
 		Headers/LegendEngine/Objects/Camera.hpp
 		Headers/LegendEngine/Objects/Object.hpp
@@ -78,21 +75,9 @@ add_library(${PROJECT_NAME} STATIC Source/Application.cpp
 		Source/Components/MeshComponent.cpp
 		Headers/LegendEngine/Resources/Shader.hpp
 		Source/Graphics/Renderer.cpp
-		Source/Graphics/Vulkan/VulkanTexture2D.cpp
-		Source/Graphics/Vulkan/VulkanShader.cpp
-		Source/Graphics/Vulkan/VulkanMaterial.cpp
-		Headers/LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp
-		Headers/LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp
-		Headers/LegendEngine/Graphics/Vulkan/VulkanShader.hpp
-		Headers/LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp
 		Source/Components/Component.cpp
-		Source/Graphics/Vulkan/VulkanVertexBuffer.cpp
-		Source/Graphics/Vulkan/ShaderModule.cpp
-		Headers/LegendEngine/Graphics/Vulkan/ShaderModule.hpp
-		Source/Graphics/Vulkan/Pipeline.cpp
 		Source/Resources/Resource.cpp
 		Source/Graphics/VertexBuffer.cpp
-		Source/Graphics/Vulkan/VmaImplementation.cpp
 		Source/IO/StbImageImplementation.cpp)
 add_dependencies(${PROJECT_NAME} tether tetherRendering compileLegendEngineAssets)
 
@@ -110,6 +95,24 @@ if (LGENG_VULKAN_API)
 	find_package(Vulkan REQUIRED)
 
 	add_definitions(-D_VULKAN_API)
+
+	target_sources(${PROJECT_NAME} PRIVATE
+			Source/Graphics/Vulkan/VulkanGraphicsContext.cpp
+			Headers/LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp
+			Source/Graphics/Vulkan/VulkanRenderer.cpp
+			Source/Graphics/Vulkan/VulkanTexture2D.cpp
+			Source/Graphics/Vulkan/VulkanShader.cpp
+			Source/Graphics/Vulkan/VulkanMaterial.cpp
+			Headers/LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp
+			Headers/LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp
+			Headers/LegendEngine/Graphics/Vulkan/VulkanShader.hpp
+			Headers/LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp
+			Source/Graphics/Vulkan/VulkanVertexBuffer.cpp
+			Source/Graphics/Vulkan/ShaderModule.cpp
+			Headers/LegendEngine/Graphics/Vulkan/ShaderModule.hpp
+			Source/Graphics/Vulkan/Pipeline.cpp
+			Source/Graphics/Vulkan/VmaImplementation.cpp
+	)
 
 	set(VK_LIBS ${VK_LIBS} ${Vulkan_LIBRARIES})
 	set(VK_INCLUDES ${VK_INCLUDES} ${Vulkan_INCLUDE_DIR})
