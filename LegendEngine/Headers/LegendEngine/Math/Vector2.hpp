@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_VECTOR2_HPP
-#define _LEGENDENGINE_MATH_VECTOR2_HPP
+#pragma once
 
 #include <LegendEngine/Math/Defs.hpp>
 
@@ -52,5 +51,3 @@ namespace LegendEngine
 }
 
 #include <LegendEngine/Math/Vector2.inl>
-
-#endif //_LEGENDENGINE_MATH_VECTOR2_HPP

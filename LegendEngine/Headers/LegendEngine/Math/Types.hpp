@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_TYPES_HPP
-#define _LEGENDENGINE_MATH_TYPES_HPP
+#pragma once
 
 #include <LegendEngine/Math/Matrix4x4.hpp>
 #include <LegendEngine/Math/Vector4.hpp>
@@ -15,5 +14,3 @@ namespace LegendEngine
 	using Vector3f = Vector3<float>;
 	using Vector4f = Vector4<float>;
 }
-
-#endif //_LEGENDENGINE_MATH_TYPES_HPP

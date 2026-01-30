@@ -1,3 +1,5 @@
+#pragma once
+
 namespace LegendEngine
 {
 	template<typename T>

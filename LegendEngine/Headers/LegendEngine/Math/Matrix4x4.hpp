@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_MATRIX4X4_HPP
-#define _LEGENDENGINE_MATH_MATRIX4X4_HPP
+#pragma once
 
 #include <LegendEngine/Math/Vector4.hpp>
 #include <LegendEngine/Math/Quaternion.hpp>
@@ -42,5 +41,3 @@ namespace LegendEngine
 }
 
 #include <LegendEngine/Math/Matrix4x4.inl>
-
-#endif //_LEGENDENGINE_MATH_MATRIX4X4_HPP

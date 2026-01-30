@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_FUNCS_VECTOR3_HPP
-#define _LEGENDENGINE_MATH_FUNCS_VECTOR3_HPP
+#pragma once
 
 #include <LegendEngine/Math/Vector3.hpp>
 
@@ -17,5 +16,3 @@ namespace LegendEngine::Math
 }
 
 #include <LegendEngine/Math/Funcs_Vector3.inl>
-
-#endif //_LEGENDENGINE_MATH_FUNCS_VECTOR3_HPP

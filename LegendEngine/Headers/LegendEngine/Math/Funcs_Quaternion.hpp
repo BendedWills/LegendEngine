@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_FUNCS_QUATERNION_HPP
-#define _LEGENDENGINE_MATH_FUNCS_QUATERNION_HPP
+#pragma once
 
 #include <LegendEngine/Math/Quaternion.hpp>
 
@@ -21,5 +20,3 @@ namespace LegendEngine::Math
 }
 
 #include <LegendEngine/Math/Funcs_Quaternion.inl>
-
-#endif //_LEGENDENGINE_MATH_FUNCS_QUATERNION_HPP

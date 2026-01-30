@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_MATH_HPP
-#define _LEGENDENGINE_MATH_MATH_HPP
+#pragma once
 
 #include <LegendEngine/Math/Funcs.hpp>
 
@@ -10,5 +9,3 @@
 #include <LegendEngine/Math/Vector2.hpp>
 #include <LegendEngine/Math/Vector3.hpp>
 #include <LegendEngine/Math/Vector4.hpp>
-
-#endif //_LEGENDENGINE_MATH_MATH_HPP

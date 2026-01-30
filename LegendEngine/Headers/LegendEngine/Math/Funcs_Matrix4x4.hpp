@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_FUNCS_MATRIX4X4_HPP
-#define _LEGENDENGINE_MATH_FUNCS_MATRIX4X4_HPP
+#pragma once
 
 #include <LegendEngine/Math/Matrix4x4.hpp>
 
@@ -60,5 +59,3 @@ namespace LegendEngine::Math
 }
 
 #include <LegendEngine/Math/Funcs_Matrix4x4.inl>
-
-#endif //_LEGENDENGINE_MATH_FUNCS_MATRIX4X4_HPP

@@ -1,6 +1,3 @@
-#ifndef _LEGENDENGINE_MATH_DEFS_HPP
-#define _LEGENDENGINE_MATH_DEFS_HPP
+#pragma once
 
 #define LGENG_MATH_FUNC inline
-
-#endif //_LEGENDENGINE_MATH_DEFS_HPP

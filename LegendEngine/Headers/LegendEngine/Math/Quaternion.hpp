@@ -1,5 +1,4 @@
-#ifndef _LEGENDENGINE_MATH_QUATERNION_HPP
-#define _LEGENDENGINE_MATH_QUATERNION_HPP
+#pragma once
 
 #include <LegendEngine/Math/Vector3.hpp>
 
@@ -36,5 +35,3 @@ namespace LegendEngine
 }
 
 #include <LegendEngine/Math/Quaternion.inl>
-
-#endif //_LEGENDENGINE_MATH_QUATERNION_HPP
