@@ -35,7 +35,10 @@ namespace LegendEngine::Graphics::Vulkan
     {
         // Application::Get() doesn't work here
 
-        CreateSwapchain();
+        const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
+        ChooseSurfaceFormat(details);
+
+        CreateSwapchain(details);
         CreateRenderPass();
         CreateUniforms();
         CreateShaders();
@@ -319,11 +322,8 @@ namespace LegendEngine::Graphics::Vulkan
         }
     }
 
-    void VulkanRenderer::CreateSwapchain()
+    void VulkanRenderer::CreateSwapchain(const TetherVulkan::SwapchainDetails& details)
     {
-        TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
-        ChooseSurfaceFormat(details);
-
         m_Swapchain.emplace(m_Context, details, m_SurfaceFormat,
             m_Surface.Get(), m_Window.GetWidth(), m_Window.GetHeight(),
             m_VSync);
@@ -709,9 +709,19 @@ namespace LegendEngine::Graphics::Vulkan
         // recreating the m_Swapchain->
         vkDeviceWaitIdle(m_Device);
 
+        const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
+        ChooseSurfaceFormat(details);
+
+        if (details.capabilities.currentExtent.width == 0 ||
+            details.capabilities.currentExtent.height == 0)
+        {
+            m_ShouldRecreateSwapchain = false;
+            return;
+        }
+
         DestroySwapchain();
 
-        CreateSwapchain();
+        CreateSwapchain(details);
         CreateDepthImages();
         CreateFramebuffers();
         CreateCommandBuffers();

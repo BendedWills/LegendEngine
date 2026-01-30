@@ -44,7 +44,7 @@ namespace LegendEngine::Graphics::Vulkan
         void UpdateCameraUniforms(const Objects::Camera& camera) override;
         void UpdateDefaultMaterialUniforms();
 
-        void CreateSwapchain();
+        void CreateSwapchain(const TetherVulkan::SwapchainDetails& details);
         void CreateRenderPass();
         void CreateUniforms();
         void CreateShaders();
