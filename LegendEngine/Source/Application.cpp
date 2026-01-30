@@ -27,7 +27,7 @@ namespace LegendEngine
         const GraphicsAPI api)
         :
         m_EventHandler(*this),
-        m_Logger(applicationName, logging),
+        m_Logger(applicationName, logging, debug),
         m_GlobalScene(m_EventBus),
         m_Debug(debug)
     {
@@ -129,6 +129,11 @@ namespace LegendEngine
     bool Application::IsCloseRequested() const
     {
         return m_Window->IsCloseRequested();
+    }
+
+    bool Application::HasConstructed()
+    {
+        return m_Instance != nullptr;
     }
 
     Application& Application::Get()

@@ -15,11 +15,6 @@ namespace LegendEngine::Objects
     {
         SetObject(this);
         CalculateTransformMatrix();
-
-        std::stringstream str;
-        str << "Created Object (" << reinterpret_cast<uint64_t>(this) << ")";
-
-        Application::Get().GetLogger().Log(Logger::Level::DEBUG, str.str());
     }
 
     Object::~Object()

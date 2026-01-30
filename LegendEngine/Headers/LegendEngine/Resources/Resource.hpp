@@ -7,7 +7,7 @@ namespace LegendEngine::Resources
     class Resource
     {
     public:
-        Resource() = default;
+        Resource();
         virtual ~Resource() = 0;
         LEGENDENGINE_NO_COPY(Resource);
     };

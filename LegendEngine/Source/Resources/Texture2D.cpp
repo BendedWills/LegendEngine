@@ -30,6 +30,7 @@ namespace LegendEngine::Resources
 
     Scope<Texture2D> Texture2D::Create(IO::TextureLoader& loader)
     {
+        LGENG_DEBUG_LOG("Texture2D created");
         return Application::Get().GetGraphicsContext().CreateTexture2D(loader);
     }
 }

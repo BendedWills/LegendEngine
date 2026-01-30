@@ -70,6 +70,7 @@ namespace LegendEngine
             return EXIT_SUCCESS;
         }
 
+        static bool HasConstructed();
         static Application& Get();
     protected:
         virtual void OnSetup() = 0;

@@ -29,6 +29,9 @@ namespace LegendEngine
         if (HasObject(object))
             return;
 
+        LGENG_DEBUG_LOGMANY(std::hex, std::showbase,
+            "Added object ", &object, " to scene ", this);
+
         m_Objects.push_back(&object);
 
         AddObjectComponents(object);
@@ -41,6 +44,9 @@ namespace LegendEngine
 
     void Scene::RemoveObject(Objects::Object& object)
     {
+        LGENG_DEBUG_LOGMANY(std::hex, std::showbase,
+            "Removed object ", &object, " from scene ", this);
+
         RemoveObjectComponents(object);
         std::erase(m_Objects, &object);
     }

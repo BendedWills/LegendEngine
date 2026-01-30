@@ -1,4 +1,5 @@
 #include <LegendEngine/Events/ComponentAddedEvent.hpp>
+#include <LegendEngine/Application.hpp>
 
 namespace LegendEngine::Events
 {
@@ -10,7 +11,11 @@ namespace LegendEngine::Events
         m_Object(object),
         m_Component(component),
         m_ComponentTypeIndex(typeIndex)
-    {}
+    {
+        LGENG_DEBUG_LOGMANY("Component added to Object (&object = ",
+            std::hex, std::showbase,
+            reinterpret_cast<size_t>(&object), ")");
+    }
 
     Objects::Object& ComponentAddedEvent::GetObject() const
     {

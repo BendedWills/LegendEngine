@@ -35,6 +35,10 @@ namespace LegendEngine::Graphics::Vulkan
     {
         // Application::Get() doesn't work here
 
+#ifdef LEGENDENGINE_DEBUG
+        app.GetLogger().Log(Logger::Level::DEBUG, "Creating renderer");
+#endif
+
         const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
         ChooseSurfaceFormat(details);
 
@@ -46,11 +50,15 @@ namespace LegendEngine::Graphics::Vulkan
         CreateFramebuffers();
         CreateCommandBuffers();
         CreateSyncObjects();
+
+#ifdef LEGENDENGINE_DEBUG
+        app.GetLogger().Log(Logger::Level::DEBUG, "Created renderer");
+#endif
     }
 
     VulkanRenderer::~VulkanRenderer()
     {
-        m_App.GetLogger().Log(Logger::Level::DEBUG, "Destroying renderer");
+        LGENG_DEBUG_LOG("Destroying renderer");
 
         vkDeviceWaitIdle(m_Device);
 
@@ -77,7 +85,7 @@ namespace LegendEngine::Graphics::Vulkan
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
         }
 
-        m_App.GetLogger().Log(Logger::Level::DEBUG, "Destroyed renderer");
+        LGENG_DEBUG_LOG("Destroyed renderer");
     }
 
     Scope<Shader> VulkanRenderer::CreateShader(std::span<Shader::Stage> stages)

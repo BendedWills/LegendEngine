@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <string>
 
 namespace LegendEngine
@@ -22,8 +23,20 @@ namespace LegendEngine
 		void SetEnabled(bool enabled);
 		void SetDebug(bool debug);
 
-		bool IsEnabled() const;
-		bool IsDebugEnabled() const;
+		[[nodiscard]] bool IsEnabled() const;
+		[[nodiscard]] bool IsDebugEnabled() const;
+
+	    template <typename... Args>
+	    void LogMany(const Level level, Args&&... args)
+	    {
+	        std::ostringstream oss;
+	        ([&]
+	        {
+	            oss << args;
+	        } (), ...);
+
+	        Log(level, oss.str());
+	    }
 	private:
 		static std::string GetFormattedTime();
 

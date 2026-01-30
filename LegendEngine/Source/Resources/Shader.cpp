@@ -5,6 +5,7 @@ namespace LegendEngine::Resources
 {
     Scope<Shader> Shader::Create(const std::span<Stage> stages)
     {
+        LGENG_DEBUG_LOG("Shader created");
         return Application::Get().GetRenderer().CreateShader(stages);
     }
 }

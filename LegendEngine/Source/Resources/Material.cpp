@@ -37,6 +37,7 @@ namespace LegendEngine::Resources
 
     Scope<Material> Material::Create()
     {
+        LGENG_DEBUG_LOG("Material created");
         return Application::Get().GetRenderer().CreateMaterial();
     }
 }
