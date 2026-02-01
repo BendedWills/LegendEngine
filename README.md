@@ -4,39 +4,16 @@ Legend Engine is a game engine made using C++.
 
 There is also Legendary, the UI editor for LegendEngine.
 
-Currently, Legend Engine only works for Linux, but a Windows version will also eventually be available.
+# How to build
 
-# Compilation
+First, clone the repository with something like `git clone https://github.com/BendedWills/LegendEngine`
 
-The `Build.sh` script will build LegendEngine, Legendary, and all tests for both of them. Build files will then be in the `Build` directory.
+LegendEngine must be built with some graphics functionality. This is chosen with the CMake options `LGENG_VULKAN_API` for Vulkan and `LGENG_OPENGL_API` for OpenGL (currently unimplemented).
 
-But if you want to build the project without using the shell script, here is how:
+## With `LGENG_VULKAN_API = ON`
 
-# Linux build instructions
-If you are on linux and want to build this project, you've come to the right place.
+Install the Vulkan SDK from https://vulkan.lunarg.com/, or use the vulkan-sdk apt package on debian based linux distros, then continue to the final step.
 
-First, run `git submodule update --init` to clone all dependencies.
+## Final step
 
-Then, run CMake to generate the Makefile like so: 
-
-	cmake -S . -B Build
-
-Then, run the make command to compile the executable:
-
-	make -j8 -C Build all
-
-The -C option tells make that the makefile is located in the "Build" directory.
-
-The -j8 option tells make to use 8 threads to build the executable. Replace the 8 with however many cores you have on your computer.
-
-And there you go! All projects and tests will now be compiled and can be run by their executables in the build directory.
-
-Something to note is that if you are compiling this with Tether in an external directory, you'll want to set these cmake options:
-```
--DTETHER_BIN2CPP_DIR=""
--DOPENMC_TETHER_DIR=""
--DTETHER_BUILD_RENDERING=ON
--DLGENG_VULKAN_API=True
--DTETHER_RENDERING_VULKAN_API=ON
--DTETHER_VMA_DIR=""
-```
+Run `cmake .` in the root directory of the repository. Then, build using the chosen CMake generator, like Visual Studio, Ninja, or makefiles.

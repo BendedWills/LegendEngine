@@ -3,16 +3,16 @@ project ("Legendary")
 
 find_package(Vulkan REQUIRED)
 
-set(CMAKE_CXX_STANDARD 23)
-
 file(GLOB_RECURSE SOURCES 
     "Source/*.cpp" "Source/*.c"
     "Headers/*.hpp" "Headers/*.h"
 )
 
-set(WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+set(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
-add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
+set(CMAKE_CXX_STANDARD 23)
+
+add_definitions(-DVULKAN_API -DWINDOW_MANAGEMENT)
 if (WIN32 AND ("${CMAKE_BUILD_TYPE}" MATCHES "Release"))
     add_executable(
         ${PROJECT_NAME} 
@@ -60,8 +60,4 @@ elseif(WIN32)
         ${Vulkan_LIBRARIES}
         LegendEngine
     )
-endif()
-
-if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    add_definitions(-D_DEBUG)
 endif()
