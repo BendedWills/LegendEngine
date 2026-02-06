@@ -1,5 +1,6 @@
 #pragma once
 
+#include <LegendEngine/Components/LightComponent.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <Tether/Rendering/Vulkan/DescriptorSet.hpp>
@@ -35,6 +36,19 @@ namespace LegendEngine::Graphics::Vulkan
             Matrix4x4f projection;
         };
 
+        struct LightUniforms
+        {
+            Color color;
+            alignas(16) Vector3f position;
+            Components::LightComponent::LightType type;
+        };
+
+        struct SceneUniforms
+        {
+            Color ambientLight;
+            alignas(16) LightUniforms lights[8];
+        };
+
         bool StartFrame() override;
         void BeginCommandBuffer();
         void UseMaterial(Resources::Material* pMaterial) override;
@@ -55,6 +69,7 @@ namespace LegendEngine::Graphics::Vulkan
 
         void CreateCameraDescriptorSetLayout();
         void CreateMaterialDescriptorSetLayout();
+        void CreateSceneDescriptorSetLayout();
 
         TetherVulkan::SwapchainDetails QuerySwapchainSupport();
         void ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details);
@@ -76,11 +91,14 @@ namespace LegendEngine::Graphics::Vulkan
         VkRenderPass m_RenderPass;
         VkDescriptorSetLayout m_CameraLayout = nullptr;
         VkDescriptorSetLayout m_MaterialLayout = nullptr;
+        VkDescriptorSetLayout m_SceneLayout = nullptr;
         std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
         std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
         std::optional<TetherVulkan::DescriptorSet> m_DefaultMatSet;
+        std::optional<TetherVulkan::DescriptorSet> m_SceneSet;
         std::optional<TetherVulkan::UniformBuffer> m_CameraUniforms;
         std::optional<TetherVulkan::UniformBuffer> m_DefaultMatUniforms;
+        std::optional<TetherVulkan::UniformBuffer> m_SceneUniforms;
 
         std::optional<VulkanShader> m_SolidShader;
         std::optional<VulkanShader> m_TexturedShader;

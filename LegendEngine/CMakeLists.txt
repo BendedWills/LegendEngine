@@ -59,7 +59,11 @@ add_library(${PROJECT_NAME} STATIC
 		Source/Components/Component.cpp
 		Source/Resources/Resource.cpp
 		Source/Graphics/VertexBuffer.cpp
-		Source/IO/StbImageImplementation.cpp)
+		Source/IO/StbImageImplementation.cpp
+		Headers/LegendEngine/Components/LightComponent.hpp
+		Headers/LegendEngine/Objects/Light.hpp
+		Source/Objects/Light.cpp
+		Source/Components/LightComponent.cpp)
 add_dependencies(${PROJECT_NAME} tether tetherRendering compileLegendEngineAssets)
 
 if (MSVC)

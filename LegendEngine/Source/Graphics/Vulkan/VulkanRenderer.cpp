@@ -75,6 +75,7 @@ namespace LegendEngine::Graphics::Vulkan
 
         vkDestroyDescriptorSetLayout(m_Device, m_CameraLayout, nullptr);
         vkDestroyDescriptorSetLayout(m_Device, m_MaterialLayout, nullptr);
+        vkDestroyDescriptorSetLayout(m_Device, m_SceneLayout, nullptr);
 
         vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 
@@ -439,6 +440,9 @@ namespace LegendEngine::Graphics::Vulkan
         m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
         m_DefaultMatUniforms.emplace(m_Context, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
 
+        m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
+        m_SceneUniforms.emplace(m_Context, sizeof(SceneUniforms), *m_SceneSet, 0);
+
         UpdateDefaultMaterialUniforms();
     }
 
@@ -611,6 +615,24 @@ namespace LegendEngine::Graphics::Vulkan
 
         if (vkCreateDescriptorSetLayout(m_Device,
             &setInfo, nullptr, &m_MaterialLayout) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create descriptor set layout");
+    }
+
+    void VulkanRenderer::CreateSceneDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uniformBinding{};
+        uniformBinding.binding = 0;
+        uniformBinding.descriptorCount = 1;
+        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo setInfo{};
+        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        setInfo.bindingCount = 1;
+        setInfo.pBindings = &uniformBinding;
+
+        if (vkCreateDescriptorSetLayout(m_Device,
+            &setInfo, nullptr, &m_SceneLayout) != VK_SUCCESS)
             throw std::runtime_error("Failed to create descriptor set layout");
     }
 

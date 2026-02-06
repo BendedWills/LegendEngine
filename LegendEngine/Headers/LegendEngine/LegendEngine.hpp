@@ -11,3 +11,4 @@
 #include <LegendEngine/Script.hpp>
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
 #include <LegendEngine/Objects/ObjectCreator.hpp>
+#include <LegendEngine/Objects/Light.hpp>
