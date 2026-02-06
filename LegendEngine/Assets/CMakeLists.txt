@@ -30,7 +30,6 @@ if (LGENG_VULKAN_API)
 	# Firstly, compile Vulkan shaders into .spv.
 
 	add_custom_target(compile${APPLICATION_NAME}VKSpv)
-	add_dependencies(compile${APPLICATION_NAME}VKSpv glslc_exe)
 
 	# Find all shader files
 	file(GLOB_RECURSE SHADERS
@@ -49,8 +48,9 @@ if (LGENG_VULKAN_API)
 		# Run glslc for each shader
 		add_custom_command(
 			TARGET compile${APPLICATION_NAME}VKSpv
+			PRE_BUILD
 			COMMAND
-				glslc_exe
+				glslc
 				# Output file
 				-o \"${BUILD_SHADER_DIR}/${FILENAME}.spv\"
 				# Source file
@@ -72,7 +72,8 @@ if (LGENG_VULKAN_API)
 		get_filename_component(FILENAME ${source} NAME)
 
 		add_custom_command(
-			TARGET convert${APPLICATION_NAME}SpvToHeaders 
+			TARGET convert${APPLICATION_NAME}SpvToHeaders
+			PRE_BUILD
 			COMMAND
 				bin2cpp
 				-s ${source}
