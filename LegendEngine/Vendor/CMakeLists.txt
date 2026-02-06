@@ -16,17 +16,10 @@ function(DeclareGitRepo libName gitRepo)
 endfunction()
 
 function(DeclareLibs)
-    DeclareGitRepo(stb https://github.com/nothings/stb)
-    DeclareGitRepo(VMA https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
     DeclareGitRepo(Tether https://github.com/BendedWills/Tether)
 endfunction()
 
 function(MakeLibsAvailable)
-    FetchContent_MakeAvailable(
-        stb
-        VMA
-    )
-
     if (NOT LGENG_TETHER_EXTERN)
         if (LGENG_VULKAN_API)
             option(TETHER_RENDERING_VULKAN_API ON)

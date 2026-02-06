@@ -1,10 +1,6 @@
 # Legendary
-Legendary is the UI editor for LegendEngine.
+Legendary will be the GUI for LegendEngine.
 
-Since LegendEngine itself is fully programmable, it can be hard to use sometimes.
-That's why Legendary exists; To provide a fully graphical version of LegendEngine.
+The working directory must be set to Legendary, the directory where the CMake list for Legendary is.
+It should automatically be set for Visual Studio and XCode, but it's generator-specific.
 
-# Dependencies
-* GL (aka OpenGL)
-* tether
-* LegendEngine

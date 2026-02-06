@@ -412,6 +412,7 @@ namespace LegendEngine::Graphics::Vulkan
     {
         CreateCameraDescriptorSetLayout();
         CreateMaterialDescriptorSetLayout();
+        CreateSceneDescriptorSetLayout();
 
         const uint32_t framesInFlight = m_Context.GetFramesInFlight();
 

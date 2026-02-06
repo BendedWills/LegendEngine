@@ -110,10 +110,6 @@ endif()
 target_include_directories(${PROJECT_NAME} 
 PUBLIC
 	"Headers"
-	"Vendor/Tether/Headers"
-	"Vendor/Tether.Rendering/Headers"
-	"Vendor/VMA/include"
-	"Vendor/stb_image/include"
 PRIVATE
 	${CMAKE_CURRENT_BINARY_DIR} # For including assets
 	${VK_INCLUDES}

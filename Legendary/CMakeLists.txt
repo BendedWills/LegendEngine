@@ -10,8 +10,6 @@ file(GLOB_RECURSE SOURCES
     "Headers/*.hpp" "Headers/*.h"
 )
 
-set(WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
 add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 if (WIN32 AND ("${CMAKE_BUILD_TYPE}" MATCHES "Release"))
     add_executable(
@@ -27,6 +25,8 @@ else()
 endif()
 add_dependencies(${PROJECT_NAME} LegendEngine tether tetherRendering)
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")
+
 if (MSVC)
 	target_compile_options(${PROJECT_NAME} 
         PRIVATE
@@ -37,11 +37,7 @@ endif()
 target_include_directories(${PROJECT_NAME} 
 PUBLIC 
     "Headers"
-    "../LegendEngine/Headers"
-PRIVATE 
-    "../LegendEngine/Vendor/Tether/Headers"
-    "../LegendEngine/Vendor/Tether.Rendering/Headers"
-    "../LegendEngine/Vendor/VMA/include"
+PRIVATE
     ${Vulkan_INCLUDE_DIR}
 )
 
@@ -60,8 +56,4 @@ elseif(WIN32)
         ${Vulkan_LIBRARIES}
         LegendEngine
     )
-endif()
-
-if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    add_definitions(-D_DEBUG)
 endif()
