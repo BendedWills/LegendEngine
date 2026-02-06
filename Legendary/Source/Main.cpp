@@ -223,11 +223,6 @@ private:
 		floor->SetScale(Vector3f(10));
 		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 
-<<<<<<< Updated upstream
-		testScene->AddObject(*cube1);
-		testScene->AddObject(*cube2);
-		GetGlobalScene().AddObject(*floor);
-=======
 	    light = Objects::Create<Light>();
 	    LightComponent& lightComponent = light->GetLightComponent();
 	    lightComponent.SetColor(Color(1, 0, 0, 1));
@@ -236,7 +231,6 @@ private:
 		testScene->AddObject(*cube2.get());
 	    GetGlobalScene().AddObject(*light);
 		GetGlobalScene().AddObject(*floor.get());
->>>>>>> Stashed changes
 	}
 
 	Stopwatch fpsTimer;
