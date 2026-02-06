@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 
 # Relative to the build directory 
 # Build/*name*/LegendEngine/Assets
