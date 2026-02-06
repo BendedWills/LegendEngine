@@ -1,33 +1,14 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 project ("LegendEngine")
 
-# Definitions
-option(LGENG_VULKAN_API "Build LegendEngine with Vulkan capabilities" ON)
-option(LGENG_OPENGL_API "Build LegendEngine with OpenGL capabilities" ON)
-option(LGENG_THREE_DIM "Build LegendEngine with 3D capabilities" ON)
-option(LGENG_TWO_DIM "Build LegendEngine with 2D capabilities" ON)
-option(LGENG_TETHER_EXTERN "Enable if tether is supplied externally" ON)
-message(STATUS "LGENG_VULKAN_API = ${LGENG_VULKAN_API}")
-message(STATUS "LGENG_OPENGL_API = ${LGENG_OPENGL_API}")
-message(STATUS "LGENG_THREE_DIM = ${LGENG_THREE_DIM}")
-message(STATUS "LGENG_TWO_DIM = ${LGENG_TWO_DIM}")
-message(STATUS "LGENG_TETHER_EXTERN = ${LGENG_TETHER_EXTERN}")
-
-# Config
-set(CMAKE_CXX_STANDARD 23)
-set(TETHER_RENDERING_VULKAN_API ON)
-set(TETHER_VMA_DIR "")
-
-# Tests
+add_subdirectory(Vendor)
 add_subdirectory(Tests/Math)
-
-if (NOT LGENG_TETHER_EXTERN)
-	add_subdirectory(Vendor/Tether)
-endif()
-
 add_subdirectory(Assets)
 
-add_library(${PROJECT_NAME} STATIC Source/Application.cpp
+set(CMAKE_CXX_STANDARD 23)
+
+add_library(${PROJECT_NAME} STATIC 
+		Source/Application.cpp
 		Headers/LegendEngine/Application.hpp
 		Headers/LegendEngine/Graphics/Renderer.hpp
 		Headers/LegendEngine/Graphics/GraphicsContext.hpp
@@ -93,8 +74,12 @@ set(VK_INCLUDES)
 
 if (LGENG_VULKAN_API)
 	find_package(Vulkan REQUIRED)
+	if (NOT Vulkan_FOUND)
+		message(FATAL_ERROR "Vulkan SDK not found. Install it from https://vulkan.lunarg.com/, or use the vulkan-sdk apt package")
+	endif()
 
 	add_definitions(-D_VULKAN_API)
+	set(TETHER_RENDERING_VULKAN_API ON)
 
 	target_sources(${PROJECT_NAME} PRIVATE
 			Source/Graphics/Vulkan/VulkanGraphicsContext.cpp

@@ -223,9 +223,9 @@ private:
 		floor->SetScale(Vector3f(10));
 		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 
-		testScene->AddObject(*cube1.get());
-		testScene->AddObject(*cube2.get());
-		GetGlobalScene().AddObject(*floor.get());
+		testScene->AddObject(*cube1);
+		testScene->AddObject(*cube2);
+		GetGlobalScene().AddObject(*floor);
 	}
 
 	Stopwatch fpsTimer;
