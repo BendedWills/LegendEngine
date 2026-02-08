@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libvulkan-dev vulkan-validationlayers-dev spirv-tools glslc
+          sudo apt-get install -y cmake ninja-build libvulkan-dev vulkan-validationlayers vulkan-tools mesa-vulkan-drivers
 
       - name: Configure
         run: |
