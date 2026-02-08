@@ -1,41 +1,9 @@
-cmake_minimum_required (VERSION 3.10)
-project ("Math")
+cmake_minimum_required(VERSION 3.10)
+project("MathTest")
 
-find_package(Vulkan REQUIRED)
+add_executable(${PROJECT_NAME} Main.cpp)
 
-set(CMAKE_CXX_STANDARD 17)
+target_link_libraries(${PROJECT_NAME} GTest::gtest_main LegendEngine)
 
-file(GLOB_RECURSE SOURCES 
-    "Source/*.cpp" "Source/*.c"
-    "Headers/*.hpp" "Headers/*.h"
-)
-
-add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
-add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} LegendEngine tether)
-
-target_include_directories(${PROJECT_NAME} 
-PUBLIC 
-    "Headers"
-    "../../Headers"
-PRIVATE 
-    "../../Vendor/Tether/Headers"
-    "../../Vendor/VMA/include"
-    ${Vulkan_INCLUDE_DIR}
-)
-
-if (UNIX)
-    target_link_libraries(${PROJECT_NAME} 
-        ${Vulkan_LIBRARIES} 
-        ${CMAKE_DL_LIBS} 
-        LegendEngine 
-        tether 
-        pthread 
-        X11
-    )
-elseif(WIN32)
-    target_link_libraries(${PROJECT_NAME} 
-        ${Vulkan_LIBRARIES}
-        LegendEngine
-    )
-endif()
+include(GoogleTest)
+gtest_discover_tests(${PROJECT_NAME})

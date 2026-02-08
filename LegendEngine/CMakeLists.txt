@@ -2,8 +2,11 @@ cmake_minimum_required (VERSION 3.10)
 project ("LegendEngine")
 
 add_subdirectory(Vendor)
-add_subdirectory(Tests/Math)
 add_subdirectory(Assets)
+
+if (LGENG_BUILD_TESTS)
+	add_subdirectory(Tests)
+endif()
 
 set(CMAKE_CXX_STANDARD 23)
 
