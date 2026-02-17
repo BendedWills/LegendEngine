@@ -66,7 +66,17 @@ add_library(${PROJECT_NAME} STATIC
 		Headers/LegendEngine/Components/LightComponent.hpp
 		Headers/LegendEngine/Objects/Light.hpp
 		Source/Objects/Light.cpp
-		Source/Components/LightComponent.cpp)
+		Source/Components/LightComponent.cpp
+		Headers/LegendEngine/Common/Platform.hpp
+		Headers/LegendEngine/Graphics/RenderTarget.hpp
+		Headers/LegendEngine/Graphics/WindowRenderTarget.hpp
+		Source/Graphics/RenderTarget.cpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanRenderTargetBridge.hpp
+		Source/Graphics/Vulkan/VulkanRenderTargetBridge.cpp
+		Headers/LegendEngine/Graphics/ShaderManager.hpp
+		Headers/LegendEngine/Graphics/Vulkan/VulkanShaderManager.hpp
+		Source/Graphics/Vulkan/VulkanShaderManager.cpp
+		Source/Graphics/ShaderManager.cpp)
 add_dependencies(${PROJECT_NAME} tether tetherRendering compileLegendEngineAssets)
 
 if (MSVC)
@@ -78,6 +88,12 @@ endif()
 
 set(VK_LIBS)
 set(VK_INCLUDES)
+
+if (LGENG_HEADLESS)
+	add_definitions(-DLGENG_HEADLESS)
+else()
+	target_sources(${PROJECT_NAME} PRIVATE "Source/Graphics/WindowRenderTarget.cpp")
+endif ()
 
 if (LGENG_VULKAN_API)
 	find_package(Vulkan REQUIRED)

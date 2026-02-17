@@ -1,16 +1,19 @@
 #pragma once
 
 #include <memory>
-
-#include "Common/Types.hpp"
+#include <LegendEngine/Scene.hpp>
+#include <LegendEngine/Common/Logger.hpp>
+#include <LegendEngine/Common/Types.hpp>
+#include <LegendEngine/Events/EventBus.hpp>
+#include <LegendEngine/Graphics/GraphicsContext.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
+#include <LegendEngine/Graphics/RenderTarget.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 #include <Tether/Window.hpp>
 
-#include <LegendEngine/Scene.hpp>
-#include <LegendEngine/Common/Logger.hpp>
-#include <LegendEngine/Events/EventBus.hpp>
-#include <LegendEngine/Graphics/GraphicsContext.hpp>
+#ifndef LGENG_HEADLESS
+#include <LegendEngine/Graphics/WindowRenderTarget.hpp>
+#endif
 
 namespace LegendEngine
 {
@@ -20,16 +23,24 @@ namespace LegendEngine
     class Application
     {
     public:
+#ifndef LGENG_HEADLESS
+        // Creates the Application with a WindowRenderTarget
         Application(
+            int width, int height,
             std::string_view applicationName,
             bool logging,
             bool debug,
             GraphicsAPI api);
+#endif
+        Application(
+            std::string_view applicationName,
+            bool logging,
+            bool debug,
+            Graphics::GraphicsContext& graphicsContext,
+            Graphics::Renderer& renderer);
         virtual ~Application() = 0;
 
         LEGENDENGINE_NO_COPY(Application);
-
-        void SetupApplication();
 
         void SetActiveCamera(Objects::Camera* pCamera);
         void SetActiveScene(Scene& scene);
@@ -37,20 +48,21 @@ namespace LegendEngine
         void ClearActiveScene();
 
         Graphics::GraphicsContext& GetGraphicsContext() const;
+        Graphics::RenderTarget& GetRenderTarget() const;
         Events::EventBus& GetEventBus();
         Scene& GetGlobalScene();
-        [[nodiscard]] Tether::Window& GetWindow() const;
         [[nodiscard]] Graphics::Renderer& GetRenderer() const;
         Objects::Camera* GetActiveCamera() const;
         Scene* GetActiveScene() const;
         Logger& GetLogger();
 
-        bool IsCloseRequested() const;
-
         template<typename T, typename... Args>
             requires std::is_base_of_v<Application, T>
-        static int RunApplication(Args... args)
+        static int RunApplication(Args&&... args)
         {
+            if (m_Instance)
+                return EXIT_FAILURE;
+
             m_Instance = std::make_unique<T>(args...);
             m_Instance->SetupApplication();
 
@@ -70,6 +82,19 @@ namespace LegendEngine
             return EXIT_SUCCESS;
         }
 
+        template<typename T, typename... Args>
+            requires std::is_base_of_v<Application, T>
+        static Application& CreateHeadless(Args&&... args)
+        {
+            if (m_Instance)
+                throw std::logic_error("Application already exists");
+
+            m_Instance = std::make_unique<T>(args...);
+            m_Instance->SetupApplication();
+
+            return *m_Instance;
+        }
+
         static bool HasConstructed();
         static Application& Get();
     protected:
@@ -77,8 +102,8 @@ namespace LegendEngine
 
         virtual void OnUpdate(float deltaTime) {}
         virtual void OnRender(float deltaTime) {}
-        virtual void OnResize(int width, int height) {}
     private:
+        void SetupApplication();
         void Run();
 
         // Must be called on the main thread
@@ -89,23 +114,11 @@ namespace LegendEngine
 
         static void RecalculateTransforms(Scene& scene);
 
-        void ReceiveResize(uint64_t width, uint64_t height);
-
-        class EventHandler final : public Utils::Events::EventHandler
-        {
-        public:
-            explicit EventHandler(Application& application);
-            void OnWindowResize(Utils::Events::WindowResizeEvent event) const;
-        private:
-            Application& m_Application;
-        };
-        EventHandler m_EventHandler;
-
         Events::EventBus m_EventBus;
 
-        Scope<Graphics::GraphicsContext> m_GraphicsContext;
-        Scope<Graphics::Renderer> m_Renderer = nullptr;
-        Scope<Tether::Window> m_Window = nullptr;
+        Graphics::GraphicsContext& m_GraphicsContext;
+        Graphics::RenderTarget& m_RenderTarget;
+        Graphics::Renderer& m_Renderer;
 
         Logger m_Logger;
 
@@ -116,6 +129,13 @@ namespace LegendEngine
 
         bool m_Debug = false;
         bool m_IsSetUp = false;
+        bool m_Headless = false;
+
+#ifndef LGENG_HEADLESS
+        Scope<Graphics::GraphicsContext> m_ManagedGraphicsContext = nullptr;
+        Scope<Graphics::WindowRenderTarget> m_WindowRenderTarget = nullptr;
+        Scope<Graphics::Renderer> m_ManagedRenderer = nullptr;
+#endif
 
         static Scope<Application> m_Instance;
     };

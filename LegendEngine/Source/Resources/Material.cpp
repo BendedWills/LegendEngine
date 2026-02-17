@@ -3,9 +3,23 @@
 
 namespace LegendEngine::Resources
 {
+    Material::Material()
+        :
+        m_ShaderManager(Application::Get().GetGraphicsContext().GetShaderManager()),
+        m_pShader(m_ShaderManager.GetByID("solid"))
+    {}
+
     void Material::SetTexture(Texture2D* toSet)
     {
         m_pTexture = toSet;
+
+        const Graphics::ShaderManager& manager =
+            Application::Get().GetGraphicsContext().GetShaderManager();
+        if (toSet)
+            m_pShader = manager.GetByID("textured");
+        else
+            m_pShader = manager.GetByID("solid");
+
         m_Changed = true;
     }
 
@@ -18,6 +32,11 @@ namespace LegendEngine::Resources
     Texture2D* Material::GetTexture() const
     {
         return m_pTexture;
+    }
+
+    Shader* Material::GetShader() const
+    {
+        return m_pShader;
     }
 
     Color Material::GetColor() const
@@ -38,6 +57,6 @@ namespace LegendEngine::Resources
     Scope<Material> Material::Create()
     {
         LGENG_DEBUG_LOG("Material created");
-        return Application::Get().GetRenderer().CreateMaterial();
+        return Application::Get().GetGraphicsContext().CreateMaterial();
     }
 }

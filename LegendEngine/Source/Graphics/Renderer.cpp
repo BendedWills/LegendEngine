@@ -4,41 +4,31 @@
 
 namespace LegendEngine::Graphics
 {
-    Renderer::Renderer(Application& app)
+    Renderer::Renderer(RenderTarget& renderTarget)
         :
-        m_App(app)
+        m_RenderTarget(renderTarget)
     {}
 
     Renderer::~Renderer()
     {}
 
-    void Renderer::RenderFrame()
+    void Renderer::RenderFrame(const std::span<Scene*> scenes)
     {
         if (!StartFrame())
             return;
 
-        Objects::Camera* pCamera = m_App.GetActiveCamera();
+        Objects::Camera* pCamera = m_RenderTarget.GetCamera();
         if (!pCamera || !pCamera->IsEnabled())
         {
             EndFrame();
             return;
         }
 
-        if (pCamera->IsDirty())
-        {
-            pCamera->CalculateViewMatrix();
-            UpdateCameraUniforms(*pCamera);
-        }
+        UpdateCamera(pCamera);
 
-        if (pCamera->IsCameraDirty())
-        {
-            pCamera->CalculateProjectionMatrix();
-            UpdateCameraUniforms(*pCamera);
-        }
-
-        RenderScene(m_App.GetGlobalScene());
-        if (Scene* pScene = m_App.GetActiveScene(); pScene)
-            RenderScene(*pScene);
+        for (Scene* pScene : scenes)
+            if (pScene)
+                RenderScene(*pScene);
 
         EndFrame();
     }
@@ -63,8 +53,8 @@ namespace LegendEngine::Graphics
             if (!component.GetObject().IsEnabled())
                 continue;
 
-            Material* pMaterial = component.GetMaterial();
-            if (pMaterial != lastMaterial)
+            if (Material* pMaterial = component.GetMaterial();
+                pMaterial != lastMaterial)
             {
                 if (pMaterial && pMaterial->HasChanged())
                 {
@@ -77,6 +67,26 @@ namespace LegendEngine::Graphics
             }
 
             DrawMesh(component);
+        }
+    }
+
+    RenderTarget& Renderer::GetRenderTarget() const
+    {
+        return m_RenderTarget;
+    }
+
+    void Renderer::UpdateCamera(Objects::Camera* pCamera)
+    {
+        if (pCamera->IsDirty())
+        {
+            pCamera->CalculateViewMatrix();
+            UpdateCameraUniforms(*pCamera);
+        }
+
+        if (pCamera->IsCameraDirty())
+        {
+            pCamera->CalculateProjectionMatrix();
+            UpdateCameraUniforms(*pCamera);
         }
     }
 }

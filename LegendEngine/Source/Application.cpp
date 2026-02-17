@@ -9,22 +9,12 @@ namespace LegendEngine
 {
     Scope<Application> Application::m_Instance = nullptr;
 
-    Application::EventHandler::EventHandler(Application& application)
-        : m_Application(application)
-    {}
-
-    void Application::EventHandler::OnWindowResize(
-        const Tether::Events::WindowResizeEvent event
-    ) const
-    {
-        m_Application.ReceiveResize(event.GetNewWidth(), event.GetNewHeight());
-    }
-
+#ifndef LGENG_HEADLESS
     Application::Application(
-        const std::string_view applicationName,
-        const bool logging,
-        const bool debug,
-        const GraphicsAPI api)
+        bool logging,
+        bool debug,
+        Graphics::GraphicsContext& gfxContext,
+        Graphics::RenderTarget& renderTarget)
         :
         m_EventHandler(*this),
         m_Logger(applicationName, logging, debug),
@@ -40,15 +30,33 @@ namespace LegendEngine
             title, false);
         m_GraphicsContext = Graphics::GraphicsContext::Create(api, applicationName,
             debug, m_Logger);
+        m_Logger.Log(Logger::Level::INFO, "Creating renderer");
         m_Renderer = m_GraphicsContext->CreateRenderer(*this);
+        m_Logger.Log(Logger::Level::INFO, "Renderer created");
 
+        m_Logger.Log(Logger::Level::INFO, "Application created");
+    }
+#endif
+
+    Application::Application(const std::string_view applicationName,
+        const bool logging, const bool debug,
+        Graphics::GraphicsContext& graphicsContext,
+        Graphics::Renderer& renderer)
+        :
+        m_GraphicsContext(graphicsContext),
+        m_RenderTarget(renderer.GetRenderTarget()),
+        m_Renderer(renderer),
+        m_Logger(applicationName, logging, debug),
+        m_GlobalScene(m_EventBus),
+        m_Debug(debug)
+    {
         m_Logger.Log(Logger::Level::INFO, "Application created");
     }
 
     Application::~Application()
     {
         m_Logger.Log(Logger::Level::INFO, "Destroying application");
-        m_Window->SetVisible(false);
+        m_RenderTarget.SetVisible(false);
     }
 
     void Application::SetupApplication()
@@ -57,23 +65,15 @@ namespace LegendEngine
 
         OnSetup();
 
-        m_Window->SetVisible(true);
-        m_Window->AddEventHandler(m_EventHandler, Utils::Events::EventType::WINDOW_RESIZE);
+        m_RenderTarget.SetVisible(true);
 
         m_Logger.Log(Logger::Level::INFO, "Application setup complete");
     }
 
     void Application::SetActiveCamera(Objects::Camera* pCamera)
     {
-        if (pCamera)
-        {
-            const float aspect =
-                static_cast<float>(m_Window->GetWidth()) /
-                    static_cast<float>(m_Window->GetHeight());
-            pCamera->SetAspectRatio(aspect);
-        }
-
         m_pActiveCamera = pCamera;
+        m_RenderTarget.SetCamera(pCamera);
     }
 
     void Application::SetActiveScene(Scene& scene)
@@ -88,7 +88,12 @@ namespace LegendEngine
 
     Graphics::GraphicsContext& Application::GetGraphicsContext() const
     {
-        return *m_GraphicsContext;
+        return m_GraphicsContext;
+    }
+
+    Graphics::RenderTarget& Application::GetRenderTarget() const
+    {
+        return m_RenderTarget;
     }
 
     Events::EventBus& Application::GetEventBus()
@@ -101,14 +106,9 @@ namespace LegendEngine
         return m_GlobalScene;
     }
 
-    Tether::Window& Application::GetWindow() const
-    {
-        return *m_Window;
-    }
-
     Graphics::Renderer& Application::GetRenderer() const
     {
-        return *m_Renderer;
+        return m_Renderer;
     }
 
     Objects::Camera* Application::GetActiveCamera() const
@@ -124,11 +124,6 @@ namespace LegendEngine
     Logger& Application::GetLogger()
     {
         return m_Logger;
-    }
-
-    bool Application::IsCloseRequested() const
-    {
-        return m_Window->IsCloseRequested();
     }
 
     bool Application::HasConstructed()
@@ -154,7 +149,7 @@ namespace LegendEngine
     void Application::Run()
     {
         Stopwatch deltaTimer;
-        while (!IsCloseRequested())
+        while (!m_RenderTarget.IsCloseRequested())
         {
             const float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
             deltaTimer.Set();
@@ -171,8 +166,10 @@ namespace LegendEngine
 
     void Application::Update(const float delta, const bool updateWindow)
     {
+#ifndef LGENG_HEADLESS
         if (updateWindow)
             Tether::Application::Get().PollEvents();
+#endif
 
         RecalculateTransforms(m_GlobalScene);
         if (m_pActiveScene)
@@ -184,10 +181,8 @@ namespace LegendEngine
 
     void Application::Render(const float delta)
     {
-        if (!m_Renderer)
-            return;
-
-        m_Renderer->RenderFrame();
+        Scene* scenes[] = { &m_GlobalScene, m_pActiveScene };
+        m_Renderer.RenderFrame(scenes);
 
         OnRender(delta);
         m_EventBus.DispatchEvent<Events::RenderEvent>(Events::RenderEvent(delta));
@@ -198,16 +193,5 @@ namespace LegendEngine
         for (Objects::Object* object : scene.GetObjects())
             if (object->IsDirty())
                 object->CalculateTransformMatrix();
-    }
-
-    void Application::ReceiveResize(const uint64_t width, const uint64_t height)
-    {
-        m_Renderer->NotifyWindowResized();
-
-        const float aspect = static_cast<float>(width) / static_cast<float>(height);
-        if (m_pActiveCamera)
-            m_pActiveCamera->SetAspectRatio(aspect);
-
-        OnResize(width, height);
     }
 }

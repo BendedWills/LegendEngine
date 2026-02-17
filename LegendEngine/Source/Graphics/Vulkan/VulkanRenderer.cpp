@@ -5,10 +5,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 #include <Tether/Rendering/Vulkan/SingleUseCommandBuffer.hpp>
 
-#include <Assets/CompiledShaders/solid.vert.spv.h>
-#include <Assets/CompiledShaders/solid.frag.spv.h>
-#include <Assets/CompiledShaders/textured.vert.spv.h>
-#include <Assets/CompiledShaders/textured.frag.spv.h>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderTargetBridge.hpp>
 
 // #ifdef VMA_VULKAN_VERSION
 // #undef VMA_VULKAN_VERSION
@@ -21,39 +18,34 @@
 namespace LegendEngine::Graphics::Vulkan
 {
     using namespace Resources;
-    using namespace VulkanShaders;
 
-    VulkanRenderer::VulkanRenderer(Application& app,
-        TetherVulkan::GraphicsContext& tetherCtx)
+    VulkanRenderer::VulkanRenderer(
+            TetherVulkan::GraphicsContext& tetherCtx,
+            RenderTarget& renderTarget,
+            ShaderManager& shaderManager,
+            const VkDescriptorSetLayout cameraLayout,
+            const VkDescriptorSetLayout sceneLayout
+            )
         :
-        Renderer(app),
+        Renderer(renderTarget),
         m_Context(tetherCtx),
-        m_Window(app.GetWindow()),
-        m_Surface(m_Context, m_Window),
+        m_ShaderManager(shaderManager),
+        m_Surface(static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).GetSurface()),
         m_Device(m_Context.GetDevice()),
         m_PhysicalDevice(m_Context.GetPhysicalDevice())
     {
         // Application::Get() doesn't work here
-
-#ifdef LEGENDENGINE_DEBUG
-        app.GetLogger().Log(Logger::Level::DEBUG, "Creating renderer");
-#endif
 
         const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
         ChooseSurfaceFormat(details);
 
         CreateSwapchain(details);
         CreateRenderPass();
-        CreateUniforms();
-        CreateShaders();
+        CreateUniforms(cameraLayout, sceneLayout);
         CreateDepthImages();
         CreateFramebuffers();
         CreateCommandBuffers();
         CreateSyncObjects();
-
-#ifdef LEGENDENGINE_DEBUG
-        app.GetLogger().Log(Logger::Level::DEBUG, "Created renderer");
-#endif
     }
 
     VulkanRenderer::~VulkanRenderer()
@@ -62,20 +54,7 @@ namespace LegendEngine::Graphics::Vulkan
 
         vkDeviceWaitIdle(m_Device);
 
-        m_CameraUniforms.reset();
-        m_DefaultMatUniforms.reset();
-        m_DefaultMatSet.reset();
-        m_CameraSet.reset();
-        m_StaticUniformPool.reset();
-
         DestroySwapchain();
-
-        m_SolidShader.reset();
-        m_TexturedShader.reset();
-
-        vkDestroyDescriptorSetLayout(m_Device, m_CameraLayout, nullptr);
-        vkDestroyDescriptorSetLayout(m_Device, m_MaterialLayout, nullptr);
-        vkDestroyDescriptorSetLayout(m_Device, m_SceneLayout, nullptr);
 
         vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 
@@ -87,22 +66,6 @@ namespace LegendEngine::Graphics::Vulkan
         }
 
         LGENG_DEBUG_LOG("Destroyed renderer");
-    }
-
-    Scope<Shader> VulkanRenderer::CreateShader(std::span<Shader::Stage> stages)
-    {
-        VkDescriptorSetLayout sets[] =
-        {
-            m_CameraLayout,
-            m_MaterialLayout,
-        };
-
-        return std::make_unique<VulkanShader>(m_Context, stages, sets, m_RenderPass);
-    }
-
-    Scope<Material> VulkanRenderer::CreateMaterial()
-    {
-        return std::make_unique<VulkanMaterial>(m_Context, m_MaterialLayout);
     }
 
     void VulkanRenderer::SetVSyncEnabled(const bool vsync)
@@ -196,8 +159,8 @@ namespace LegendEngine::Graphics::Vulkan
         vkCmdSetScissor(buffer, 0, 1, &scissor);
 
         m_Sets[0] = *m_CameraSet->GetSetAtIndex(m_CurrentFrame);
-        m_Sets[1] = *m_DefaultMatSet->GetSetAtIndex(m_CurrentFrame);
-        m_pCurrentShader = &m_SolidShader.value();
+        m_Sets[1] = *m_SceneSet->GetSetAtIndex(m_CurrentFrame);
+        m_pCurrentShader = nullptr;
 
         vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             m_pCurrentShader->GetPipeline());
@@ -208,22 +171,19 @@ namespace LegendEngine::Graphics::Vulkan
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
         const auto pVkMat = static_cast<VulkanMaterial*>(pMaterial);
 
-        VulkanShader* pShader = &m_SolidShader.value();
+        const auto pShader = static_cast<VulkanShader*>(pMaterial->GetShader());
+
         if (const Texture2D* pTexture = pMaterial->GetTexture();
             pMaterial && pTexture)
-        {
-            m_Sets[1] = pVkMat->GetSetAtIndex(m_CurrentFrame);
-            pShader = &m_TexturedShader.value();
-        }
-        else
-            m_Sets[1] = *m_DefaultMatSet->GetSetAtIndex(m_CurrentFrame);
+            m_Sets[2] = pVkMat->GetSetAtIndex(m_CurrentFrame);
 
-        if (pShader != m_pCurrentShader)
-        {
-            vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+        if (pShader == m_pCurrentShader)
+            return;
+
+        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pShader->GetPipeline());
-            m_pCurrentShader = pShader;
-        }
+        m_pCurrentShader = pShader;
+        m_CurrentlyUsingMaterial = pMaterial;
     }
 
     void VulkanRenderer::DrawMesh(const Components::MeshComponent& mesh)
@@ -240,10 +200,14 @@ namespace LegendEngine::Graphics::Vulkan
             VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform),
             &transform);
 
+        // The sets that have a chance of not being used should be at the end
+        // of m_Sets
+        const size_t setCount = std::size(m_Sets) - 1 + m_CurrentlyUsingMaterial;
+
         vkCmdBindDescriptorSets(
             buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             m_pCurrentShader->GetPipelineLayout(),
-            0, std::size(m_Sets),
+            0, setCount,
             m_Sets,
             0, nullptr
         );
@@ -321,20 +285,10 @@ namespace LegendEngine::Graphics::Vulkan
         }
     }
 
-    void VulkanRenderer::UpdateDefaultMaterialUniforms()
-    {
-        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
-        {
-            VulkanMaterial::Uniforms uniforms;
-            void* data = m_DefaultMatUniforms->GetMappedData(i);
-            *static_cast<VulkanMaterial::Uniforms*>(data) = uniforms;
-        }
-    }
-
     void VulkanRenderer::CreateSwapchain(const TetherVulkan::SwapchainDetails& details)
     {
         m_Swapchain.emplace(m_Context, details, m_SurfaceFormat,
-            m_Surface.Get(), m_Window.GetWidth(), m_Window.GetHeight(),
+            m_Surface, m_RenderTarget.GetWidth(), m_RenderTarget.GetHeight(),
             m_VSync);
 
         m_SwapchainImages = m_Swapchain->GetImages();
@@ -408,12 +362,9 @@ namespace LegendEngine::Graphics::Vulkan
 			throw std::runtime_error("Failed to create render pass");
     }
 
-    void VulkanRenderer::CreateUniforms()
+    void VulkanRenderer::CreateUniforms(VkDescriptorSetLayout cameraLayout,
+        VkDescriptorSetLayout sceneLayout)
     {
-        CreateCameraDescriptorSetLayout();
-        CreateMaterialDescriptorSetLayout();
-        CreateSceneDescriptorSetLayout();
-
         const uint32_t framesInFlight = m_Context.GetFramesInFlight();
 
         VkDescriptorPoolSize uniformsSize{};
@@ -434,54 +385,21 @@ namespace LegendEngine::Graphics::Vulkan
         m_StaticUniformPool.emplace(m_Context, framesInFlight * 3,
             std::size(sizes), sizes);
 
-        m_CameraSet.emplace(*m_StaticUniformPool, m_CameraLayout, framesInFlight);
+        m_CameraSet.emplace(*m_StaticUniformPool, cameraLayout, framesInFlight);
         m_CameraUniforms.emplace(m_Context, sizeof(CameraUniforms), *m_CameraSet,
             0);
 
-        m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
-        m_DefaultMatUniforms.emplace(m_Context, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
-
-        m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
+        m_SceneSet.emplace(*m_StaticUniformPool, sceneLayout, framesInFlight);
         m_SceneUniforms.emplace(m_Context, sizeof(SceneUniforms), *m_SceneSet, 0);
-
-        UpdateDefaultMaterialUniforms();
-    }
-
-    void VulkanRenderer::CreateShaders()
-    {
-        static Shader::Stage solidStages[] =
-        {
-            { ShaderType::VERTEX, _binary_solid_vert_spv,
-                sizeof(_binary_solid_vert_spv) },
-                { ShaderType::FRAG, _binary_solid_frag_spv,
-                    sizeof(_binary_solid_frag_spv) }
-        };
-
-        static Shader::Stage texturedStages[] =
-        {
-            { ShaderType::VERTEX, _binary_textured_vert_spv,
-                sizeof(_binary_textured_vert_spv) },
-                { ShaderType::FRAG, _binary_textured_frag_spv,
-                    sizeof(_binary_textured_frag_spv) }
-        };
-
-        VkDescriptorSetLayout sets[] =
-        {
-            m_CameraLayout,
-            m_MaterialLayout,
-        };
-
-        m_SolidShader.emplace(m_Context, solidStages, sets, m_RenderPass);
-        m_TexturedShader.emplace(m_Context, texturedStages, sets, m_RenderPass);
     }
 
     void VulkanRenderer::CreateDepthImages()
     {
-        VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
+        auto [width, height] = m_Swapchain->GetExtent();
 
         Tether::Rendering::Resources::BufferedImageInfo info{};
-        info.width = swapchainExtent.width;
-        info.height = swapchainExtent.height;
+        info.width = width;
+        info.height = height;
 
         VkFormat depthFormat = FindDepthFormat();
         m_DepthImage.emplace(m_Context, nullptr,
@@ -500,8 +418,8 @@ namespace LegendEngine::Graphics::Vulkan
 
     void VulkanRenderer::CreateFramebuffers()
     {
-        VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
-        uint64_t imageViewCount = m_SwapchainImageViews.size();
+        auto [width, height] = m_Swapchain->GetExtent();
+        const uint64_t imageViewCount = m_SwapchainImageViews.size();
 
         m_Framebuffers.resize(imageViewCount);
 
@@ -518,8 +436,8 @@ namespace LegendEngine::Graphics::Vulkan
             framebufferDesc.renderPass = m_RenderPass;
             framebufferDesc.attachmentCount = 2;
             framebufferDesc.pAttachments = attachments;
-            framebufferDesc.width = swapchainExtent.width;
-            framebufferDesc.height = swapchainExtent.height;
+            framebufferDesc.width = width;
+            framebufferDesc.height = height;
             framebufferDesc.layers = 1;
 
             if (vkCreateFramebuffer(m_Device, &framebufferDesc, nullptr,
@@ -571,88 +489,20 @@ namespace LegendEngine::Graphics::Vulkan
         }
     }
 
-    void VulkanRenderer::CreateCameraDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding cameraSetBinding{};
-        cameraSetBinding.binding = 0;
-        cameraSetBinding.descriptorCount = 1;
-        cameraSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cameraSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = 1;
-        setInfo.pBindings = &cameraSetBinding;
-
-        if (vkCreateDescriptorSetLayout(m_Device,
-            &setInfo, nullptr, &m_CameraLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-    }
-
-    void VulkanRenderer::CreateMaterialDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding uniformBinding{};
-        uniformBinding.binding = 0;
-        uniformBinding.descriptorCount = 1;
-        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding samplerBinding{};
-        samplerBinding.binding = 1;
-        samplerBinding.descriptorCount = 1;
-        samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding bindings[] =
-        {
-            uniformBinding,
-            samplerBinding
-        };
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = std::size(bindings);
-        setInfo.pBindings = bindings;
-
-        if (vkCreateDescriptorSetLayout(m_Device,
-            &setInfo, nullptr, &m_MaterialLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-    }
-
-    void VulkanRenderer::CreateSceneDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding uniformBinding{};
-        uniformBinding.binding = 0;
-        uniformBinding.descriptorCount = 1;
-        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = 1;
-        setInfo.pBindings = &uniformBinding;
-
-        if (vkCreateDescriptorSetLayout(m_Device,
-            &setInfo, nullptr, &m_SceneLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-    }
-
-    TetherVulkan::SwapchainDetails VulkanRenderer::QuerySwapchainSupport()
+    TetherVulkan::SwapchainDetails VulkanRenderer::QuerySwapchainSupport() const
     {
         TetherVulkan::SwapchainDetails details;
 
-        const VkSurfaceKHR surface = m_Surface.Get();
-
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             m_PhysicalDevice,
-            surface,
+            m_Surface,
             &details.capabilities
         );
 
         uint32_t formatCount;
         vkGetPhysicalDeviceSurfaceFormatsKHR(
             m_PhysicalDevice,
-            surface,
+            m_Surface,
             &formatCount,
             nullptr
         );
@@ -662,7 +512,7 @@ namespace LegendEngine::Graphics::Vulkan
             details.formats.resize(formatCount);
             vkGetPhysicalDeviceSurfaceFormatsKHR(
                 m_PhysicalDevice,
-                surface,
+                m_Surface,
                 &formatCount,
                 details.formats.data()
             );
@@ -671,7 +521,7 @@ namespace LegendEngine::Graphics::Vulkan
         uint32_t presentModeCount = 0;
         vkGetPhysicalDeviceSurfacePresentModesKHR(
             m_PhysicalDevice,
-            surface,
+            m_Surface,
             &presentModeCount,
             nullptr
         );
@@ -681,7 +531,7 @@ namespace LegendEngine::Graphics::Vulkan
             details.presentModes.resize(presentModeCount);
             vkGetPhysicalDeviceSurfacePresentModesKHR(
                 m_PhysicalDevice,
-                surface,
+                m_Surface,
                 &presentModeCount,
                 details.presentModes.data()
             );

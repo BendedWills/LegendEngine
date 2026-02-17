@@ -27,7 +27,7 @@ namespace LegendEngine::Graphics::Vulkan
         };
 
         Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context,
-            const Info& info, VkRenderPass renderPass);
+            const Info& info);
         ~Pipeline();
         LEGENDENGINE_NO_COPY(Pipeline);
 

@@ -252,13 +252,8 @@ private:
 	Logger& m_Logger;
 };
 
-#if defined(_WIN32) && defined(NDEBUG)
-#include <Windows.h>
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
-	int nCmdShow)
-#else
-int main()
-#endif
+#include <LegendEngine/Common/Platform.hpp>
+LEGENDENGINE_MAIN
 {
 	return Application::RunApplication<Legendary>();
 }

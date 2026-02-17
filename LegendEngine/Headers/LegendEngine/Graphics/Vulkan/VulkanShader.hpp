@@ -11,14 +11,13 @@ namespace LegendEngine::Graphics::Vulkan
     {
     public:
         VulkanShader(Tether::Rendering::Vulkan::GraphicsContext& context,
-            std::span<Stage> stages, std::span<VkDescriptorSetLayout> sets,
-            VkRenderPass renderPass);
+            std::span<Stage> stages, std::span<VkDescriptorSetLayout> sets);
 
         VkPipeline GetPipeline() const;
         VkPipelineLayout GetPipelineLayout() const;
     private:
         Pipeline CreatePipeline(std::span<Stage> stages,
-            std::span<VkDescriptorSetLayout> sets, VkRenderPass renderPass) const;
+            std::span<VkDescriptorSetLayout> sets) const;
 
         Tether::Rendering::Vulkan::GraphicsContext& m_Context;
         Pipeline m_Pipeline;

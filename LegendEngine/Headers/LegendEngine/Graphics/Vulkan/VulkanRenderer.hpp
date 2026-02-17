@@ -18,14 +18,13 @@ namespace LegendEngine::Graphics::Vulkan
     {
     public:
         explicit VulkanRenderer(
-            Application& app,
-            TetherVulkan::GraphicsContext& tetherCtx
+            TetherVulkan::GraphicsContext& tetherCtx,
+            RenderTarget& renderTarget,
+            ShaderManager& shaderManager,
+            VkDescriptorSetLayout cameraLayout,
+            VkDescriptorSetLayout sceneLayout
         );
         ~VulkanRenderer() override;
-
-        Scope<Resources::Shader> CreateShader(
-            std::span<Resources::Shader::Stage> stages) override;
-        Scope<Resources::Material> CreateMaterial() override;
 
         void SetVSyncEnabled(bool vsync) override;
         void NotifyWindowResized() override;
@@ -56,22 +55,17 @@ namespace LegendEngine::Graphics::Vulkan
         void EndFrame() override;
 
         void UpdateCameraUniforms(const Objects::Camera& camera) override;
-        void UpdateDefaultMaterialUniforms();
 
         void CreateSwapchain(const TetherVulkan::SwapchainDetails& details);
         void CreateRenderPass();
-        void CreateUniforms();
-        void CreateShaders();
+        void CreateUniforms(VkDescriptorSetLayout cameraLayout,
+            VkDescriptorSetLayout sceneLayout);
         void CreateDepthImages();
         void CreateFramebuffers();
         void CreateCommandBuffers();
         void CreateSyncObjects();
 
-        void CreateCameraDescriptorSetLayout();
-        void CreateMaterialDescriptorSetLayout();
-        void CreateSceneDescriptorSetLayout();
-
-        TetherVulkan::SwapchainDetails QuerySwapchainSupport();
+        TetherVulkan::SwapchainDetails QuerySwapchainSupport() const;
         void ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details);
         [[nodiscard]] VkFormat FindDepthFormat() const;
         [[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
@@ -84,24 +78,16 @@ namespace LegendEngine::Graphics::Vulkan
         bool m_ShouldRecreateSwapchain = false;
 
         TetherVulkan::GraphicsContext& m_Context;
-        Tether::Window& m_Window;
-        TetherVulkan::Surface m_Surface;
+        ShaderManager& m_ShaderManager;
+        VkSurfaceKHR m_Surface;
 
         std::optional<TetherVulkan::Swapchain> m_Swapchain;
         VkRenderPass m_RenderPass;
-        VkDescriptorSetLayout m_CameraLayout = nullptr;
-        VkDescriptorSetLayout m_MaterialLayout = nullptr;
-        VkDescriptorSetLayout m_SceneLayout = nullptr;
         std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
         std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
-        std::optional<TetherVulkan::DescriptorSet> m_DefaultMatSet;
         std::optional<TetherVulkan::DescriptorSet> m_SceneSet;
         std::optional<TetherVulkan::UniformBuffer> m_CameraUniforms;
-        std::optional<TetherVulkan::UniformBuffer> m_DefaultMatUniforms;
         std::optional<TetherVulkan::UniformBuffer> m_SceneUniforms;
-
-        std::optional<VulkanShader> m_SolidShader;
-        std::optional<VulkanShader> m_TexturedShader;
 
         std::optional<TetherVulkan::BufferedImage> m_DepthImage;
         VkImageView m_DepthImageView;
@@ -122,7 +108,8 @@ namespace LegendEngine::Graphics::Vulkan
         uint32_t m_CurrentFrame = 0;
         uint32_t m_CurrentImageIndex = 0;
 
-        VkDescriptorSet m_Sets[2] = {};
+        VkDescriptorSet m_Sets[3] = {};
         VulkanShader* m_pCurrentShader = nullptr;
+        bool m_CurrentlyUsingMaterial = false;
     };
 }

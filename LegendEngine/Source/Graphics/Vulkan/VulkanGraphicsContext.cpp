@@ -1,6 +1,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanGraphicsContext.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderTargetBridge.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
@@ -40,29 +41,57 @@ namespace LegendEngine::Graphics::Vulkan
         }
 
         m_Context.m_Logger.Log(level, ss.str());
-
     }
 
     VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName,
-        const bool debug, Logger& logger)
+        const bool debug)
         :
-        m_Logger(logger),
+        m_Logger("VulkanGraphicsContext", true, debug),
         m_ContextCreator(debug, applicationName, "LegendEngine"),
         m_GraphicsContext(m_ContextCreator),
         m_Callback(*this)
     {
         m_ContextCreator.AddDebugMessenger(&m_Callback);
+
+        // This order matters, because the sets get added to m_SetLayouts when
+        // they are created, and Vulkan cares about the order in vkCmdBindDescriptorSets
+        CreateCameraDescriptorSetLayout();
+        CreateSceneDescriptorSetLayout();
+        CreateMaterialDescriptorSetLayout();
+
+        m_ShaderManager.emplace(m_GraphicsContext, m_SetLayouts);
     }
 
     VulkanGraphicsContext::~VulkanGraphicsContext()
     {
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
+
+        m_ShaderManager.reset();
+
+        vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_CameraLayout, nullptr);
+        vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_MaterialLayout, nullptr);
+        vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_SceneLayout, nullptr);
     }
 
-    Scope<Renderer> VulkanGraphicsContext::CreateRenderer(Application& app)
+    Scope<Renderer> VulkanGraphicsContext::CreateRenderer(RenderTarget& renderTarget)
     {
-        return std::make_unique<VulkanRenderer>(app, m_GraphicsContext);
+        return std::make_unique<VulkanRenderer>(
+            m_GraphicsContext, renderTarget, *m_ShaderManager,
+            m_CameraLayout, m_SceneLayout
+        );
     }
+
+    Scope<RenderTargetBridge> VulkanGraphicsContext::CreateHeadlessRenderTargetBridge()
+    {
+        return std::make_unique<VulkanRenderTargetBridge>(m_GraphicsContext);
+    }
+
+#ifndef LGENG_HEADLESS
+    Scope<RenderTargetBridge> VulkanGraphicsContext::CreateWindowRenderTargetBridge(Tether::Window& window)
+    {
+        return std::make_unique<VulkanRenderTargetBridge>(m_GraphicsContext, window);
+    }
+#endif
 
     Scope<VertexBuffer> VulkanGraphicsContext::CreateVertexBuffer(
             std::span<VertexTypes::Vertex3> vertices,
@@ -77,8 +106,115 @@ namespace LegendEngine::Graphics::Vulkan
         return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader);
     }
 
+    Scope<Resources::Shader> VulkanGraphicsContext::CreateShader(std::span<Resources::Shader::Stage> stages)
+    {
+        return std::make_unique<VulkanShader>(m_GraphicsContext, stages, m_SetLayouts);
+    }
+
+    Scope<Resources::Material> VulkanGraphicsContext::CreateMaterial()
+    {
+        return std::make_unique<VulkanMaterial>(m_GraphicsContext, m_MaterialLayout);
+    }
+
     TetherVulkan::GraphicsContext& VulkanGraphicsContext::GetTetherGraphicsContext()
     {
         return m_GraphicsContext;
+    }
+
+    VkDescriptorSetLayout VulkanGraphicsContext::GetCameraLayout() const
+    {
+        return m_CameraLayout;
+    }
+
+    VkDescriptorSetLayout VulkanGraphicsContext::GetMaterialLayout() const
+    {
+        return m_MaterialLayout;
+    }
+
+    VkDescriptorSetLayout VulkanGraphicsContext::GetSceneLayout() const
+    {
+        return m_SceneLayout;
+    }
+
+    std::span<VkDescriptorSetLayout> VulkanGraphicsContext::GetSets()
+    {
+        return m_SetLayouts;
+    }
+
+    const ShaderManager& VulkanGraphicsContext::GetShaderManager() const
+    {
+        return *m_ShaderManager;
+    }
+
+    void VulkanGraphicsContext::CreateCameraDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding cameraSetBinding{};
+        cameraSetBinding.binding = 0;
+        cameraSetBinding.descriptorCount = 1;
+        cameraSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cameraSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutCreateInfo setInfo{};
+        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        setInfo.bindingCount = 1;
+        setInfo.pBindings = &cameraSetBinding;
+
+        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
+            &setInfo, nullptr, &m_CameraLayout) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create descriptor set layout");
+
+        m_SetLayouts.push_back(m_CameraLayout);
+    }
+
+    void VulkanGraphicsContext::CreateMaterialDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uniformBinding{};
+        uniformBinding.binding = 0;
+        uniformBinding.descriptorCount = 1;
+        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding samplerBinding{};
+        samplerBinding.binding = 1;
+        samplerBinding.descriptorCount = 1;
+        samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding bindings[] =
+        {
+            uniformBinding,
+            samplerBinding
+        };
+
+        VkDescriptorSetLayoutCreateInfo setInfo{};
+        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        setInfo.bindingCount = std::size(bindings);
+        setInfo.pBindings = bindings;
+
+        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
+            &setInfo, nullptr, &m_MaterialLayout) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create descriptor set layout");
+
+        m_SetLayouts.push_back(m_MaterialLayout);
+    }
+
+    void VulkanGraphicsContext::CreateSceneDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uniformBinding{};
+        uniformBinding.binding = 0;
+        uniformBinding.descriptorCount = 1;
+        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo setInfo{};
+        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        setInfo.bindingCount = 1;
+        setInfo.pBindings = &uniformBinding;
+
+        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
+            &setInfo, nullptr, &m_SceneLayout) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create descriptor set layout");
+
+        m_SetLayouts.push_back(m_SceneLayout);
     }
 }

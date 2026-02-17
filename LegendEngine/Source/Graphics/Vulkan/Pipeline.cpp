@@ -3,8 +3,8 @@
 
 namespace LegendEngine::Graphics::Vulkan
 {
-    Pipeline::Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context, const Info& info,
-        VkRenderPass renderPass)
+    Pipeline::Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context,
+        const Info& info)
         :
         m_Context(context)
     {
@@ -156,7 +156,7 @@ namespace LegendEngine::Graphics::Vulkan
 		pipelineDesc.pMultisampleState = &multisampleState;
 		pipelineDesc.pColorBlendState = &colorBlending;
 		pipelineDesc.layout = m_PipelineLayout;
-		pipelineDesc.renderPass = renderPass;
+		pipelineDesc.renderPass = VK_NULL_HANDLE;
 		pipelineDesc.subpass = 0;
 		pipelineDesc.basePipelineHandle = VK_NULL_HANDLE;
 		pipelineDesc.pDepthStencilState = &depthStencil;

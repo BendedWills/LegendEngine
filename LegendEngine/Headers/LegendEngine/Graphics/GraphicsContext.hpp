@@ -5,9 +5,11 @@
 #include <LegendEngine/Common/Logger.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
+#include <LegendEngine/Graphics/ShaderManager.hpp>
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
 #include <LegendEngine/Resources/Material.hpp>
 #include <LegendEngine/Resources/Shader.hpp>
+#include <Tether/Window.hpp>
 
 namespace LegendEngine::Graphics
 {
@@ -20,14 +22,23 @@ namespace LegendEngine::Graphics
         virtual ~GraphicsContext() = 0;
         LEGENDENGINE_NO_COPY(GraphicsContext);
 
-        virtual Scope<Renderer> CreateRenderer(Application& app) = 0;
+        virtual Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) = 0;
+        virtual Scope<RenderTargetBridge> CreateHeadlessRenderTargetBridge() = 0;
+#ifndef LGENG_HEADLESS
+        virtual Scope<RenderTargetBridge> CreateWindowRenderTargetBridge(Tether::Window& window) = 0;
+#endif
 
         virtual Scope<VertexBuffer> CreateVertexBuffer(
             std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices) = 0;
         virtual Scope<Resources::Texture2D> CreateTexture2D(IO::TextureLoader& loader) = 0;
+        virtual Scope<Resources::Shader> CreateShader(
+            std::span<Resources::Shader::Stage> stages) = 0;
+        virtual Scope<Resources::Material> CreateMaterial() = 0;
+
+        virtual const ShaderManager& GetShaderManager() const = 0;
 
         static Scope<GraphicsContext> Create(GraphicsAPI api,
-            std::string_view applicationName, bool debug, Logger& logger);
+            std::string_view applicationName, bool debug);
     };
 }
