@@ -19,7 +19,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLGENG_BUILD_TESTS=ON
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLGENG_BUILD_TESTS=ON -DTETHER_HEADLESS=ON -DLGENG_HEADLESS=ON
 
       - name: Build
         run: |
