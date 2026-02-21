@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include <LegendEngine/Math/Funcs.hpp>
 
 #include <LegendEngine/Math/Types.hpp>

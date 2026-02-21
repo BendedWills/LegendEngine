@@ -22,7 +22,7 @@ set(TETHER_HEADLESS ${LGENG_HEADLESS})
 if (LGENG_VULKAN_API)
 	find_package(Vulkan)
 	if (NOT Vulkan_FOUND)
-		message(FATAL_ERROR "LGENG_VULKAN_API is enabled, but the Vulkan SDK was not found. \nInstall it from https://vulkan.lunarg.com/, or run \"apt install libvulkan-dev vulkan-validationlayers vulkan-tools\"")
+		message(FATAL_ERROR "LGENG_VULKAN_API is enabled, but the Vulkan SDK was not found. \nInstall it from https://vulkan.lunarg.com/, or run \"apt install libvulkan-dev vulkan-validationlayers vulkan-tools glslc\"")
 	endif()
 endif()
 
