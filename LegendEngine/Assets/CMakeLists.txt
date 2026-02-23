@@ -50,7 +50,7 @@ if (LGENG_VULKAN_API)
 			TARGET compile${APPLICATION_NAME}VKSpv
 			PRE_BUILD
 			COMMAND
-				glslc
+				glslc --target-env=vulkan1.3
 				# Output file
 				-o \"${BUILD_SHADER_DIR}/${FILENAME}.spv\"
 				# Source file
