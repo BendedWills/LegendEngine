@@ -19,6 +19,7 @@ namespace LegendEngine::Graphics::Vulkan
             VkDescriptorSetLayout* pSetLayouts;
             uint32_t dynamicStateCount;
             VkDynamicState* pDynamicStates;
+            VkSurfaceFormatKHR surfaceFormat;
         };
 
         struct ObjectTransform

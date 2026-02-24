@@ -8,6 +8,14 @@
 
 namespace LegendEngine::Graphics::Vulkan
 {
+    static const char* EXTENTIONS[] =
+        { VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
+    static constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR DYNAMIC_RENDERING
+    {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
+        .dynamicRendering = true
+    };
+
     VulkanGraphicsContext::DebugCallback::DebugCallback(VulkanGraphicsContext& context)
         :
         m_Context(context)
@@ -47,11 +55,16 @@ namespace LegendEngine::Graphics::Vulkan
         const bool debug)
         :
         m_Logger("VulkanGraphicsContext", true, debug),
-        m_ContextCreator(debug, applicationName, "LegendEngine"),
+        m_ContextCreator(debug, applicationName, "LegendEngine",
+            EXTENTIONS, &DYNAMIC_RENDERING),
         m_GraphicsContext(m_ContextCreator),
         m_Callback(*this)
     {
         m_ContextCreator.AddDebugMessenger(&m_Callback);
+
+        if (const TetherVulkan::DeviceLoader& loader = m_GraphicsContext.GetDeviceLoader();
+            !loader.vkCmdBeginRenderingKHR || !loader.vkCmdEndRenderingKHR)
+            throw std::runtime_error("Couldn't load dynamic rendering funcs");
 
         // This order matters, because the sets get added to m_SetLayouts when
         // they are created, and Vulkan cares about the order in vkCmdBindDescriptorSets
@@ -75,9 +88,15 @@ namespace LegendEngine::Graphics::Vulkan
 
     Scope<Renderer> VulkanGraphicsContext::CreateRenderer(RenderTarget& renderTarget)
     {
+        constexpr VkSurfaceFormatKHR surfaceFormat =
+        {
+            .format = VK_FORMAT_B8G8R8A8_UNORM,
+            .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+        };
+
         return std::make_unique<VulkanRenderer>(
             m_GraphicsContext, renderTarget, *m_ShaderManager,
-            m_CameraLayout, m_SceneLayout
+            m_CameraLayout, m_SceneLayout, surfaceFormat, *m_DefaultMatSet
         );
     }
 

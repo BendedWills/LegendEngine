@@ -5,13 +5,12 @@ layout(location = 1) in vec3 inPos;
 
 layout(location = 0) out vec4 fragColor;
 
-// Set 1 is the material set
-layout(set = 1, binding = 0) uniform Material
+layout(set = 2, binding = 0) uniform Material
 {
     vec4 color;
 } mat;
 
-layout(set = 1, binding = 1) uniform sampler2D albedoSampler;
+layout(set = 2, binding = 1) uniform sampler2D albedoSampler;
 
 const vec3 LIGHT_POS = vec3(-2, 1, 1);
 const float LIGHT_STRENGTH = 10;

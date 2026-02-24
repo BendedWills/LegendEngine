@@ -72,6 +72,8 @@ namespace LegendEngine::Graphics::Vulkan
         VkDescriptorSetLayout m_SceneLayout = nullptr;
         VkDescriptorSetLayout m_MaterialLayout = nullptr;
 
+        VkSurfaceFormatKHR m_SurfaceFormat{};
+
         std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
         std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
         std::optional<TetherVulkan::DescriptorSet> m_DefaultMatSet;

@@ -22,7 +22,9 @@ namespace LegendEngine::Graphics::Vulkan
             RenderTarget& renderTarget,
             ShaderManager& shaderManager,
             VkDescriptorSetLayout cameraLayout,
-            VkDescriptorSetLayout sceneLayout
+            VkDescriptorSetLayout sceneLayout,
+            VkSurfaceFormatKHR surfaceFormat,
+            TetherVulkan::DescriptorSet& defaultMatSet
         );
         ~VulkanRenderer() override;
 
@@ -61,12 +63,10 @@ namespace LegendEngine::Graphics::Vulkan
         void CreateUniforms(VkDescriptorSetLayout cameraLayout,
             VkDescriptorSetLayout sceneLayout);
         void CreateDepthImages();
-        void CreateFramebuffers();
         void CreateCommandBuffers();
         void CreateSyncObjects();
 
         TetherVulkan::SwapchainDetails QuerySwapchainSupport() const;
-        void ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details);
         [[nodiscard]] VkFormat FindDepthFormat() const;
         [[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
             VkImageTiling tiling, VkFormatFeatureFlags features) const;
@@ -78,6 +78,8 @@ namespace LegendEngine::Graphics::Vulkan
         bool m_ShouldRecreateSwapchain = false;
 
         TetherVulkan::GraphicsContext& m_Context;
+        const TetherVulkan::DeviceLoader& m_DeviceLoader;
+        TetherVulkan::DescriptorSet& m_DefaultMatSet;
         ShaderManager& m_ShaderManager;
         VkSurfaceKHR m_Surface;
 
@@ -94,16 +96,15 @@ namespace LegendEngine::Graphics::Vulkan
 
         std::vector<VkImage> m_SwapchainImages;
         std::vector<VkImageView> m_SwapchainImageViews;
-        std::vector<VkFramebuffer> m_Framebuffers;
         std::vector<VkCommandBuffer> m_CommandBuffers;
         std::vector<VkSemaphore> m_ImageAvailableSemaphores;
         std::vector<VkSemaphore> m_RenderFinishedSemaphores;
         std::vector<VkFence> m_InFlightFences;
 
+        VkSurfaceFormatKHR m_SurfaceFormat;
+
         VkDevice m_Device;
         VkPhysicalDevice m_PhysicalDevice;
-
-        VkSurfaceFormatKHR m_SurfaceFormat{};
 
         uint32_t m_CurrentFrame = 0;
         uint32_t m_CurrentImageIndex = 0;

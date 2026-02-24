@@ -24,26 +24,29 @@ namespace LegendEngine::Graphics::Vulkan
             RenderTarget& renderTarget,
             ShaderManager& shaderManager,
             const VkDescriptorSetLayout cameraLayout,
-            const VkDescriptorSetLayout sceneLayout
+            const VkDescriptorSetLayout sceneLayout,
+            VkSurfaceFormatKHR surfaceFormat,
+            TetherVulkan::DescriptorSet& defaultMatSet
             )
         :
         Renderer(renderTarget),
         m_Context(tetherCtx),
+        m_DeviceLoader(tetherCtx.GetDeviceLoader()),
+        m_DefaultMatSet(defaultMatSet),
         m_ShaderManager(shaderManager),
         m_Surface(static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).GetSurface()),
+        m_SurfaceFormat(surfaceFormat),
         m_Device(m_Context.GetDevice()),
         m_PhysicalDevice(m_Context.GetPhysicalDevice())
     {
         // Application::Get() doesn't work here
 
         const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
-        ChooseSurfaceFormat(details);
 
         CreateSwapchain(details);
         CreateRenderPass();
         CreateUniforms(cameraLayout, sceneLayout);
         CreateDepthImages();
-        CreateFramebuffers();
         CreateCommandBuffers();
         CreateSyncObjects();
     }
@@ -115,7 +118,6 @@ namespace LegendEngine::Graphics::Vulkan
     void VulkanRenderer::BeginCommandBuffer()
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
-        const VkFramebuffer framebuffer = m_Framebuffers[m_CurrentImageIndex];
         const VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
 
         vkResetCommandBuffer(buffer, 0);
@@ -124,21 +126,6 @@ namespace LegendEngine::Graphics::Vulkan
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
             throw std::runtime_error("Failed to begin recording command buffer");
-
-        VkClearValue clearColors[] =
-        {
-            { 0.0f, 0.0f, 0.0f, 1.0f },
-            { 1.0f, 0 }
-        };
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = m_RenderPass;
-        renderPassInfo.framebuffer = framebuffer;
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = swapchainExtent;
-        renderPassInfo.clearValueCount = 2;
-        renderPassInfo.pClearValues = clearColors;
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -154,13 +141,35 @@ namespace LegendEngine::Graphics::Vulkan
         scissor.extent.width = swapchainExtent.width;
         scissor.extent.height = swapchainExtent.height;
 
-        vkCmdBeginRenderPass(buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        VkRenderingAttachmentInfoKHR colorAttachmentInfo{};
+        colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        colorAttachmentInfo.imageView = m_SwapchainImageViews[m_CurrentFrame];
+        colorAttachmentInfo.clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        VkRenderingAttachmentInfoKHR depthAttachmentInfo{};
+        depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        depthAttachmentInfo.imageView = m_DepthImageView;
+        depthAttachmentInfo.clearValue = {1.0f, 0.0f };
+
+        VkRenderingInfoKHR renderInfo{};
+        renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderInfo.colorAttachmentCount = 1;
+        renderInfo.pColorAttachments = &colorAttachmentInfo;
+        renderInfo.layerCount = 1;
+        renderInfo.pDepthAttachment = &depthAttachmentInfo;
+        renderInfo.pStencilAttachment = &depthAttachmentInfo;
+        renderInfo.renderArea.offset = { 0, 0 };
+        renderInfo.renderArea.extent = swapchainExtent;
+
+        m_DeviceLoader.vkCmdBeginRenderingKHR(buffer, &renderInfo);
+
         vkCmdSetViewport(buffer, 0, 1, &viewport);
         vkCmdSetScissor(buffer, 0, 1, &scissor);
 
         m_Sets[0] = *m_CameraSet->GetSetAtIndex(m_CurrentFrame);
         m_Sets[1] = *m_SceneSet->GetSetAtIndex(m_CurrentFrame);
-        m_pCurrentShader = nullptr;
+        m_Sets[2] = *m_DefaultMatSet.GetSetAtIndex(m_CurrentFrame);
+        m_pCurrentShader = static_cast<VulkanShader*>(m_ShaderManager.GetByID("solid"));
 
         vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             m_pCurrentShader->GetPipeline());
@@ -168,14 +177,18 @@ namespace LegendEngine::Graphics::Vulkan
 
     void VulkanRenderer::UseMaterial(Material* pMaterial)
     {
+        m_CurrentlyUsingMaterial = pMaterial;
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
-        const auto pVkMat = static_cast<VulkanMaterial*>(pMaterial);
 
-        const auto pShader = static_cast<VulkanShader*>(pMaterial->GetShader());
+        auto pShader = static_cast<VulkanShader*>(m_ShaderManager.GetByID("solid"));
 
-        if (const Texture2D* pTexture = pMaterial->GetTexture();
-            pMaterial && pTexture)
-            m_Sets[2] = pVkMat->GetSetAtIndex(m_CurrentFrame);
+        if (pMaterial)
+        {
+            m_Sets[2] = static_cast<VulkanMaterial*>(pMaterial)->GetSetAtIndex(m_CurrentFrame);
+            pShader = static_cast<VulkanShader*>(pMaterial->GetShader());
+        }
+        else
+            m_Sets[2] = *m_DefaultMatSet.GetSetAtIndex(m_CurrentFrame);
 
         if (pShader == m_pCurrentShader)
             return;
@@ -183,7 +196,6 @@ namespace LegendEngine::Graphics::Vulkan
         vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pShader->GetPipeline());
         m_pCurrentShader = pShader;
-        m_CurrentlyUsingMaterial = pMaterial;
     }
 
     void VulkanRenderer::DrawMesh(const Components::MeshComponent& mesh)
@@ -230,7 +242,7 @@ namespace LegendEngine::Graphics::Vulkan
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
 
-        vkCmdEndRenderPass(buffer);
+        m_DeviceLoader.vkCmdEndRenderingKHR(buffer);
         if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
             throw std::runtime_error("Failed to record render command buffer");
 
@@ -416,36 +428,6 @@ namespace LegendEngine::Graphics::Vulkan
         cmdBuffer.Submit();
     }
 
-    void VulkanRenderer::CreateFramebuffers()
-    {
-        auto [width, height] = m_Swapchain->GetExtent();
-        const uint64_t imageViewCount = m_SwapchainImageViews.size();
-
-        m_Framebuffers.resize(imageViewCount);
-
-        for (uint64_t i = 0; i < imageViewCount; i++)
-        {
-            const VkImageView attachments[] =
-            {
-                m_SwapchainImageViews[i],
-                m_DepthImageView
-            };
-
-            VkFramebufferCreateInfo framebufferDesc{};
-            framebufferDesc.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferDesc.renderPass = m_RenderPass;
-            framebufferDesc.attachmentCount = 2;
-            framebufferDesc.pAttachments = attachments;
-            framebufferDesc.width = width;
-            framebufferDesc.height = height;
-            framebufferDesc.layers = 1;
-
-            if (vkCreateFramebuffer(m_Device, &framebufferDesc, nullptr,
-                &m_Framebuffers[i]) != VK_SUCCESS)
-                throw std::runtime_error("Failed to create framebuffer");
-        }
-    }
-
     void VulkanRenderer::CreateCommandBuffers()
     {
         m_CommandBuffers.resize(m_Context.GetFramesInFlight());
@@ -540,35 +522,32 @@ namespace LegendEngine::Graphics::Vulkan
         return details;
     }
 
-    void VulkanRenderer::ChooseSurfaceFormat(const TetherVulkan::SwapchainDetails& details)
-    {
-        for (const auto& availableFormat : details.formats)
-            if (availableFormat.format == VK_FORMAT_R32G32B32_UINT)
-            {
-                m_SurfaceFormat = availableFormat;
-                return;
-            }
-
-        m_SurfaceFormat = details.formats[0];
-    }
-
     VkFormat VulkanRenderer::FindDepthFormat() const
     {
-        return FindSupportedFormat(
-            {
-                VK_FORMAT_D32_SFLOAT,
-                VK_FORMAT_D32_SFLOAT_S8_UINT,
-                VK_FORMAT_D24_UNORM_S8_UINT
-            },
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-        );
+        constexpr VkFormat candidates[] = {
+            VK_FORMAT_D32_SFLOAT,
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D24_UNORM_S8_UINT
+        };
+
+        constexpr VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        for (const VkFormat format : candidates)
+        {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
+
+            if ((props.optimalTilingFeatures & features) == features)
+                return format;
+        }
+
+        return candidates[0];
     }
 
     VkFormat VulkanRenderer::FindSupportedFormat(const std::vector<VkFormat>& candidates,
         const VkImageTiling tiling, const VkFormatFeatureFlags features) const
     {
-        for (VkFormat format : candidates)
+        for (const VkFormat format : candidates)
         {
             VkFormatProperties props;
             vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
@@ -591,7 +570,6 @@ namespace LegendEngine::Graphics::Vulkan
         vkDeviceWaitIdle(m_Device);
 
         const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
-        ChooseSurfaceFormat(details);
 
         if (details.capabilities.currentExtent.width == 0 ||
             details.capabilities.currentExtent.height == 0)
@@ -604,7 +582,6 @@ namespace LegendEngine::Graphics::Vulkan
 
         CreateSwapchain(details);
         CreateDepthImages();
-        CreateFramebuffers();
         CreateCommandBuffers();
 
         m_ShouldRecreateSwapchain = false;
@@ -614,9 +591,6 @@ namespace LegendEngine::Graphics::Vulkan
     {
         vkFreeCommandBuffers(m_Device, m_Context.GetCommandPool(),
             static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
-
-        for (const VkFramebuffer framebuffer : m_Framebuffers)
-            vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
 
         m_DepthImage.reset();
 

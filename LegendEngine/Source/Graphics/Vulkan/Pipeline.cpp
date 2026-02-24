@@ -16,6 +16,10 @@ namespace LegendEngine::Graphics::Vulkan
         pushConstant.offset = 0;
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+    	VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
+    	renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    	renderingCreateInfo.colorAttachmentCount = 1;
+
         VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
 		pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutDesc.setLayoutCount = info.setCount;
