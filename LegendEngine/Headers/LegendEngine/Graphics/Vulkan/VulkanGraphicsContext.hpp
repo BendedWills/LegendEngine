@@ -1,6 +1,5 @@
 #pragma once
 
-#include <LegendEngine/Common/Logger.hpp>
 #include <LegendEngine/Graphics/GraphicsContext.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShaderManager.hpp>
@@ -16,7 +15,7 @@ namespace LegendEngine::Graphics::Vulkan
     class VulkanGraphicsContext final : public GraphicsContext
     {
     public:
-        VulkanGraphicsContext(std::string_view applicationName, bool debug);
+        VulkanGraphicsContext(std::string_view applicationName);
         ~VulkanGraphicsContext() override;
 
         Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) override;
@@ -41,11 +40,18 @@ namespace LegendEngine::Graphics::Vulkan
 
         const ShaderManager& GetShaderManager() const override;
 
+        VkFormat GetDepthFormat() const;
+
         TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
     private:
+        VkFormat FindDepthFormat() const;
+
         void CreateCameraDescriptorSetLayout();
         void CreateSceneDescriptorSetLayout();
         void CreateMaterialDescriptorSetLayout();
+
+        void CreateUniforms();
+        void UpdateDefaultMaterialUniforms();
 
         class DebugCallback final : public TetherVulkan::DebugCallback
         {
@@ -61,7 +67,7 @@ namespace LegendEngine::Graphics::Vulkan
             VulkanGraphicsContext& m_Context;
         };
 
-        Logger m_Logger;
+        bool m_Debug = false;
 
         TetherVulkan::ContextCreator m_ContextCreator;
         TetherVulkan::GraphicsContext m_GraphicsContext;
@@ -85,5 +91,7 @@ namespace LegendEngine::Graphics::Vulkan
         std::vector<VkDescriptorSetLayout> m_SetLayouts;
 
         std::optional<VulkanShaderManager> m_ShaderManager;
+
+        VkFormat m_DepthFormat;
     };
 }

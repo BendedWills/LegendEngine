@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <LegendEngine/Common/Defs.hpp>
-#include <LegendEngine/Common/Logger.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
 #include <LegendEngine/Graphics/ShaderManager.hpp>
@@ -36,9 +35,9 @@ namespace LegendEngine::Graphics
             std::span<Resources::Shader::Stage> stages) = 0;
         virtual Scope<Resources::Material> CreateMaterial() = 0;
 
-        virtual const ShaderManager& GetShaderManager() const = 0;
+        [[nodiscard]] virtual const ShaderManager& GetShaderManager() const = 0;
 
         static Scope<GraphicsContext> Create(GraphicsAPI api,
-            std::string_view applicationName, bool debug);
+            std::string_view applicationName);
     };
 }

@@ -5,6 +5,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
+#include <LegendEngine/IO/Logger.hpp>
 
 namespace LegendEngine::Graphics::Vulkan
 {
@@ -30,32 +31,35 @@ namespace LegendEngine::Graphics::Vulkan
         std::stringstream ss;
         ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
 
-        Logger::Level level;
+        IO::Logger::Level level;
         switch (messageSeverity)
         {
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-                level = Logger::Level::INFO;
+                level = IO::Logger::Level::INFO;
                 break;
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-                level = Logger::Level::WARN;
+                level = IO::Logger::Level::WARN;
                 break;
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-                level = Logger::Level::ERROR;
+                level = IO::Logger::Level::ERROR;
                 break;
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-                level = Logger::Level::DEBUG;
+                level = IO::Logger::Level::DEBUG;
                 break;
-            default: level = Logger::Level::INFO;
+            default: level = IO::Logger::Level::INFO;
         }
 
-        m_Context.m_Logger.Log(level, ss.str());
+        IO::Logger::GetGlobalLogger().Log(level, ss.str());
     }
 
-    VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName,
-        const bool debug)
+    VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName)
         :
-        m_Logger("VulkanGraphicsContext", true, debug),
-        m_ContextCreator(debug, applicationName, "LegendEngine",
+#ifdef NDEBUG
+        m_Debug(false),
+#else
+        m_Debug(true),
+#endif
+        m_ContextCreator(m_Debug, applicationName, "LegendEngine",
             EXTENTIONS, &DYNAMIC_RENDERING),
         m_GraphicsContext(m_ContextCreator),
         m_Callback(*this)
@@ -72,7 +76,10 @@ namespace LegendEngine::Graphics::Vulkan
         CreateSceneDescriptorSetLayout();
         CreateMaterialDescriptorSetLayout();
 
-        m_ShaderManager.emplace(m_GraphicsContext, m_SetLayouts);
+        CreateUniforms();
+
+        m_DepthFormat = FindDepthFormat();
+        m_ShaderManager.emplace(m_GraphicsContext, m_SetLayouts, m_DepthFormat);
     }
 
     VulkanGraphicsContext::~VulkanGraphicsContext()
@@ -127,7 +134,7 @@ namespace LegendEngine::Graphics::Vulkan
 
     Scope<Resources::Shader> VulkanGraphicsContext::CreateShader(std::span<Resources::Shader::Stage> stages)
     {
-        return std::make_unique<VulkanShader>(m_GraphicsContext, stages, m_SetLayouts);
+        return std::make_unique<VulkanShader>(m_GraphicsContext, stages, m_SetLayouts, m_DepthFormat);
     }
 
     Scope<Resources::Material> VulkanGraphicsContext::CreateMaterial()
@@ -235,5 +242,75 @@ namespace LegendEngine::Graphics::Vulkan
             throw std::runtime_error("Failed to create descriptor set layout");
 
         m_SetLayouts.push_back(m_SceneLayout);
+    }
+
+    void VulkanGraphicsContext::CreateUniforms()
+    {
+        const uint32_t framesInFlight = m_GraphicsContext.GetFramesInFlight();
+
+        VkDescriptorPoolSize uniformsSize{};
+        uniformsSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformsSize.descriptorCount = framesInFlight * 2;
+
+        VkDescriptorPoolSize samplersSize{};
+        samplersSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplersSize.descriptorCount = framesInFlight;
+
+        VkDescriptorPoolSize sizes[] =
+        {
+            uniformsSize,
+            samplersSize
+        };
+
+        m_StaticUniformPool.emplace(m_GraphicsContext, framesInFlight * 3,
+            std::size(sizes), sizes);
+
+        m_CameraSet.emplace(*m_StaticUniformPool, m_CameraLayout, framesInFlight);
+        m_CameraUniforms.emplace(m_GraphicsContext, sizeof(Objects::Camera::CameraUniforms), *m_CameraSet,
+            0);
+
+        m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
+        m_DefaultMatUniforms.emplace(m_GraphicsContext, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
+
+        m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
+
+        UpdateDefaultMaterialUniforms();
+    }
+
+    void VulkanGraphicsContext::UpdateDefaultMaterialUniforms()
+    {
+        for (uint32_t i = 0; i < m_GraphicsContext.GetFramesInFlight(); i++)
+        {
+            VulkanMaterial::Uniforms uniforms;
+            void* data = m_DefaultMatUniforms->GetMappedData(i);
+            *static_cast<VulkanMaterial::Uniforms*>(data) = uniforms;
+        }
+    }
+
+    VkFormat VulkanGraphicsContext::FindDepthFormat() const
+    {
+        constexpr VkFormat candidates[] = {
+            VK_FORMAT_D32_SFLOAT,
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D24_UNORM_S8_UINT
+        };
+
+        constexpr VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        for (const VkFormat format : candidates)
+        {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(m_GraphicsContext.GetPhysicalDevice(), format, &props);
+
+            if ((props.optimalTilingFeatures & features) == features)
+                return format;
+        }
+
+        return candidates[0];
+    }
+
+    VkFormat VulkanGraphicsContext::GetDepthFormat() const
+    {
+        return m_DepthFormat;
     }
 }

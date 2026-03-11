@@ -12,8 +12,7 @@ namespace LegendEngine::Events
     {
         if (!m_Cancelable && isCancelled)
         {
-            Application::Get().GetLogger().Log(Logger::Level::WARN,
-                "An event was set to be canceled, but it was not cancelable");
+            LGENG_WARN("An event was set to be canceled, but it was not cancelable");
             return;
         }
 

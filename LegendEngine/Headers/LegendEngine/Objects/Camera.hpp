@@ -7,6 +7,12 @@ namespace LegendEngine::Objects
     class Camera final : public Object
     {
     public:
+        struct CameraUniforms
+        {
+            Matrix4x4f view;
+            Matrix4x4f projection;
+        };
+
         Camera();
 
         void SetAspectRatio(float aspect);

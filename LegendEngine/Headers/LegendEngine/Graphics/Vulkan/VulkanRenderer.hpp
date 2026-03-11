@@ -31,12 +31,6 @@ namespace LegendEngine::Graphics::Vulkan
         void SetVSyncEnabled(bool vsync) override;
         void NotifyWindowResized() override;
     private:
-        struct CameraUniforms
-        {
-            Matrix4x4f view;
-            Matrix4x4f projection;
-        };
-
         struct LightUniforms
         {
             Color color;

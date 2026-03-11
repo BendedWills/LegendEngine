@@ -12,14 +12,14 @@ namespace LegendEngine
         m_EventBus(Application::Get().GetEventBus()),
         m_EventSubscriber(m_EventBus)
     {
-        LGENG_DEBUG_LOGMANY("Script created (this = ",
-            std::hex, std::showbase, this, ", &object = ", &object, ")");
+        LGENG_DEBUG("Script created (this = {:#X}, &object = {:#X})",
+            reinterpret_cast<size_t>(this), reinterpret_cast<size_t>(&object));
     }
 
     Script::~Script()
     {
-        LGENG_DEBUG_LOGMANY("Script destroyed (this = ",
-            std::hex, std::showbase, this, ", &object = ", &m_Object, ")");
+        LGENG_DEBUG("Script destroyed (this = {:#X}, &object = {:#X})",
+        reinterpret_cast<size_t>(this), reinterpret_cast<size_t>(&m_Object));
     }
 
     Objects::Object& Script::GetObject() const
@@ -29,8 +29,8 @@ namespace LegendEngine
 
     void Script::ListenForUpdates()
     {
-        LGENG_DEBUG_LOGMANY(std::hex, std::showbase,
-            "Script ", this, " is listening for updates");
+        LGENG_DEBUG("Script {:#X} is listening for updates",
+            reinterpret_cast<size_t>(this));
 
         m_IsUpdateListener = true;
 
@@ -43,8 +43,8 @@ namespace LegendEngine
 
     void Script::ListenForRender()
     {
-        LGENG_DEBUG_LOGMANY(std::hex, std::showbase,
-            "Script ", this, " is listening for renders");
+        LGENG_DEBUG("Script {:#X} is listening for renders",
+            reinterpret_cast<size_t>(this));
 
         m_IsRenderListener = true;
 

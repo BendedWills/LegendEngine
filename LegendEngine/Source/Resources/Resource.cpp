@@ -1,5 +1,5 @@
 #include <LegendEngine/Application.hpp>
-#include <LegendEngine/Common/Logger.hpp>
+#include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Resources/Resource.hpp>
 
 namespace LegendEngine::Resources
@@ -10,10 +10,8 @@ namespace LegendEngine::Resources
         if (!Application::HasConstructed())
             return;
 
-        LGENG_DEBUG_LOGMANY(
-            "Resource created (this = ",
-            std::hex, std::showbase,
-            reinterpret_cast<size_t>(this), ")");
+        LGENG_DEBUG("Resource created (this = {:#X})",
+            reinterpret_cast<size_t>(this));
 #endif
     }
 
@@ -23,10 +21,8 @@ namespace LegendEngine::Resources
         if (!Application::HasConstructed())
             return;
 
-        LGENG_DEBUG_LOGMANY(
-            "Resource destroyed (this = ",
-            std::hex, std::showbase,
-            reinterpret_cast<size_t>(this), ")");
+        LGENG_DEBUG("Resource destroyed (this = {:#X})",
+            reinterpret_cast<size_t>(this));
 #endif
     }
 }

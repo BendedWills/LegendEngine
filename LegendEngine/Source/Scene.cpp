@@ -29,8 +29,8 @@ namespace LegendEngine
         if (HasObject(object))
             return;
 
-        LGENG_DEBUG_LOGMANY(std::hex, std::showbase,
-            "Added object ", &object, " to scene ", this);
+        LGENG_DEBUG("Added object {:#X} to scene {:#X}",
+            reinterpret_cast<size_t>(&object), reinterpret_cast<size_t>(this));
 
         m_Objects.push_back(&object);
 
@@ -44,8 +44,8 @@ namespace LegendEngine
 
     void Scene::RemoveObject(Objects::Object& object)
     {
-        LGENG_DEBUG_LOGMANY(std::hex, std::showbase,
-            "Removed object ", &object, " from scene ", this);
+        LGENG_DEBUG("Removed object {:#X} from scene {:#X}",
+            reinterpret_cast<size_t>(&object), reinterpret_cast<size_t>(this));
 
         RemoveObjectComponents(object);
         std::erase(m_Objects, &object);
@@ -54,11 +54,6 @@ namespace LegendEngine
     void Scene::Clear()
     {
         m_Objects.clear();
-    }
-
-    Scope<Scene> Scene::Create()
-    {
-        return std::make_unique<Scene>();
     }
 
     Scene::ObjectsVecType& Scene::GetObjects()
@@ -71,25 +66,30 @@ namespace LegendEngine
         return m_Components;
     }
 
+    Scope<Scene> Scene::Create()
+    {
+        return std::make_unique<Scene>();
+    }
+
     void Scene::ListenForEvents()
     {
         m_EventBus.Subscribe<Events::ComponentAddedEvent>(m_EventSubscriber,
-        [this](const Events::ComponentAddedEvent& event)
-        {
-            OnComponentAdd(event);
-        });
+                                                          [this](const Events::ComponentAddedEvent& event)
+                                                          {
+                                                              OnComponentAdd(event);
+                                                          });
 
         m_EventBus.Subscribe<Events::ComponentRemovedEvent>(m_EventSubscriber,
-        [this](const Events::ComponentRemovedEvent& event)
-        {
-            OnComponentRemove(event);
-        });
+                                                            [this](const Events::ComponentRemovedEvent& event)
+                                                            {
+                                                                OnComponentRemove(event);
+                                                            });
 
         m_EventBus.Subscribe<Events::ObjectDestroyedEvent>(m_EventSubscriber,
-        [this](const Events::ObjectDestroyedEvent& event)
-        {
-            RemoveObject(event.GetObject());
-        });
+                                                           [this](const Events::ObjectDestroyedEvent& event)
+                                                           {
+                                                               RemoveObject(event.GetObject());
+                                                           });
     }
 
     void Scene::AddObjectComponents(Objects::Object& object)

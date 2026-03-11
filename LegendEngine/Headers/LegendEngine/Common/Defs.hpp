@@ -24,12 +24,6 @@
 
 #if defined(NDEBUG)
 #define LEGENDENGINE_RELEASE
-
-#define LGENG_DEBUG_LOG(args)
-#define LGENG_DEBUG_LOGMANY(...)
 #else
 #define LEGENDENGINE_DEBUG
-
-#define LGENG_DEBUG_LOG(args) Application::Get().GetLogger().Log(Logger::Level::DEBUG, args)
-#define LGENG_DEBUG_LOGMANY(...) Application::Get().GetLogger().LogMany(Logger::Level::DEBUG, __VA_ARGS__)
 #endif

@@ -10,7 +10,8 @@ namespace LegendEngine::Graphics::Vulkan
     {
     public:
         VulkanShaderManager(TetherVulkan::GraphicsContext& graphicsContext,
-            const std::span<VkDescriptorSetLayout>& setLayouts);
+            const std::span<VkDescriptorSetLayout>& setLayouts,
+            VkFormat depthFormat);
     private:
         TetherVulkan::GraphicsContext& m_GraphicsContext;
         std::span<VkDescriptorSetLayout> m_SetLayouts;

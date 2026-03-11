@@ -18,6 +18,11 @@ namespace LegendEngine::Graphics
         return m_Window.IsCloseRequested();
     }
 
+    void WindowRenderTarget::SetVisible(bool visible)
+    {
+        m_Window.SetVisible(visible);
+    }
+
     Tether::Window& WindowRenderTarget::GetWindow() const
     {
         return m_Window;

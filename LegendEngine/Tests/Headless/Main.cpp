@@ -21,7 +21,7 @@ private:
     Scope<Objects::Object> m_Placeholder;
 };
 
-#include <LegendEngine/Common/Platform.hpp>
+#include <LegendEngine/Common/Entrypoint.hpp>
 LEGENDENGINE_MAIN
 {
     const Scope<Graphics::GraphicsContext> ctx = Graphics::GraphicsContext::Create(

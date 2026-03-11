@@ -1,10 +1,17 @@
 #pragma once
 
-#if defined(_WIN32) && defined(NDEBUG)
-#include <Tether/Platform/Win32Window.hpp>
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#define LEGENDENGINE_MAIN int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+#ifdef _WIN32
+#ifdef _WIN64
+#define LGENG_PLATFORM_WINDOWS
 #else
-#define LEGENDENGINE_MAIN int main()
+#error "x86 is not supported"
 #endif
+#elif defined(__APPLE__) || defined(__MACH__)
+#define LGENG_PLATFORM_MACOS
+#elif defined(__linux__)
+#define LGENG_PLATFORM_LINUX
+#else
+#error "Unsupported platform"
+#endif
+
+

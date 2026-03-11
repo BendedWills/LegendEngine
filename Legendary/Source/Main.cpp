@@ -3,7 +3,7 @@
 #include <thread>
 
 #include <LegendEngine/LegendEngine.hpp>
-#include <LegendEngine/Common/Logger.hpp>
+#include <../../LegendEngine/Headers/LegendEngine/IO/Logger.hpp>
 
 using namespace LegendEngine;
 using namespace Objects;
@@ -56,8 +56,8 @@ public:
 		Script(*camera),
 		m_Camera(*camera)
 	{
-		Application& app = Application::Get();
-		Utils::Window& window = app.GetWindow();
+		const Application& app = Application::Get();
+		Utils::Window& window = app.GetWindowRenderTarget().GetWindow();
 		window.AddInputListener(*this, Input::InputType::KEY);
 		window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
 
@@ -152,28 +152,23 @@ class Legendary final : public Application
 public:
 	Legendary()
 		:
-#if !defined(NDEBUG)
-		Application("Legendary", true, true, GraphicsAPI::VULKAN),
-#else
-		Application("Legendary", false, false, RenderingAPI::VULKAN),
-#endif
-		m_Logger(GetLogger())
+		Application(1280, 720, "Legendary", GraphicsAPI::VULKAN)
 	{}
 
 	void OnUpdate(const float delta) override
 	{
 		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
 		{
-			m_Logger.Log(Logger::Level::INFO,
-				"FPS: " + std::to_string(1.0f / delta));
+			LGENG_INFO("FPS: {}", 1.0f / delta);
 			fpsTimer.Set();
 		}
 	}
 private:
 	void OnSetup() override
 	{
-		GetWindow().SetCursorMode(Tether::Window::CursorMode::DISABLED);
-		GetWindow().SetRawInputEnabled(true);
+		Utils::Window& window = GetWindowRenderTarget().GetWindow();
+		// window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
+		window.SetRawInputEnabled(true);
 
 	    testScene = Scene::Create();
 
@@ -227,10 +222,10 @@ private:
 	    LightComponent& lightComponent = light->GetLightComponent();
 	    lightComponent.SetColor(Color(1, 0, 0, 1));
 
-		testScene->AddObject(*cube1.get());
-		testScene->AddObject(*cube2.get());
+		testScene->AddObject(*cube1);
+		testScene->AddObject(*cube2);
 	    GetGlobalScene().AddObject(*light);
-		GetGlobalScene().AddObject(*floor.get());
+		GetGlobalScene().AddObject(*floor);
 	}
 
 	Stopwatch fpsTimer;
@@ -248,11 +243,9 @@ private:
 	std::unique_ptr<Material> material2;
 	std::unique_ptr<Texture2D> texture;
 	std::unique_ptr<Texture2D> texture2;
-
-	Logger& m_Logger;
 };
 
-#include <LegendEngine/Common/Platform.hpp>
+#include <LegendEngine/Common/Entrypoint.hpp>
 LEGENDENGINE_MAIN
 {
 	return Application::RunApplication<Legendary>();

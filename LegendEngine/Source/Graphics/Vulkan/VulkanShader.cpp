@@ -7,10 +7,11 @@ namespace LegendEngine::Graphics::Vulkan
 
     VulkanShader::VulkanShader(GraphicsContext& context,
         const std::span<Stage> stages,
-        const std::span<VkDescriptorSetLayout> sets)
+        const std::span<VkDescriptorSetLayout> sets,
+        VkFormat depthFormat)
         :
         m_Context(context),
-        m_Pipeline(CreatePipeline(stages, sets))
+        m_Pipeline(CreatePipeline(stages, sets, depthFormat))
     {}
 
     VkPipeline VulkanShader::GetPipeline() const
@@ -24,7 +25,7 @@ namespace LegendEngine::Graphics::Vulkan
     }
 
     Pipeline VulkanShader::CreatePipeline(const std::span<Stage> stages,
-        std::span<VkDescriptorSetLayout> sets) const
+        std::span<VkDescriptorSetLayout> sets, VkFormat depthFormat) const
     {
         std::vector<VkPipelineShaderStageCreateInfo> vkStages;
         std::vector<ShaderModule> shaderModules;
@@ -65,6 +66,7 @@ namespace LegendEngine::Graphics::Vulkan
         pipelineInfo.pDynamicStates = dynamicStates;
         pipelineInfo.setCount = sets.size();
         pipelineInfo.pSetLayouts = sets.data();
+        pipelineInfo.depthFormat = depthFormat;
 
         return Pipeline(m_Context, pipelineInfo);
     }

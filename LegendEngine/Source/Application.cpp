@@ -5,57 +5,41 @@
 #include <LegendEngine/Events/RenderEvent.hpp>
 #include <LegendEngine/Events/UpdateEvent.hpp>
 
+#include "LegendEngine/Graphics/WindowRenderTarget.hpp"
+
 namespace LegendEngine
 {
     Scope<Application> Application::m_Instance = nullptr;
 
 #ifndef LGENG_HEADLESS
     Application::Application(
-        bool logging,
-        bool debug,
-        Graphics::GraphicsContext& gfxContext,
-        Graphics::RenderTarget& renderTarget)
+        int width, int height,
+        std::string_view applicationName,
+        GraphicsAPI api)
         :
-        m_EventHandler(*this),
-        m_Logger(applicationName, logging, debug),
-        m_GlobalScene(m_EventBus),
-        m_Debug(debug)
+        m_GraphicsContext(CreateGraphicsContext(applicationName, api)),
+        m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
+        m_Renderer(CreateRenderer()),
+        m_GlobalScene(m_EventBus)
     {
-        std::wstring title(applicationName.size(), L' ');
-        std::mbstowcs(title.data(), applicationName.data(),
-            applicationName.size());
-
-        m_Logger.Log(Logger::Level::INFO, "Creating window");
-        m_Window = Tether::Window::Create(1280, 720,
-            title, false);
-        m_GraphicsContext = Graphics::GraphicsContext::Create(api, applicationName,
-            debug, m_Logger);
-        m_Logger.Log(Logger::Level::INFO, "Creating renderer");
-        m_Renderer = m_GraphicsContext->CreateRenderer(*this);
-        m_Logger.Log(Logger::Level::INFO, "Renderer created");
-
-        m_Logger.Log(Logger::Level::INFO, "Application created");
+        LGENG_INFO("Application created");
     }
 #endif
 
-    Application::Application(const std::string_view applicationName,
-        const bool logging, const bool debug,
-        Graphics::GraphicsContext& graphicsContext,
+    Application::Application(Graphics::GraphicsContext& graphicsContext,
         Graphics::Renderer& renderer)
         :
         m_GraphicsContext(graphicsContext),
         m_RenderTarget(renderer.GetRenderTarget()),
         m_Renderer(renderer),
-        m_Logger(applicationName, logging, debug),
-        m_GlobalScene(m_EventBus),
-        m_Debug(debug)
+        m_GlobalScene(m_EventBus)
     {
-        m_Logger.Log(Logger::Level::INFO, "Application created");
+        LGENG_INFO("Application created");
     }
 
     Application::~Application()
     {
-        m_Logger.Log(Logger::Level::INFO, "Destroying application");
+        LGENG_INFO("Destroying application");
         m_RenderTarget.SetVisible(false);
     }
 
@@ -67,7 +51,7 @@ namespace LegendEngine
 
         m_RenderTarget.SetVisible(true);
 
-        m_Logger.Log(Logger::Level::INFO, "Application setup complete");
+        LGENG_INFO("Application setup complete");
     }
 
     void Application::SetActiveCamera(Objects::Camera* pCamera)
@@ -96,6 +80,13 @@ namespace LegendEngine
         return m_RenderTarget;
     }
 
+#ifndef LGENG_HEADLESS
+    Graphics::WindowRenderTarget& Application::GetWindowRenderTarget() const
+    {
+        return *m_WindowRenderTarget;
+    }
+#endif
+
     Events::EventBus& Application::GetEventBus()
     {
         return m_EventBus;
@@ -119,11 +110,6 @@ namespace LegendEngine
     Scene* Application::GetActiveScene() const
     {
         return m_pActiveScene;
-    }
-
-    Logger& Application::GetLogger()
-    {
-        return m_Logger;
     }
 
     bool Application::HasConstructed()
@@ -193,5 +179,33 @@ namespace LegendEngine
         for (Objects::Object* object : scene.GetObjects())
             if (object->IsDirty())
                 object->CalculateTransformMatrix();
+    }
+
+    Graphics::GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
+            GraphicsAPI api)
+    {
+        LGENG_INFO("Creating graphics context");
+        return *(m_ManagedGraphicsContext = Graphics::GraphicsContext::Create(api, applicationName));
+    }
+
+    Graphics::RenderTarget& Application::CreateRenderTarget(int width, int height,
+            std::string_view applicationName)
+    {
+        std::wstring title(applicationName.size(), L' ');
+        std::mbstowcs(title.data(), applicationName.data(),
+            applicationName.size());
+
+        LGENG_INFO("Creating window");
+        m_Window = Tether::Window::Create(width, height,
+            title, false);
+
+        LGENG_INFO("Creating render target");
+        return *(m_WindowRenderTarget = std::make_unique<Graphics::WindowRenderTarget>(*m_ManagedGraphicsContext, *m_Window));
+    }
+
+    Graphics::Renderer& Application::CreateRenderer()
+    {
+        LGENG_INFO("Creating renderer");
+        return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
     }
 }

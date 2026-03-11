@@ -19,6 +19,7 @@ namespace LegendEngine::Graphics::Vulkan
     	VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
     	renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     	renderingCreateInfo.colorAttachmentCount = 1;
+    	renderingCreateInfo.depthAttachmentFormat = info.depthFormat;
 
         VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
 		pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

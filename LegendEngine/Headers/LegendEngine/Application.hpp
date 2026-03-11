@@ -2,14 +2,17 @@
 
 #include <memory>
 #include <LegendEngine/Scene.hpp>
-#include <LegendEngine/Common/Logger.hpp>
+#include <LegendEngine/Common/Assert.hpp>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Events/EventBus.hpp>
 #include <LegendEngine/Graphics/GraphicsContext.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
 #include <LegendEngine/Graphics/RenderTarget.hpp>
+#include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 #include <Tether/Window.hpp>
+
+#include "Graphics/WindowRenderTarget.hpp"
 
 #ifndef LGENG_HEADLESS
 #include <LegendEngine/Graphics/WindowRenderTarget.hpp>
@@ -28,15 +31,11 @@ namespace LegendEngine
         Application(
             int width, int height,
             std::string_view applicationName,
-            bool logging,
-            bool debug,
             GraphicsAPI api);
+
+        Graphics::WindowRenderTarget& GetWindowRenderTarget() const;
 #endif
-        Application(
-            std::string_view applicationName,
-            bool logging,
-            bool debug,
-            Graphics::GraphicsContext& graphicsContext,
+        Application(Graphics::GraphicsContext& graphicsContext,
             Graphics::Renderer& renderer);
         virtual ~Application() = 0;
 
@@ -54,7 +53,6 @@ namespace LegendEngine
         [[nodiscard]] Graphics::Renderer& GetRenderer() const;
         Objects::Camera* GetActiveCamera() const;
         Scene* GetActiveScene() const;
-        Logger& GetLogger();
 
         template<typename T, typename... Args>
             requires std::is_base_of_v<Application, T>
@@ -72,10 +70,7 @@ namespace LegendEngine
             }
             catch (const std::exception& e)
             {
-                m_Instance->m_Logger.Log(Logger::Level::ERROR,
-                    "Uncaught exception!");
-                m_Instance->m_Logger.Log(Logger::Level::ERROR,
-                    e.what());
+                LGENG_ERROR_TRACE("Uncaught exception! {}", e.what());
                 return EXIT_FAILURE;
             }
 
@@ -86,8 +81,7 @@ namespace LegendEngine
             requires std::is_base_of_v<Application, T>
         static Application& CreateHeadless(Args&&... args)
         {
-            if (m_Instance)
-                throw std::logic_error("Application already exists");
+            LGENG_ASSERT(!m_Instance, "Application already exists");
 
             m_Instance = std::make_unique<T>(args...);
             m_Instance->SetupApplication();
@@ -103,6 +97,12 @@ namespace LegendEngine
         virtual void OnUpdate(float deltaTime) {}
         virtual void OnRender(float deltaTime) {}
     private:
+        Graphics::GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
+            GraphicsAPI api);
+        Graphics::RenderTarget& CreateRenderTarget(int width, int height,
+            std::string_view applicationName);
+        Graphics::Renderer& CreateRenderer();
+
         void SetupApplication();
         void Run();
 
@@ -116,26 +116,25 @@ namespace LegendEngine
 
         Events::EventBus m_EventBus;
 
+#ifndef LGENG_HEADLESS
+        Scope<Graphics::GraphicsContext> m_ManagedGraphicsContext = nullptr;
+        Scope<Graphics::WindowRenderTarget> m_WindowRenderTarget = nullptr;
+        Scope<Graphics::Renderer> m_ManagedRenderer = nullptr;
+
+        Scope<Utils::Window> m_Window = nullptr;
+#endif
+
         Graphics::GraphicsContext& m_GraphicsContext;
         Graphics::RenderTarget& m_RenderTarget;
         Graphics::Renderer& m_Renderer;
-
-        Logger m_Logger;
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;
 
         Objects::Camera* m_pActiveCamera = nullptr;
 
-        bool m_Debug = false;
         bool m_IsSetUp = false;
         bool m_Headless = false;
-
-#ifndef LGENG_HEADLESS
-        Scope<Graphics::GraphicsContext> m_ManagedGraphicsContext = nullptr;
-        Scope<Graphics::WindowRenderTarget> m_WindowRenderTarget = nullptr;
-        Scope<Graphics::Renderer> m_ManagedRenderer = nullptr;
-#endif
 
         static Scope<Application> m_Instance;
     };

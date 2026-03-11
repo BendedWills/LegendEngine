@@ -15,6 +15,8 @@ namespace LegendEngine::Graphics
         [[nodiscard]] Tether::Window& GetWindow() const;
         uint32_t GetWidth() const;
         uint32_t GetHeight() const;
+
+        void SetVisible(bool visible) override;
     private:
         void ReceiveResize(uint64_t width, uint64_t height) const;
 

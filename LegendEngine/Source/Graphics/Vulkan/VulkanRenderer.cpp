@@ -53,7 +53,7 @@ namespace LegendEngine::Graphics::Vulkan
 
     VulkanRenderer::~VulkanRenderer()
     {
-        LGENG_DEBUG_LOG("Destroying renderer");
+        LGENG_DEBUG("Destroying renderer");
 
         vkDeviceWaitIdle(m_Device);
 
@@ -68,7 +68,7 @@ namespace LegendEngine::Graphics::Vulkan
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
         }
 
-        LGENG_DEBUG_LOG("Destroyed renderer");
+        LGENG_DEBUG("Destroyed renderer");
     }
 
     void VulkanRenderer::SetVSyncEnabled(const bool vsync)
@@ -144,11 +144,14 @@ namespace LegendEngine::Graphics::Vulkan
         VkRenderingAttachmentInfoKHR colorAttachmentInfo{};
         colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         colorAttachmentInfo.imageView = m_SwapchainImageViews[m_CurrentFrame];
+        colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachmentInfo.clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+        colorAttachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
         VkRenderingAttachmentInfoKHR depthAttachmentInfo{};
         depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         depthAttachmentInfo.imageView = m_DepthImageView;
+        depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         depthAttachmentInfo.clearValue = {1.0f, 0.0f };
 
         VkRenderingInfoKHR renderInfo{};
@@ -157,7 +160,7 @@ namespace LegendEngine::Graphics::Vulkan
         renderInfo.pColorAttachments = &colorAttachmentInfo;
         renderInfo.layerCount = 1;
         renderInfo.pDepthAttachment = &depthAttachmentInfo;
-        renderInfo.pStencilAttachment = &depthAttachmentInfo;
+        renderInfo.pStencilAttachment = nullptr;
         renderInfo.renderArea.offset = { 0, 0 };
         renderInfo.renderArea.extent = swapchainExtent;
 
@@ -286,14 +289,14 @@ namespace LegendEngine::Graphics::Vulkan
 
     void VulkanRenderer::UpdateCameraUniforms(const Objects::Camera& camera)
     {
-        CameraUniforms uniforms;
+        Objects::Camera::CameraUniforms uniforms;
         uniforms.projection = camera.GetProjectionMatrix();
         uniforms.view = camera.GetViewMatrix();
 
         for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
         {
             void* data = m_CameraUniforms->GetMappedData(i);
-            *static_cast<CameraUniforms*>(data) = uniforms;
+            *static_cast<Objects::Camera::CameraUniforms*>(data) = uniforms;
         }
     }
 
@@ -398,7 +401,7 @@ namespace LegendEngine::Graphics::Vulkan
             std::size(sizes), sizes);
 
         m_CameraSet.emplace(*m_StaticUniformPool, cameraLayout, framesInFlight);
-        m_CameraUniforms.emplace(m_Context, sizeof(CameraUniforms), *m_CameraSet,
+        m_CameraUniforms.emplace(m_Context, sizeof(Objects::Camera::CameraUniforms), *m_CameraSet,
             0);
 
         m_SceneSet.emplace(*m_StaticUniformPool, sceneLayout, framesInFlight);

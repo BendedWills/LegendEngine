@@ -21,12 +21,12 @@ namespace LegendEngine::Graphics::Vulkan
     STAGES(textured);
 
     VulkanShaderManager::VulkanShaderManager(TetherVulkan::GraphicsContext& graphicsContext,
-        const std::span<VkDescriptorSetLayout>& setLayouts)
+        const std::span<VkDescriptorSetLayout>& setLayouts, VkFormat depthFormat)
         :
         m_GraphicsContext(graphicsContext),
         m_SetLayouts(setLayouts),
-        m_SolidShader(m_GraphicsContext, STAGES_solid, m_SetLayouts),
-        m_TexturedShader(m_GraphicsContext, STAGES_textured, m_SetLayouts)
+        m_SolidShader(m_GraphicsContext, STAGES_solid, m_SetLayouts, depthFormat),
+        m_TexturedShader(m_GraphicsContext, STAGES_textured, m_SetLayouts, depthFormat)
     {
         RegisterShader("solid", m_SolidShader);
         RegisterShader("textured", m_TexturedShader);
