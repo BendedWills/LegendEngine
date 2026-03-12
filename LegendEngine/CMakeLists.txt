@@ -27,7 +27,7 @@ set(VK_LIBS)
 set(VK_INCLUDES)
 
 if (LGENG_HEADLESS)
-	add_definitions(-DLGENG_HEADLESS)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC -DLGENG_HEADLESS)
 else()
 	target_sources(${PROJECT_NAME} PRIVATE "Source/Graphics/WindowRenderTarget.cpp")
 endif ()

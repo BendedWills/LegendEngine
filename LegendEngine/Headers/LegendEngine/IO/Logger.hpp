@@ -85,6 +85,8 @@ namespace LegendEngine::IO
 			Log(Level::DEBUG, std::format(format, std::forward<Args>(args)...), location);
 		}
 
+		static void CreateGlobalLogger(std::string_view name);
+		static void DestroyGlobalLogger();
 		static Logger& GetGlobalLogger();
 	private:
 		static std::string GetFormattedTime();
@@ -92,5 +94,7 @@ namespace LegendEngine::IO
 
 		std::string m_Name;
 		std::vector<std::shared_ptr<LoggerSink>> m_Sinks;
+
+		static std::unique_ptr<Logger> m_Instance;
 	};
 }

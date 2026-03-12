@@ -3,6 +3,7 @@
 
 namespace LegendEngine::Graphics
 {
+#ifndef LGENG_HEADLESS
     WindowRenderTarget::WindowRenderTarget(GraphicsContext& ctx,
         Tether::Window& window)
         :
@@ -12,6 +13,7 @@ namespace LegendEngine::Graphics
     {
         m_Window.AddEventHandler(m_EventHandler, Tether::Events::EventType::WINDOW_RESIZE);
     }
+#endif
 
     bool WindowRenderTarget::IsCloseRequested() const
     {

@@ -16,11 +16,6 @@ namespace LegendEngine::Graphics::Vulkan
         pushConstant.offset = 0;
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    	VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
-    	renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    	renderingCreateInfo.colorAttachmentCount = 1;
-    	renderingCreateInfo.depthAttachmentFormat = info.depthFormat;
-
         VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
 		pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutDesc.setLayoutCount = info.setCount;
@@ -150,8 +145,17 @@ namespace LegendEngine::Graphics::Vulkan
 		// stages for one shader module. That means that you can have a VSMain and
 		// a PSMain in one shader module (aka a glsl file in this case).
 
+    	VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
+
+    	VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
+    	renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    	renderingCreateInfo.colorAttachmentCount = 1;
+    	renderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+    	renderingCreateInfo.depthAttachmentFormat = info.depthFormat;
+
 		VkGraphicsPipelineCreateInfo pipelineDesc{};
 		pipelineDesc.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    	pipelineDesc.pNext = &renderingCreateInfo;
 		pipelineDesc.stageCount = info.stageCount;
 		pipelineDesc.pStages = info.pStages;
 		pipelineDesc.pVertexInputState = &vertexInputInfo;

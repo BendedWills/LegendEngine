@@ -24,161 +24,10 @@ namespace LegendEngine
     {
         LGENG_INFO("Application created");
     }
-#endif
 
-    Application::Application(Graphics::GraphicsContext& graphicsContext,
-        Graphics::Renderer& renderer)
-        :
-        m_GraphicsContext(graphicsContext),
-        m_RenderTarget(renderer.GetRenderTarget()),
-        m_Renderer(renderer),
-        m_GlobalScene(m_EventBus)
-    {
-        LGENG_INFO("Application created");
-    }
-
-    Application::~Application()
-    {
-        LGENG_INFO("Destroying application");
-        m_RenderTarget.SetVisible(false);
-    }
-
-    void Application::SetupApplication()
-    {
-        m_IsSetUp = true;
-
-        OnSetup();
-
-        m_RenderTarget.SetVisible(true);
-
-        LGENG_INFO("Application setup complete");
-    }
-
-    void Application::SetActiveCamera(Objects::Camera* pCamera)
-    {
-        m_pActiveCamera = pCamera;
-        m_RenderTarget.SetCamera(pCamera);
-    }
-
-    void Application::SetActiveScene(Scene& scene)
-    {
-        m_pActiveScene = &scene;
-    }
-
-    void Application::ClearActiveScene()
-    {
-        m_pActiveScene = nullptr;
-    }
-
-    Graphics::GraphicsContext& Application::GetGraphicsContext() const
-    {
-        return m_GraphicsContext;
-    }
-
-    Graphics::RenderTarget& Application::GetRenderTarget() const
-    {
-        return m_RenderTarget;
-    }
-
-#ifndef LGENG_HEADLESS
     Graphics::WindowRenderTarget& Application::GetWindowRenderTarget() const
     {
         return *m_WindowRenderTarget;
-    }
-#endif
-
-    Events::EventBus& Application::GetEventBus()
-    {
-        return m_EventBus;
-    }
-
-    Scene& Application::GetGlobalScene()
-    {
-        return m_GlobalScene;
-    }
-
-    Graphics::Renderer& Application::GetRenderer() const
-    {
-        return m_Renderer;
-    }
-
-    Objects::Camera* Application::GetActiveCamera() const
-    {
-        return m_pActiveCamera;
-    }
-
-    Scene* Application::GetActiveScene() const
-    {
-        return m_pActiveScene;
-    }
-
-    bool Application::HasConstructed()
-    {
-        return m_Instance != nullptr;
-    }
-
-    Application& Application::Get()
-    {
-        if (!m_Instance)
-            throw std::runtime_error(
-                "Application::Get() called before it was constructed. "
-                "No LegendEngine objects may be used before Application::Run()");
-
-        if (!m_Instance->m_IsSetUp)
-            throw std::runtime_error(
-                "Application not set up"
-                "No LegendEngine objects may be used before SetupApplication()");
-
-        return *m_Instance;
-    }
-
-    void Application::Run()
-    {
-        Stopwatch deltaTimer;
-        while (!m_RenderTarget.IsCloseRequested())
-        {
-            const float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
-            deltaTimer.Set();
-
-            RenderFrame(delta);
-        }
-    }
-
-    void Application::RenderFrame(const float delta)
-    {
-        Update(delta);
-        Render(delta);
-    }
-
-    void Application::Update(const float delta, const bool updateWindow)
-    {
-#ifndef LGENG_HEADLESS
-        if (updateWindow)
-            Tether::Application::Get().PollEvents();
-#endif
-
-        RecalculateTransforms(m_GlobalScene);
-        if (m_pActiveScene)
-            RecalculateTransforms(*m_pActiveScene);
-
-        OnUpdate(delta);
-        m_EventBus.DispatchEvent<Events::UpdateEvent>(Events::UpdateEvent(delta));
-    }
-
-    void Application::Render(const float delta)
-    {
-        Scene* scenes[] = { &m_GlobalScene, m_pActiveScene };
-        m_Renderer.RenderFrame(scenes);
-
-        OnRender(delta);
-        m_EventBus.DispatchEvent<Events::RenderEvent>(Events::RenderEvent(delta));
-    }
-
-    void Application::RecalculateTransforms(Scene& scene)
-    {
-        for (Objects::Object* object : scene.GetObjects())
-            if (object->IsDirty())
-                object->CalculateTransformMatrix();
     }
 
     Graphics::GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
@@ -207,5 +56,162 @@ namespace LegendEngine
     {
         LGENG_INFO("Creating renderer");
         return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
+    }
+
+    Graphics::Renderer& Application::GetRenderer() const
+    {
+        return m_Renderer;
+    }
+
+    void Application::Render(const float delta)
+    {
+        Scene* scenes[] = { &m_GlobalScene, m_pActiveScene };
+        m_Renderer.RenderFrame(scenes);
+
+        OnRender(delta);
+        m_EventBus.DispatchEvent<Events::RenderEvent>(Events::RenderEvent(delta));
+    }
+
+    Graphics::RenderTarget& Application::GetRenderTarget() const
+    {
+        return m_RenderTarget;
+    }
+
+    void Application::SetActiveCamera(Objects::Camera* pCamera)
+    {
+        m_pActiveCamera = pCamera;
+        m_RenderTarget.SetCamera(pCamera);
+    }
+
+    void Application::Run()
+    {
+        Stopwatch deltaTimer;
+        while (!m_RenderTarget.IsCloseRequested())
+        {
+            const float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
+            deltaTimer.Set();
+
+            RenderFrame(delta);
+        }
+    }
+
+    void Application::RenderFrame(const float delta)
+    {
+        Update(delta);
+        Render(delta);
+    }
+#endif
+
+    Application::Application(Graphics::GraphicsContext& ctx)
+        :
+        m_GraphicsContext(ctx),
+        m_GlobalScene(m_EventBus)
+    {
+        LGENG_INFO("Application created");
+    }
+
+    Application::~Application()
+    {
+        LGENG_INFO("Destroying application");
+
+#ifndef LGENG_HEADLESS
+        m_RenderTarget.SetVisible(false);
+#endif
+    }
+
+    void Application::SetActiveScene(Scene& scene)
+    {
+        m_pActiveScene = &scene;
+    }
+
+    void Application::ClearActiveScene()
+    {
+        m_pActiveScene = nullptr;
+    }
+
+    Graphics::GraphicsContext& Application::GetGraphicsContext() const
+    {
+        return m_GraphicsContext;
+    }
+
+    Events::EventBus& Application::GetEventBus()
+    {
+        return m_EventBus;
+    }
+
+    Scene& Application::GetGlobalScene()
+    {
+        return m_GlobalScene;
+    }
+
+    Objects::Camera* Application::GetActiveCamera() const
+    {
+        return m_pActiveCamera;
+    }
+
+    Scene* Application::GetActiveScene() const
+    {
+        return m_pActiveScene;
+    }
+
+    void Application::Destroy()
+    {
+        m_Instance.reset();
+    }
+
+    bool Application::HasConstructed()
+    {
+        return m_Instance != nullptr;
+    }
+
+    Application& Application::Get()
+    {
+        if (!m_Instance)
+            throw std::runtime_error(
+                "Application::Get() called before it was constructed. "
+                "No LegendEngine objects may be used before Application::Run(), "
+                "Application::Destroy must be called if running in headless mode");
+
+        if (!m_Instance->m_IsSetUp)
+            throw std::runtime_error(
+                "Application not set up"
+                "No LegendEngine objects may be used before SetupApplication()");
+
+        return *m_Instance;
+    }
+
+    void Application::SetupApplication()
+    {
+        m_IsSetUp = true;
+
+        OnSetup();
+
+#ifndef LGENG_HEADLESS
+        m_RenderTarget.SetVisible(true);
+#endif
+
+        LGENG_INFO("Application setup complete");
+    }
+
+    void Application::Update(const float delta, const bool updateWindow)
+    {
+#ifndef LGENG_HEADLESS
+        if (updateWindow)
+            Tether::Application::Get().PollEvents();
+#endif
+
+        RecalculateTransforms(m_GlobalScene);
+        if (m_pActiveScene)
+            RecalculateTransforms(*m_pActiveScene);
+
+        OnUpdate(delta);
+        m_EventBus.DispatchEvent<Events::UpdateEvent>(Events::UpdateEvent(delta));
+    }
+
+    void Application::RecalculateTransforms(Scene& scene)
+    {
+        for (Objects::Object* object : scene.GetObjects())
+            if (object->IsDirty())
+                object->CalculateTransformMatrix();
     }
 }

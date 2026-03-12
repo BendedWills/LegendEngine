@@ -4,6 +4,7 @@
 #include <ctime>
 #include <chrono>
 #include <format>
+#include <LegendEngine/Common/Types.hpp>
 
 namespace LegendEngine::IO
 {
@@ -33,28 +34,28 @@ namespace LegendEngine::IO
 
 		switch (level)
 		{
-		case Level::INFO:
+			case Level::INFO:
 			{
 				severity = "INFO";
 				color = Color::BLUE;
 			}
 			break;
 
-		case Level::WARN:
+			case Level::WARN:
 			{
 				severity = "WARN";
 				color = Color::GOLD;
 			}
 			break;
 
-		case Level::DEBUG:
+			case Level::DEBUG:
 			{
 				severity = "DEBUG";
 				color = Color::GREEN;
 			}
 			break;
 
-		case Level::ERROR:
+			case Level::ERROR:
 			{
 				severity = "ERROR";
 				color = Color::RED;
@@ -94,15 +95,25 @@ namespace LegendEngine::IO
 		plain += std::format(" => {}", message);
 
 		for (auto& sink : m_Sinks)
-		{
 			sink->Log(colorized, plain);
-		}
+	}
+
+	void Logger::CreateGlobalLogger(std::string_view name)
+	{
+		m_Instance = std::make_unique<Logger>(name);
+	}
+
+	void Logger::DestroyGlobalLogger()
+	{
+		m_Instance.reset();
 	}
 
 	Logger& Logger::GetGlobalLogger()
 	{
-		static Logger globalLogger("LegendEngine");
-		return globalLogger;
+		if (!m_Instance)
+			CreateGlobalLogger("LegendEngine");
+
+		return *m_Instance;
 	}
 
 	std::string Logger::GetFormattedTime()
@@ -123,4 +134,6 @@ namespace LegendEngine::IO
 	{
 		return std::format(" {}:{} ({}) ", location.file_name(), location.line(), location.function_name());
 	}
+
+	Scope<Logger> Logger::m_Instance = nullptr;
 }

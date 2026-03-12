@@ -24,7 +24,8 @@ namespace LegendEngine::Graphics::Vulkan
             VkDescriptorSetLayout cameraLayout,
             VkDescriptorSetLayout sceneLayout,
             VkSurfaceFormatKHR surfaceFormat,
-            TetherVulkan::DescriptorSet& defaultMatSet
+            TetherVulkan::DescriptorSet& defaultMatSet,
+            VkFormat depthFormat
         );
         ~VulkanRenderer() override;
 
@@ -48,12 +49,12 @@ namespace LegendEngine::Graphics::Vulkan
         void BeginCommandBuffer();
         void UseMaterial(Resources::Material* pMaterial) override;
         void DrawMesh(const Components::MeshComponent& mesh) override;
+        void EndCommandBuffer() const;
         void EndFrame() override;
 
         void UpdateCameraUniforms(const Objects::Camera& camera) override;
 
         void CreateSwapchain(const TetherVulkan::SwapchainDetails& details);
-        void CreateRenderPass();
         void CreateUniforms(VkDescriptorSetLayout cameraLayout,
             VkDescriptorSetLayout sceneLayout);
         void CreateDepthImages();
@@ -61,7 +62,6 @@ namespace LegendEngine::Graphics::Vulkan
         void CreateSyncObjects();
 
         TetherVulkan::SwapchainDetails QuerySwapchainSupport() const;
-        [[nodiscard]] VkFormat FindDepthFormat() const;
         [[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
             VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
@@ -78,15 +78,15 @@ namespace LegendEngine::Graphics::Vulkan
         VkSurfaceKHR m_Surface;
 
         std::optional<TetherVulkan::Swapchain> m_Swapchain;
-        VkRenderPass m_RenderPass;
         std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
         std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
         std::optional<TetherVulkan::DescriptorSet> m_SceneSet;
         std::optional<TetherVulkan::UniformBuffer> m_CameraUniforms;
         std::optional<TetherVulkan::UniformBuffer> m_SceneUniforms;
 
-        std::optional<TetherVulkan::BufferedImage> m_DepthImage;
-        VkImageView m_DepthImageView;
+        std::vector<VkImage> m_DepthImages;
+        std::vector<VmaAllocation> m_DepthAllocs;
+        std::vector<VkImageView> m_DepthImageViews;
 
         std::vector<VkImage> m_SwapchainImages;
         std::vector<VkImageView> m_SwapchainImageViews;
@@ -102,6 +102,8 @@ namespace LegendEngine::Graphics::Vulkan
 
         uint32_t m_CurrentFrame = 0;
         uint32_t m_CurrentImageIndex = 0;
+
+        VkFormat m_DepthFormat;
 
         VkDescriptorSet m_Sets[3] = {};
         VulkanShader* m_pCurrentShader = nullptr;

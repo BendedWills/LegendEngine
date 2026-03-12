@@ -34,9 +34,10 @@ namespace LegendEngine
             GraphicsAPI api);
 
         Graphics::WindowRenderTarget& GetWindowRenderTarget() const;
+        [[nodiscard]] Graphics::Renderer& GetRenderer() const;
+#else
+        Application(Graphics::GraphicsContext& ctx); // Headless application constructor
 #endif
-        Application(Graphics::GraphicsContext& graphicsContext,
-            Graphics::Renderer& renderer);
         virtual ~Application() = 0;
 
         LEGENDENGINE_NO_COPY(Application);
@@ -50,7 +51,6 @@ namespace LegendEngine
         Graphics::RenderTarget& GetRenderTarget() const;
         Events::EventBus& GetEventBus();
         Scene& GetGlobalScene();
-        [[nodiscard]] Graphics::Renderer& GetRenderer() const;
         Objects::Camera* GetActiveCamera() const;
         Scene* GetActiveScene() const;
 
@@ -58,8 +58,7 @@ namespace LegendEngine
             requires std::is_base_of_v<Application, T>
         static int RunApplication(Args&&... args)
         {
-            if (m_Instance)
-                return EXIT_FAILURE;
+            LGENG_ASSERT(!m_Instance, "Application already exists");
 
             m_Instance = std::make_unique<T>(args...);
             m_Instance->SetupApplication();
@@ -74,9 +73,13 @@ namespace LegendEngine
                 return EXIT_FAILURE;
             }
 
+            // TODO: convert app to own resources so this can go in Destroy
+            IO::Logger::DestroyGlobalLogger();
+
             return EXIT_SUCCESS;
         }
 
+#ifdef LGENG_HEADLESS
         template<typename T, typename... Args>
             requires std::is_base_of_v<Application, T>
         static Application& CreateHeadless(Args&&... args)
@@ -88,6 +91,9 @@ namespace LegendEngine
 
             return *m_Instance;
         }
+#endif
+
+        static void Destroy();
 
         static bool HasConstructed();
         static Application& Get();
@@ -97,12 +103,6 @@ namespace LegendEngine
         virtual void OnUpdate(float deltaTime) {}
         virtual void OnRender(float deltaTime) {}
     private:
-        Graphics::GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
-            GraphicsAPI api);
-        Graphics::RenderTarget& CreateRenderTarget(int width, int height,
-            std::string_view applicationName);
-        Graphics::Renderer& CreateRenderer();
-
         void SetupApplication();
         void Run();
 
@@ -117,16 +117,23 @@ namespace LegendEngine
         Events::EventBus m_EventBus;
 
 #ifndef LGENG_HEADLESS
+        Graphics::GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
+            GraphicsAPI api);
+        Graphics::RenderTarget& CreateRenderTarget(int width, int height,
+            std::string_view applicationName);
+        Graphics::Renderer& CreateRenderer();
+
         Scope<Graphics::GraphicsContext> m_ManagedGraphicsContext = nullptr;
         Scope<Graphics::WindowRenderTarget> m_WindowRenderTarget = nullptr;
         Scope<Graphics::Renderer> m_ManagedRenderer = nullptr;
 
         Scope<Utils::Window> m_Window = nullptr;
+
+        Graphics::RenderTarget& m_RenderTarget;
+        Graphics::Renderer& m_Renderer;
 #endif
 
         Graphics::GraphicsContext& m_GraphicsContext;
-        Graphics::RenderTarget& m_RenderTarget;
-        Graphics::Renderer& m_Renderer;
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;

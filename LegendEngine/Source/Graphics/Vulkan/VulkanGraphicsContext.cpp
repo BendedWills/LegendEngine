@@ -103,7 +103,8 @@ namespace LegendEngine::Graphics::Vulkan
 
         return std::make_unique<VulkanRenderer>(
             m_GraphicsContext, renderTarget, *m_ShaderManager,
-            m_CameraLayout, m_SceneLayout, surfaceFormat, *m_DefaultMatSet
+            m_CameraLayout, m_SceneLayout, surfaceFormat, *m_DefaultMatSet,
+            m_DepthFormat
         );
     }
 

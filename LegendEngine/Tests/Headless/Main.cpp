@@ -6,9 +6,9 @@ using namespace LegendEngine;
 class Headless : public Application
 {
 public:
-    Headless(Graphics::GraphicsContext& ctx, Graphics::Renderer& renderer)
+    Headless(Graphics::GraphicsContext& ctx)
         :
-        Application("Headless", true, true, ctx, renderer)
+        Application(ctx)
     {}
 private:
     void OnSetup() override
@@ -25,10 +25,9 @@ private:
 LEGENDENGINE_MAIN
 {
     const Scope<Graphics::GraphicsContext> ctx = Graphics::GraphicsContext::Create(
-        GraphicsAPI::VULKAN, "Headless", true);
+        GraphicsAPI::VULKAN, "Headless");
     Graphics::RenderTarget renderTarget(ctx->CreateHeadlessRenderTargetBridge());
-    const Scope<Graphics::Renderer> renderer = ctx->CreateRenderer(renderTarget);
-    Application& app = Application::CreateHeadless<Headless>(*ctx, *renderer);
+    Application& app = Application::CreateHeadless<Headless>(*ctx);
 
     Stopwatch sw;
     sw.Set();

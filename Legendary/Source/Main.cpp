@@ -166,10 +166,6 @@ public:
 private:
 	void OnSetup() override
 	{
-		Utils::Window& window = GetWindowRenderTarget().GetWindow();
-		// window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
-		window.SetRawInputEnabled(true);
-
 	    testScene = Scene::Create();
 
 		// Create the camera
@@ -184,6 +180,10 @@ private:
 		CreateObjects();
 
 		SetActiveScene(*testScene);
+
+		Utils::Window& window = GetWindowRenderTarget().GetWindow();
+		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
+		window.SetRawInputEnabled(true);
 	}
 
 	void CreateMaterials()

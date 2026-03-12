@@ -26,7 +26,8 @@ namespace LegendEngine::Graphics::Vulkan
             const VkDescriptorSetLayout cameraLayout,
             const VkDescriptorSetLayout sceneLayout,
             VkSurfaceFormatKHR surfaceFormat,
-            TetherVulkan::DescriptorSet& defaultMatSet
+            TetherVulkan::DescriptorSet& defaultMatSet,
+            VkFormat depthFormat
             )
         :
         Renderer(renderTarget),
@@ -37,14 +38,21 @@ namespace LegendEngine::Graphics::Vulkan
         m_Surface(static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).GetSurface()),
         m_SurfaceFormat(surfaceFormat),
         m_Device(m_Context.GetDevice()),
-        m_PhysicalDevice(m_Context.GetPhysicalDevice())
+        m_PhysicalDevice(m_Context.GetPhysicalDevice()),
+        m_DepthFormat(depthFormat)
     {
+        LGENG_ASSERT(!static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).IsHeadless(),
+            "Renderers can't be created with a headless surface");
+
         // Application::Get() doesn't work here
+
+        m_DepthImages.resize(m_Context.GetFramesInFlight());
+        m_DepthAllocs.resize(m_Context.GetFramesInFlight());
+        m_DepthImageViews.resize(m_Context.GetFramesInFlight());
 
         const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
 
         CreateSwapchain(details);
-        CreateRenderPass();
         CreateUniforms(cameraLayout, sceneLayout);
         CreateDepthImages();
         CreateCommandBuffers();
@@ -58,8 +66,6 @@ namespace LegendEngine::Graphics::Vulkan
         vkDeviceWaitIdle(m_Device);
 
         DestroySwapchain();
-
-        vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 
         for (uint64_t i = 0; i < m_Context.GetFramesInFlight(); i++)
         {
@@ -127,6 +133,21 @@ namespace LegendEngine::Graphics::Vulkan
         if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
             throw std::runtime_error("Failed to begin recording command buffer");
 
+        VkImageMemoryBarrier colorBarrier{};
+        colorBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        colorBarrier.image = m_SwapchainImages[m_CurrentImageIndex];
+        colorBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        colorBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+        vkCmdPipelineBarrier(buffer,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            0, 0, nullptr,
+            0, nullptr,
+            1, &colorBarrier);
+
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -143,16 +164,19 @@ namespace LegendEngine::Graphics::Vulkan
 
         VkRenderingAttachmentInfoKHR colorAttachmentInfo{};
         colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        colorAttachmentInfo.imageView = m_SwapchainImageViews[m_CurrentFrame];
+        colorAttachmentInfo.imageView = m_SwapchainImageViews[m_CurrentImageIndex];
         colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachmentInfo.clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
-        colorAttachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
         VkRenderingAttachmentInfoKHR depthAttachmentInfo{};
         depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        depthAttachmentInfo.imageView = m_DepthImageView;
+        depthAttachmentInfo.imageView = m_DepthImageViews[m_CurrentFrame];
         depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         depthAttachmentInfo.clearValue = {1.0f, 0.0f };
+        depthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
         VkRenderingInfoKHR renderInfo{};
         renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -241,11 +265,34 @@ namespace LegendEngine::Graphics::Vulkan
         vkCmdDrawIndexed(buffer, mesh.GetIndexCount(), 1, 0, 0, 0);
     }
 
+    void VulkanRenderer::EndCommandBuffer() const
+    {
+        const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
+
+        vkCmdEndRendering(buffer);
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = m_SwapchainImages[m_CurrentImageIndex];
+        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+        vkCmdPipelineBarrier(buffer,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0, 0,
+            nullptr, 0,
+            nullptr, 1, &barrier);
+    }
+
     void VulkanRenderer::EndFrame()
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
 
-        m_DeviceLoader.vkCmdEndRenderingKHR(buffer);
+        EndCommandBuffer();
+
         if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
             throw std::runtime_error("Failed to record render command buffer");
 
@@ -310,73 +357,6 @@ namespace LegendEngine::Graphics::Vulkan
         m_SwapchainImageViews = m_Swapchain->CreateImageViews();
     }
 
-    void VulkanRenderer::CreateRenderPass()
-    {
-        VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = m_SurfaceFormat.format;
-		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentDescription depthAttachment{};
-		depthAttachment.format = FindDepthFormat();
-		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference colorAttachmentReference{};
-		colorAttachmentReference.attachment = 0;
-		colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depthAttachmentReference{};
-		depthAttachmentReference.attachment = 1;
-		depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass{};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentReference;
-		subpass.pDepthStencilAttachment = &depthAttachmentReference;
-
-		VkSubpassDependency dependency{};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-			| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-			| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-			| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-		const VkAttachmentDescription attachments[] =
-		{
-			colorAttachment,
-			depthAttachment
-		};
-
-		VkRenderPassCreateInfo desc{};
-		desc.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		desc.attachmentCount = 2;
-		desc.pAttachments = attachments;
-		desc.subpassCount = 1;
-		desc.pSubpasses = &subpass;
-		desc.dependencyCount = 1;
-		desc.pDependencies = &dependency;
-
-		if (vkCreateRenderPass(m_Device, &desc, nullptr, &m_RenderPass)
-			!= VK_SUCCESS)
-			throw std::runtime_error("Failed to create render pass");
-    }
-
     void VulkanRenderer::CreateUniforms(VkDescriptorSetLayout cameraLayout,
         VkDescriptorSetLayout sceneLayout)
     {
@@ -412,21 +392,54 @@ namespace LegendEngine::Graphics::Vulkan
     {
         auto [width, height] = m_Swapchain->GetExtent();
 
-        Tether::Rendering::Resources::BufferedImageInfo info{};
-        info.width = width;
-        info.height = height;
-
-        VkFormat depthFormat = FindDepthFormat();
-        m_DepthImage.emplace(m_Context, nullptr,
-            nullptr, info, depthFormat, true);
-        m_DepthImageView = m_DepthImage->GetImageView();
-
         TetherVulkan::SingleUseCommandBuffer cmdBuffer(m_Context);
         cmdBuffer.Begin();
-        cmdBuffer.TransitionImageLayout(m_DepthImage->Get(), depthFormat,
-            VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        {
+            VkImageCreateInfo imageInfo{};
+            imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageInfo.imageType = VK_IMAGE_TYPE_2D;
+            imageInfo.extent.width = width;
+            imageInfo.extent.height = height;
+            imageInfo.extent.depth = 1;
+            imageInfo.mipLevels = 1;
+            imageInfo.arrayLayers = 1;
+            imageInfo.format = m_DepthFormat;
+            imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+            VmaAllocationCreateInfo allocInfo{};
+            allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+            if (vmaCreateImage(m_Context.GetAllocator(), &imageInfo, &allocInfo,
+                &m_DepthImages[i], &m_DepthAllocs[i], nullptr) != VK_SUCCESS)
+                throw std::runtime_error("Failed to create image");
+
+            VkImageViewCreateInfo viewInfo{};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = m_DepthImages[i];
+            viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = m_DepthFormat;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+
+            if (vkCreateImageView(m_Device, &viewInfo, nullptr,
+                &m_DepthImageViews[i]) != VK_SUCCESS)
+                throw std::runtime_error("Failed to create texture image view");
+
+            cmdBuffer.TransitionImageLayout(m_DepthImages[i], m_DepthFormat,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
+        }
+
         cmdBuffer.End();
         cmdBuffer.Submit();
     }
@@ -525,28 +538,6 @@ namespace LegendEngine::Graphics::Vulkan
         return details;
     }
 
-    VkFormat VulkanRenderer::FindDepthFormat() const
-    {
-        constexpr VkFormat candidates[] = {
-            VK_FORMAT_D32_SFLOAT,
-            VK_FORMAT_D32_SFLOAT_S8_UINT,
-            VK_FORMAT_D24_UNORM_S8_UINT
-        };
-
-        constexpr VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
-
-        for (const VkFormat format : candidates)
-        {
-            VkFormatProperties props;
-            vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
-
-            if ((props.optimalTilingFeatures & features) == features)
-                return format;
-        }
-
-        return candidates[0];
-    }
-
     VkFormat VulkanRenderer::FindSupportedFormat(const std::vector<VkFormat>& candidates,
         const VkImageTiling tiling, const VkFormatFeatureFlags features) const
     {
@@ -595,10 +586,14 @@ namespace LegendEngine::Graphics::Vulkan
         vkFreeCommandBuffers(m_Device, m_Context.GetCommandPool(),
             static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
 
-        m_DepthImage.reset();
-
         for (const VkImageView imageView : m_SwapchainImageViews)
             vkDestroyImageView(m_Device, imageView, nullptr);
+
+        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        {
+            vmaDestroyImage(m_Context.GetAllocator(), m_DepthImages[i], m_DepthAllocs[i]);
+            vkDestroyImageView(m_Device, m_DepthImageViews[i], nullptr);
+        }
 
         m_Swapchain.reset();
     }
