@@ -29,7 +29,6 @@ namespace LegendEngine::IO
         uint64_t m_Height = 0;
         uint8_t m_Channels = 0;
         uint8_t* m_Data = nullptr;
-        uint8_t* m_StbIData = nullptr;
 
         bool m_ShouldFree = false;
     };

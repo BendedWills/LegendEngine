@@ -29,8 +29,8 @@ namespace LegendEngine::IO
 
     TextureData::~TextureData()
     {
-        if (m_Data)
-            free(m_StbIData);
+        if (m_ShouldFree)
+            free(m_Data);
     }
 
     uint64_t TextureData::GetWidth() const
@@ -50,7 +50,7 @@ namespace LegendEngine::IO
 
     uint8_t* TextureData::GetData() const
     {
-        return m_Data ? m_Data : m_StbIData;
+        return m_Data;
     }
 
     bool TextureData::HasLoaded() const
