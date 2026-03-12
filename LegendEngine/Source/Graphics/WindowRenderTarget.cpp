@@ -55,7 +55,7 @@ namespace LegendEngine::Graphics
         m_Parent(parent)
     {}
 
-    void WindowRenderTarget::EventHandler::OnWindowResize(const Tether::Events::WindowResizeEvent event) const
+    void WindowRenderTarget::EventHandler::OnWindowResize(const Tether::Events::WindowResizeEvent& event)
     {
         if (m_Parent.m_Window.IsVisible())
             m_Parent.ReceiveResize(event.GetNewWidth(), event.GetNewHeight());

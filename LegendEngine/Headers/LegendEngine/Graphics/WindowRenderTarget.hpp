@@ -24,7 +24,7 @@ namespace LegendEngine::Graphics
         {
         public:
             explicit EventHandler(WindowRenderTarget& parent);
-            void OnWindowResize(Tether::Events::WindowResizeEvent event) const;
+            void OnWindowResize(const Tether::Events::WindowResizeEvent& event) override;
         private:
             WindowRenderTarget& m_Parent;
         };
