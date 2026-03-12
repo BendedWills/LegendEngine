@@ -215,13 +215,11 @@ private:
 		material = Material::Create();
 		material2 = Material::Create();
 
-		IO::TextureLoader planksLoader;
-		IO::TextureLoader tilesLoader;
-		planksLoader.FromFile("Assets/planks.png");
-		tilesLoader.FromFile("Assets/tiles.png");
+		std::future<IO::TextureData> planksLoader = IO::TextureData::FromFile("Assets/planks.png");
+		std::future<IO::TextureData> tilesLoader = IO::TextureData::FromFile("Assets/tiles.png");
 
-		texture = Texture2D::Create(planksLoader);
-		texture2 = Texture2D::Create(tilesLoader);
+		texture = Texture2D::Create(planksLoader.get());
+		texture2 = Texture2D::Create(tilesLoader.get());
 
 		material->SetTexture(texture.get());
 		material2->SetTexture(texture2.get());

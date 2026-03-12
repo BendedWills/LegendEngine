@@ -14,7 +14,7 @@ namespace LegendEngine::Graphics::Vulkan
     {
     public:
         VulkanTexture2D(Tether::Rendering::Vulkan::GraphicsContext& context,
-            const IO::TextureLoader& loader);
+            const IO::TextureData& loader);
         ~VulkanTexture2D() override;
 
         VkDescriptorType GetDescriptorType() override;

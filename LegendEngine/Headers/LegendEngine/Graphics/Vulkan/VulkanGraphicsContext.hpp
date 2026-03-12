@@ -27,7 +27,7 @@ namespace LegendEngine::Graphics::Vulkan
         Scope<VertexBuffer> CreateVertexBuffer(
             std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices) override;
-        Scope<Resources::Texture2D> CreateTexture2D(IO::TextureLoader& loader) override;
+        Scope<Resources::Texture2D> CreateTexture2D(const IO::TextureData& loader) override;
         Scope<Resources::Shader> CreateShader(
             std::span<Resources::Shader::Stage> stages) override;
         Scope<Resources::Material> CreateMaterial() override;

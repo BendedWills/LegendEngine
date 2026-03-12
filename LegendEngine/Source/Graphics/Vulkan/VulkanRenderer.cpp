@@ -293,8 +293,8 @@ namespace LegendEngine::Graphics::Vulkan
 
         EndCommandBuffer();
 
-        if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
-            throw std::runtime_error("Failed to record render command buffer");
+        VkResult result = vkEndCommandBuffer(buffer);
+        LE_ASSERT(result == VK_SUCCESS, "Failed to end command buffer");
 
         // Wait for the image to be available before rendering the frame and
         // signal the render finished semaphore once rendering is complete.
@@ -314,9 +314,9 @@ namespace LegendEngine::Graphics::Vulkan
 
         // The in flight fence for this frame must be reset.
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
-        if (vkQueueSubmit(m_Context.GetQueue(), 1, &submitInfo,
-            m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
-            throw std::runtime_error("vkQueueSubmit");
+        result = vkQueueSubmit(m_Context.GetQueue(), 1, &submitInfo,
+            m_InFlightFences[m_CurrentFrame]);
+        LE_ASSERT(result == VK_SUCCESS, "Failed to submit queue");
 
         // Wait for the frame to be rendered until presenting
         // (hence the wait semaphores being the signal semaphores)

@@ -3,7 +3,7 @@
 
 namespace LegendEngine::Resources
 {
-    Texture2D::Texture2D(const IO::TextureLoader& loader)
+    Texture2D::Texture2D(const IO::TextureData& loader)
         :
         m_Width(loader.GetWidth()),
         m_Height(loader.GetHeight()),
@@ -28,7 +28,7 @@ namespace LegendEngine::Resources
         return m_Channels;
     }
 
-    Scope<Texture2D> Texture2D::Create(IO::TextureLoader& loader)
+    Scope<Texture2D> Texture2D::Create(const IO::TextureData& loader)
     {
         LE_DEBUG("Texture2D created");
         return Application::Get().GetGraphicsContext().CreateTexture2D(loader);

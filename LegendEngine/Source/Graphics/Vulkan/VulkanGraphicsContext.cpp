@@ -128,7 +128,7 @@ namespace LegendEngine::Graphics::Vulkan
         return std::make_unique<VulkanVertexBuffer>(m_GraphicsContext, vertices, indices);
     }
 
-    Scope<Resources::Texture2D> VulkanGraphicsContext::CreateTexture2D(IO::TextureLoader& loader)
+    Scope<Resources::Texture2D> VulkanGraphicsContext::CreateTexture2D(const IO::TextureData& loader)
     {
         return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader);
     }

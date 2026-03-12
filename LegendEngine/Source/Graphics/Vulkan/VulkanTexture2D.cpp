@@ -6,7 +6,7 @@ namespace LegendEngine::Graphics::Vulkan
     using namespace Tether::Rendering::Vulkan;
 
     VulkanTexture2D::VulkanTexture2D(GraphicsContext& context,
-        const IO::TextureLoader& loader)
+        const IO::TextureData& loader)
         :
         Texture2D(loader),
         m_Context(context)
