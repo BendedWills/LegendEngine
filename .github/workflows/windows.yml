@@ -1,0 +1,23 @@
+name: Build (Windows)
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.1.1
+        with:
+          version: latest
+          cache: true
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=Release -DLGENG_BUILD_TESTS=OFF
+      - name: Build
+        run: |
+          cmake --build build
