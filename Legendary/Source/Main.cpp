@@ -48,18 +48,20 @@ private:
 	Material& m_Material;
 };
 
-class CameraScript final : public Script, Input::InputListener
+class CameraScript final : public Script, public Input::InputListener
 {
 public:
 	explicit CameraScript(Camera* camera)
 		:
 		Script(*camera),
+		m_Window(Application::Get().GetWindow()),
 		m_Camera(*camera)
 	{
-		const Application& app = Application::Get();
-		Utils::Window& window = app.GetWindow();
-		window.AddInputListener(*this, Input::InputType::KEY);
-		window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
+		m_Window.AddInputListener(*this, Input::InputType::KEY);
+		m_Window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
+		m_Window.AddInputListener(*this, Input::InputType::MOUSE_CLICK);
+
+		m_Camera.SetPosition(Vector3f(-1.0f, 2.0f, 4.0f));
 
 		ListenForUpdates();
 	}
@@ -108,6 +110,13 @@ public:
 			case Utils::Keycodes::KEY_LEFT_SHIFT: keys.shift = pressed; break;
 			case Utils::Keycodes::KEY_LEFT_CONTROL: keys.ctrl = pressed; break;
 
+			case Utils::Keycodes::KEY_ESCAPE:
+			{
+				m_Window.SetCursorMode(Tether::Window::CursorMode::NORMAL);
+				m_CaptureMouse = false;
+			}
+			break;
+
 			default: break;
 		}
 	}
@@ -115,6 +124,9 @@ public:
 	const float sense = 0.04f;
 	void OnRawMouseMove(Input::RawMouseMoveInfo& info) override
 	{
+		if (!m_CaptureMouse)
+			return;
+
 		horz += static_cast<float>(info.GetRawX()) * sense;
 		vert += static_cast<float>(info.GetRawY()) * sense;
 
@@ -127,6 +139,15 @@ public:
 		q *= Math::AngleAxis(Math::Radians(horz), Vector3f(0, 1, 0));
 		
 		m_Object.SetRotation(q);
+	}
+
+	void OnMouseClick(Input::MouseClickInfo& info) override
+	{
+		if (m_CaptureMouse)
+			return;
+
+		m_Window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
+		m_CaptureMouse = true;
 	}
 
 	struct Keys
@@ -144,7 +165,10 @@ public:
 	float horz = 0.0f;
 	float vert = 0.0f;
 private:
+	bool m_CaptureMouse = true;
+
 	Camera& m_Camera;
+	Tether::Window& m_Window;
 };
 
 class Legendary final : public Application

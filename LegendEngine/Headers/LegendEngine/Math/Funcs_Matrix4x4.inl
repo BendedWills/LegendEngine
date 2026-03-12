@@ -98,9 +98,6 @@ namespace LegendEngine
 	template<typename T>
 	LE_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_ZO(T fov, T aspect, T nearZ, T farZ)
 	{
-		if (abs(aspect - std::numeric_limits<T>::epsilon()) <= T(0))
-			return Matrix4x4<T>(0);
-
 		const T tanHalfFov = tan(fov / static_cast<T>(2));
 
 		Matrix4x4<T> product;
@@ -116,9 +113,6 @@ namespace LegendEngine
 	template<typename T>
 	LE_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_NO(T fov, T aspect, T nearZ, T farZ)
 	{
-		if (abs(aspect - std::numeric_limits<T>::epsilon()) <= T(0))
-			return Matrix4x4<T>(0);
-
 		const T tanHalfFov = tan(fov / static_cast<T>(2));
 
 		Matrix4x4<T> product;
