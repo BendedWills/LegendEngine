@@ -11,9 +11,9 @@ jobs:
       - name: Install CMake
         uses: lukka/get-cmake@latest
       - name: Install Vulkan SDK
-        uses: humbletim/install-vulkan-sdk@v1.1.1
+        uses: jakoch/install-vulkan-sdk-action@v1
         with:
-          version: latest
+          vulkan_version: latest
           cache: true
       - name: Configure
         run: |
