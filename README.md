@@ -1,3 +1,5 @@
+[![Build and test (Linux)](https://github.com/BendedWills/LegendEngine/actions/workflows/tests.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/tests.yml)
+
 # Legend Engine 
 
 Legend Engine is a game engine made using C++.
