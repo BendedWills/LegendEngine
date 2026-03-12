@@ -29,7 +29,7 @@ namespace LegendEngine
         if (HasObject(object))
             return;
 
-        LGENG_DEBUG("Added object {:#X} to scene {:#X}",
+        LGENG_DEBUG("Added object {:#x} to scene {:#x}",
             reinterpret_cast<size_t>(&object), reinterpret_cast<size_t>(this));
 
         m_Objects.push_back(&object);
@@ -44,7 +44,7 @@ namespace LegendEngine
 
     void Scene::RemoveObject(Objects::Object& object)
     {
-        LGENG_DEBUG("Removed object {:#X} from scene {:#X}",
+        LGENG_DEBUG("Removed object {:#x} from scene {:#x}",
             reinterpret_cast<size_t>(&object), reinterpret_cast<size_t>(this));
 
         RemoveObjectComponents(object);

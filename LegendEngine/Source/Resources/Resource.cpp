@@ -10,7 +10,7 @@ namespace LegendEngine::Resources
         if (!Application::HasConstructed())
             return;
 
-        LGENG_DEBUG("Resource created (this = {:#X})",
+        LGENG_DEBUG("Resource created (this = {:#x})",
             reinterpret_cast<size_t>(this));
 #endif
     }
@@ -21,7 +21,7 @@ namespace LegendEngine::Resources
         if (!Application::HasConstructed())
             return;
 
-        LGENG_DEBUG("Resource destroyed (this = {:#X})",
+        LGENG_DEBUG("Resource destroyed (this = {:#x})",
             reinterpret_cast<size_t>(this));
 #endif
     }

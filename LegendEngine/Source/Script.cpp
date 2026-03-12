@@ -12,13 +12,13 @@ namespace LegendEngine
         m_EventBus(Application::Get().GetEventBus()),
         m_EventSubscriber(m_EventBus)
     {
-        LGENG_DEBUG("Script created (this = {:#X}, &object = {:#X})",
+        LGENG_DEBUG("Script created (this = {:#x}, &object = {:#x})",
             reinterpret_cast<size_t>(this), reinterpret_cast<size_t>(&object));
     }
 
     Script::~Script()
     {
-        LGENG_DEBUG("Script destroyed (this = {:#X}, &object = {:#X})",
+        LGENG_DEBUG("Script destroyed (this = {:#x}, &object = {:#x})",
         reinterpret_cast<size_t>(this), reinterpret_cast<size_t>(&m_Object));
     }
 
@@ -29,7 +29,7 @@ namespace LegendEngine
 
     void Script::ListenForUpdates()
     {
-        LGENG_DEBUG("Script {:#X} is listening for updates",
+        LGENG_DEBUG("Script {:#x} is listening for updates",
             reinterpret_cast<size_t>(this));
 
         m_IsUpdateListener = true;
@@ -43,7 +43,7 @@ namespace LegendEngine
 
     void Script::ListenForRender()
     {
-        LGENG_DEBUG("Script {:#X} is listening for renders",
+        LGENG_DEBUG("Script {:#x} is listening for renders",
             reinterpret_cast<size_t>(this));
 
         m_IsRenderListener = true;
