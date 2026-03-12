@@ -129,11 +129,12 @@ namespace LegendEngine
 
         Scope<Utils::Window> m_Window = nullptr;
 
+#endif
+        Graphics::GraphicsContext& m_GraphicsContext;
+#ifndef LGENG_HEADLESS
         Graphics::RenderTarget& m_RenderTarget;
         Graphics::Renderer& m_Renderer;
 #endif
-
-        Graphics::GraphicsContext& m_GraphicsContext;
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;

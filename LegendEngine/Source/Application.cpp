@@ -30,37 +30,20 @@ namespace LegendEngine
         return *m_WindowRenderTarget;
     }
 
-    Graphics::GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
-            GraphicsAPI api)
-    {
-        LGENG_INFO("Creating graphics context");
-        return *(m_ManagedGraphicsContext = Graphics::GraphicsContext::Create(api, applicationName));
-    }
-
-    Graphics::RenderTarget& Application::CreateRenderTarget(int width, int height,
-            std::string_view applicationName)
-    {
-        std::wstring title(applicationName.size(), L' ');
-        std::mbstowcs(title.data(), applicationName.data(),
-            applicationName.size());
-
-        LGENG_INFO("Creating window");
-        m_Window = Tether::Window::Create(width, height,
-            title, false);
-
-        LGENG_INFO("Creating render target");
-        return *(m_WindowRenderTarget = std::make_unique<Graphics::WindowRenderTarget>(*m_ManagedGraphicsContext, *m_Window));
-    }
-
-    Graphics::Renderer& Application::CreateRenderer()
-    {
-        LGENG_INFO("Creating renderer");
-        return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
-    }
-
     Graphics::Renderer& Application::GetRenderer() const
     {
         return m_Renderer;
+    }
+
+    void Application::SetActiveCamera(Objects::Camera* pCamera)
+    {
+        m_pActiveCamera = pCamera;
+        m_RenderTarget.SetCamera(pCamera);
+    }
+
+    Graphics::RenderTarget& Application::GetRenderTarget() const
+    {
+        return m_RenderTarget;
     }
 
     void Application::Render(const float delta)
@@ -70,17 +53,6 @@ namespace LegendEngine
 
         OnRender(delta);
         m_EventBus.DispatchEvent<Events::RenderEvent>(Events::RenderEvent(delta));
-    }
-
-    Graphics::RenderTarget& Application::GetRenderTarget() const
-    {
-        return m_RenderTarget;
-    }
-
-    void Application::SetActiveCamera(Objects::Camera* pCamera)
-    {
-        m_pActiveCamera = pCamera;
-        m_RenderTarget.SetCamera(pCamera);
     }
 
     void Application::Run()
@@ -99,6 +71,34 @@ namespace LegendEngine
     {
         Update(delta);
         Render(delta);
+    }
+
+    Graphics::GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
+                                                                  GraphicsAPI api)
+    {
+        LGENG_INFO("Creating graphics context");
+        return *(m_ManagedGraphicsContext = Graphics::GraphicsContext::Create(api, applicationName));
+    }
+
+    Graphics::RenderTarget& Application::CreateRenderTarget(int width, int height,
+                                                            std::string_view applicationName)
+    {
+        std::wstring title(applicationName.size(), L' ');
+        std::mbstowcs(title.data(), applicationName.data(),
+                      applicationName.size());
+
+        LGENG_INFO("Creating window");
+        m_Window = Tether::Window::Create(width, height,
+                                          title, false);
+
+        LGENG_INFO("Creating render target");
+        return *(m_WindowRenderTarget = std::make_unique<Graphics::WindowRenderTarget>(*m_ManagedGraphicsContext, *m_Window));
+    }
+
+    Graphics::Renderer& Application::CreateRenderer()
+    {
+        LGENG_INFO("Creating renderer");
+        return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
     }
 #else
     Application::Application(Graphics::GraphicsContext& ctx)
