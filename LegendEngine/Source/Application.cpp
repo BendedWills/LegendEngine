@@ -100,8 +100,7 @@ namespace LegendEngine
         Update(delta);
         Render(delta);
     }
-#endif
-
+#else
     Application::Application(Graphics::GraphicsContext& ctx)
         :
         m_GraphicsContext(ctx),
@@ -109,6 +108,7 @@ namespace LegendEngine
     {
         LGENG_INFO("Application created");
     }
+#endif
 
     Application::~Application()
     {
