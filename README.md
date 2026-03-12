@@ -2,11 +2,13 @@
 [![Build and test (Linux)](https://github.com/BendedWills/LegendEngine/actions/workflows/tests.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/tests.yml)
 [![CodeQL Advanced](https://github.com/BendedWills/LegendEngine/actions/workflows/codeql.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/codeql.yml)
 
-# Legend Engine 
+# Legend Engine
+***
 
-Legend Engine is a WIP game engine made using C++.
+<img alt="l.png" src="Assets/l.png" width="200"/>
 
-![img.png](Assets/demo.png)
+Legend Engine is a WIP game engine made using C++. <br>
+*whose current logo currently looks a bit like an insult you'd hear in Call Of Duty*
 
 The goal is for it to be a fast, versatile, and feature-rich game 
 engine that runs on Windows and Linux.
@@ -14,6 +16,9 @@ An important goal for the engine is to be usable either through its GUI frontend
 called Legendary, as well as its API in code!
 
 All window management and input is done from scratch and handled by a library called [Tether](https://github.com/BendedWills/Tether).
+
+Here's a simple scene:
+![demo.png](Assets/demo.png)
 
 ## How to build
 
