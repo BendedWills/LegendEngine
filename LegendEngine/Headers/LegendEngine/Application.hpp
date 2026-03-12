@@ -12,12 +12,6 @@
 #include <LegendEngine/Objects/Camera.hpp>
 #include <Tether/Window.hpp>
 
-#include "Graphics/WindowRenderTarget.hpp"
-
-#ifndef LE_HEADLESS
-#include <LegendEngine/Graphics/WindowRenderTarget.hpp>
-#endif
-
 namespace LegendEngine
 {
     namespace Input = Tether::Input;
@@ -33,8 +27,8 @@ namespace LegendEngine
             std::string_view applicationName,
             GraphicsAPI api);
 
-        Graphics::WindowRenderTarget& GetWindowRenderTarget() const;
         [[nodiscard]] Graphics::Renderer& GetRenderer() const;
+        Tether::Window& GetWindow() const;
 #else
         Application(Graphics::GraphicsContext& ctx); // Headless application constructor
 #endif
@@ -117,6 +111,17 @@ namespace LegendEngine
         Events::EventBus m_EventBus;
 
 #ifndef LE_HEADLESS
+        class ResizeHandler : public Tether::Events::EventHandler
+        {
+        public:
+            ResizeHandler(Application& app);
+
+            void OnWindowResize(const Tether::Events::WindowResizeEvent& event) override;
+
+            Application& m_Application;
+        };
+        ResizeHandler m_ResizeHandler;
+
         Graphics::GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
             GraphicsAPI api);
         Graphics::RenderTarget& CreateRenderTarget(int width, int height,
@@ -124,11 +129,10 @@ namespace LegendEngine
         Graphics::Renderer& CreateRenderer();
 
         Scope<Graphics::GraphicsContext> m_ManagedGraphicsContext = nullptr;
-        Scope<Graphics::WindowRenderTarget> m_WindowRenderTarget = nullptr;
+        Scope<Graphics::RenderTarget> m_WindowRenderTarget = nullptr;
         Scope<Graphics::Renderer> m_ManagedRenderer = nullptr;
 
         Scope<Utils::Window> m_Window = nullptr;
-
 #endif
         Graphics::GraphicsContext& m_GraphicsContext;
 #ifndef LE_HEADLESS

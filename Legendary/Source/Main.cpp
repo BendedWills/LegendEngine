@@ -57,7 +57,7 @@ public:
 		m_Camera(*camera)
 	{
 		const Application& app = Application::Get();
-		Utils::Window& window = app.GetWindowRenderTarget().GetWindow();
+		Utils::Window& window = app.GetWindow();
 		window.AddInputListener(*this, Input::InputType::KEY);
 		window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
 
@@ -181,7 +181,7 @@ private:
 
 		SetActiveScene(*testScene);
 
-		Utils::Window& window = GetWindowRenderTarget().GetWindow();
+		Utils::Window& window = GetWindow();
 		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		window.SetRawInputEnabled(true);
 	}

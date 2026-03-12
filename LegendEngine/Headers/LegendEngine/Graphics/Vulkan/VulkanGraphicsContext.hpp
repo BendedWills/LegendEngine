@@ -19,9 +19,9 @@ namespace LegendEngine::Graphics::Vulkan
         ~VulkanGraphicsContext() override;
 
         Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) override;
-        Scope<RenderTargetBridge> CreateHeadlessRenderTargetBridge() override;
+        Scope<RenderTarget> CreateHeadlessRenderTarget() override;
 #ifndef LE_HEADLESS
-        Scope<RenderTargetBridge> CreateWindowRenderTargetBridge(Tether::Window& window) override;
+        Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;
 #endif
 
         Scope<VertexBuffer> CreateVertexBuffer(

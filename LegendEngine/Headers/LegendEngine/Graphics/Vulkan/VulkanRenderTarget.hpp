@@ -10,15 +10,15 @@ namespace LegendEngine::Graphics::Vulkan
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
-    class VulkanRenderTargetBridge final : public RenderTargetBridge
+    class VulkanRenderTarget final : public RenderTarget
     {
     public:
-        VulkanRenderTargetBridge(TetherVulkan::GraphicsContext& context); // Headless
-        VulkanRenderTargetBridge(TetherVulkan::GraphicsContext& context, Tether::Window& window);
-        LEGENDENGINE_NO_COPY(VulkanRenderTargetBridge);
+        VulkanRenderTarget(TetherVulkan::GraphicsContext& context); // Headless
+        VulkanRenderTarget(TetherVulkan::GraphicsContext& context, Tether::Window& window);
+        LEGENDENGINE_NO_COPY(VulkanRenderTarget);
 
-        bool IsHeadless() const;
         VkSurfaceKHR GetSurface();
+        [[nodiscard]] bool IsHeadless() const;
     private:
         TetherVulkan::Surface m_Surface;
         bool m_IsHeadless;

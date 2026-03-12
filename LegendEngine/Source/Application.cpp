@@ -5,29 +5,38 @@
 #include <LegendEngine/Events/RenderEvent.hpp>
 #include <LegendEngine/Events/UpdateEvent.hpp>
 
-#include "LegendEngine/Graphics/WindowRenderTarget.hpp"
-
 namespace LegendEngine
 {
     Scope<Application> Application::m_Instance = nullptr;
 
 #ifndef LE_HEADLESS
+    Application::ResizeHandler::ResizeHandler(Application& app)
+        :
+        m_Application(app)
+    {}
+
+    void Application::ResizeHandler::OnWindowResize(const Tether::Events::WindowResizeEvent& event)
+    {
+        if (!m_Application.m_pActiveCamera)
+            return;
+
+        const auto width = static_cast<float>(event.GetNewWidth());
+        const auto height = static_cast<float>(event.GetNewHeight());
+        m_Application.m_pActiveCamera->SetAspectRatio(width / height);
+    }
+
     Application::Application(
         int width, int height,
         std::string_view applicationName,
         GraphicsAPI api)
         :
+        m_ResizeHandler(*this),
         m_GraphicsContext(CreateGraphicsContext(applicationName, api)),
         m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
         m_Renderer(CreateRenderer()),
         m_GlobalScene(m_EventBus)
     {
         LE_INFO("Application created");
-    }
-
-    Graphics::WindowRenderTarget& Application::GetWindowRenderTarget() const
-    {
-        return *m_WindowRenderTarget;
     }
 
     Graphics::Renderer& Application::GetRenderer() const
@@ -58,7 +67,7 @@ namespace LegendEngine
     void Application::Run()
     {
         Stopwatch deltaTimer;
-        while (!m_RenderTarget.IsCloseRequested())
+        while (!m_Window->IsCloseRequested())
         {
             const float delta = deltaTimer.GetElapsedMillis() / 1000.0f;
             deltaTimer.Set();
@@ -90,15 +99,21 @@ namespace LegendEngine
         LE_INFO("Creating window");
         m_Window = Tether::Window::Create(width, height,
                                           title, false);
+        m_Window->AddEventHandler(m_ResizeHandler, Tether::Events::EventType::WINDOW_RESIZE);
 
         LE_INFO("Creating render target");
-        return *(m_WindowRenderTarget = std::make_unique<Graphics::WindowRenderTarget>(*m_ManagedGraphicsContext, *m_Window));
+        return *(m_WindowRenderTarget = m_GraphicsContext.CreateWindowRenderTarget(*m_Window));
     }
 
     Graphics::Renderer& Application::CreateRenderer()
     {
         LE_INFO("Creating renderer");
         return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
+    }
+
+    Tether::Window& Application::GetWindow() const
+    {
+        return *m_Window;
     }
 #else
     Application::Application(Graphics::GraphicsContext& ctx)
@@ -115,7 +130,7 @@ namespace LegendEngine
         LE_INFO("Destroying application");
 
 #ifndef LE_HEADLESS
-        m_RenderTarget.SetVisible(false);
+        m_Window->SetVisible(false);
 #endif
     }
 
@@ -187,7 +202,7 @@ namespace LegendEngine
         OnSetup();
 
 #ifndef LE_HEADLESS
-        m_RenderTarget.SetVisible(true);
+        m_Window->SetVisible(true);
 #endif
 
         LE_INFO("Application setup complete");

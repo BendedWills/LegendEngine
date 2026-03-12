@@ -1,7 +1,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanGraphicsContext.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanRenderTargetBridge.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderTarget.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
@@ -108,15 +108,15 @@ namespace LegendEngine::Graphics::Vulkan
         );
     }
 
-    Scope<RenderTargetBridge> VulkanGraphicsContext::CreateHeadlessRenderTargetBridge()
+    Scope<RenderTarget> VulkanGraphicsContext::CreateHeadlessRenderTarget()
     {
-        return std::make_unique<VulkanRenderTargetBridge>(m_GraphicsContext);
+        return std::make_unique<VulkanRenderTarget>(m_GraphicsContext);
     }
 
 #ifndef LE_HEADLESS
-    Scope<RenderTargetBridge> VulkanGraphicsContext::CreateWindowRenderTargetBridge(Tether::Window& window)
+    Scope<RenderTarget> VulkanGraphicsContext::CreateWindowRenderTarget(Tether::Window& window)
     {
-        return std::make_unique<VulkanRenderTargetBridge>(m_GraphicsContext, window);
+        return std::make_unique<VulkanRenderTarget>(m_GraphicsContext, window);
     }
 #endif
 

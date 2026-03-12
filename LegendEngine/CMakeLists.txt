@@ -28,9 +28,7 @@ set(VK_INCLUDES)
 
 if (LE_HEADLESS)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC -DLE_HEADLESS)
-else()
-	target_sources(${PROJECT_NAME} PRIVATE "Source/Graphics/WindowRenderTarget.cpp")
-endif ()
+endif()
 
 if (LE_VULKAN_API)
 	find_package(Vulkan REQUIRED)

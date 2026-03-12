@@ -5,7 +5,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 #include <Tether/Rendering/Vulkan/SingleUseCommandBuffer.hpp>
 
-#include <LegendEngine/Graphics/Vulkan/VulkanRenderTargetBridge.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanRenderTarget.hpp>
 
 // #ifdef VMA_VULKAN_VERSION
 // #undef VMA_VULKAN_VERSION
@@ -23,8 +23,8 @@ namespace LegendEngine::Graphics::Vulkan
             TetherVulkan::GraphicsContext& tetherCtx,
             RenderTarget& renderTarget,
             ShaderManager& shaderManager,
-            const VkDescriptorSetLayout cameraLayout,
-            const VkDescriptorSetLayout sceneLayout,
+            VkDescriptorSetLayout cameraLayout,
+            VkDescriptorSetLayout sceneLayout,
             VkSurfaceFormatKHR surfaceFormat,
             TetherVulkan::DescriptorSet& defaultMatSet,
             VkFormat depthFormat
@@ -35,13 +35,13 @@ namespace LegendEngine::Graphics::Vulkan
         m_DeviceLoader(tetherCtx.GetDeviceLoader()),
         m_DefaultMatSet(defaultMatSet),
         m_ShaderManager(shaderManager),
-        m_Surface(static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).GetSurface()),
+        m_Surface(dynamic_cast<VulkanRenderTarget&>(renderTarget).GetSurface()),
         m_SurfaceFormat(surfaceFormat),
         m_Device(m_Context.GetDevice()),
         m_PhysicalDevice(m_Context.GetPhysicalDevice()),
         m_DepthFormat(depthFormat)
     {
-        LE_ASSERT(!static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).IsHeadless(),
+        LE_ASSERT(!dynamic_cast<VulkanRenderTarget&>(renderTarget).IsHeadless(),
             "Renderers can't be created with a headless surface");
 
         // Application::Get() doesn't work here

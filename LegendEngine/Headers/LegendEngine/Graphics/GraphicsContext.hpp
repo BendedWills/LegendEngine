@@ -22,9 +22,9 @@ namespace LegendEngine::Graphics
         LEGENDENGINE_NO_COPY(GraphicsContext);
 
         virtual Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) = 0;
-        virtual Scope<RenderTargetBridge> CreateHeadlessRenderTargetBridge() = 0;
+        virtual Scope<RenderTarget> CreateHeadlessRenderTarget() = 0;
 #ifndef LE_HEADLESS
-        virtual Scope<RenderTargetBridge> CreateWindowRenderTargetBridge(Tether::Window& window) = 0;
+        virtual Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) = 0;
 #endif
 
         virtual Scope<VertexBuffer> CreateVertexBuffer(

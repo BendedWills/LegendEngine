@@ -3,24 +3,6 @@
 
 namespace LegendEngine::Graphics
 {
-    RenderTarget::RenderTarget(Scope<RenderTargetBridge> bridge)
-        :
-        m_Bridge(std::move(bridge))
-    {}
-
-    RenderTargetBridge& RenderTarget::GetBridge() const
-    {
-        return *m_Bridge;
-    }
-
-    bool RenderTarget::IsCloseRequested() const
-    {
-        LE_WARN(
-            "RenderTarget::IsCloseRequested called but it was not "
-            "implemented. Is the application running headless?");
-        return false;
-    }
-
     uint32_t RenderTarget::GetWidth() const
     {
         return 100;
