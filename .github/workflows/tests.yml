@@ -30,4 +30,4 @@ jobs:
 
       - name: Run tests
         run: |
-          ctest --test-dir build/Tests --output-on-failure
+          ctest --test-dir build/LegendEngine/LegendEngine/Tests --output-on-failure
