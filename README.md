@@ -1,10 +1,12 @@
+[![Build (Windows)](https://github.com/BendedWills/LegendEngine/actions/workflows/windows.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/windows.yml)
 [![Build and test (Linux)](https://github.com/BendedWills/LegendEngine/actions/workflows/tests.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/tests.yml)
+[![CodeQL Advanced](https://github.com/BendedWills/LegendEngine/actions/workflows/codeql.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/codeql.yml)
 
 # Legend Engine 
 
 Legend Engine is a WIP game engine made using C++.
 
-
+![img.png](Assets/demo.png)
 
 The goal is for it to be a fast, versatile, and feature-rich game 
 engine that runs on Windows and Linux.
@@ -16,14 +18,14 @@ All window management and input is done from scratch and handled by a library ca
 ## How to build
 
 Dependencies:
-* CMake
-* Some toolchain compatible with CMake like Ninja, Makefile, Visual Studio, etc.
-* Vulkan SDK (if building with `LGENG_VULKAN_API`, enabled by default)
+* **CMake**
+* Some toolchain compatible with CMake like **Ninja**, **Makefile**, **Visual Studio**, etc.
+* **Vulkan SDK** *(if building with `LGENG_VULKAN_API`, enabled by default)*
 
 As well as:
-* googletest (if building tests)
-* Tether
-* Vulkan Memory Allocator (VMA), if `LGENG_VULKAN_API` is enabled
+* **googletest** *(if building tests)*
+* **Tether**
+* **Vulkan Memory Allocator (VMA)**, *if `LGENG_VULKAN_API` is enabled*
 
 which the above should be fetched automatically by CMake.
 
@@ -35,6 +37,11 @@ sudo apt install libvulkan-dev vulkan-validationlayers vulkan-tools glslc
 
 ## Technologies used
 
-* Vulkan and eventually more modern Graphics APIs
+* Modern C++26 and design patterns
+* Doxygen for generating a documentation page
 * GitHub Actions for building and testing the project automatically
 * Kanban-style planners for managing development internally.
+* CodeQL static analysis
+* Unit testing using googletest
+
+...and more as the project continues to grow!
