@@ -3,9 +3,10 @@
 [![CodeQL Advanced](https://github.com/BendedWills/LegendEngine/actions/workflows/codeql.yml/badge.svg)](https://github.com/BendedWills/LegendEngine/actions/workflows/codeql.yml)
 
 # Legend Engine
-***
 
 <img alt="l.png" src="Assets/l.png" width="200"/>
+
+***
 
 Legend Engine is a WIP game engine made using C++. <br>
 *whose current logo currently looks a bit like an insult you'd hear in Call Of Duty*
