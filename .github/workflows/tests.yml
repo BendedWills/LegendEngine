@@ -15,11 +15,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libvulkan-dev vulkan-validationlayers vulkan-tools mesa-vulkan-drivers glslc
+          sudo apt-get install -y cmake ninja-build libvulkan-dev vulkan-validationlayers vulkan-tools mesa-vulkan-drivers glslc g++-14
 
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLGENG_BUILD_TESTS=ON -DTETHER_HEADLESS=ON -DLGENG_HEADLESS=ON
+          cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_BUILD_TYPE=Release -DLGENG_BUILD_TESTS=ON -DTETHER_HEADLESS=ON -DLGENG_HEADLESS=ON
 
       - name: Build
         run: |
