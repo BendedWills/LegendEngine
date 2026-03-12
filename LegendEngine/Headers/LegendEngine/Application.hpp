@@ -54,6 +54,9 @@ namespace LegendEngine
         Objects::Camera* GetActiveCamera() const;
         Scene* GetActiveScene() const;
 
+        void Update(float delta, bool updateWindow = true);
+        void Render(float delta);
+
         template<typename T, typename... Args>
             requires std::is_base_of_v<Application, T>
         static int RunApplication(Args&&... args)
@@ -108,9 +111,6 @@ namespace LegendEngine
 
         // Must be called on the main thread
         void RenderFrame(float delta = 1.0f);
-
-        void Update(float delta, bool updateWindow = true);
-        void Render(float delta);
 
         static void RecalculateTransforms(Scene& scene);
 
