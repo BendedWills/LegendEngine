@@ -2,43 +2,39 @@
 
 # Legend Engine 
 
-Legend Engine is a game engine made using C++.
+Legend Engine is a WIP game engine made using C++.
 
-There is also Legendary, the UI editor for LegendEngine.
 
-Currently, Legend Engine only works for Linux, but a Windows version will also eventually be available.
 
-# Compilation
+The goal is for it to be a fast, versatile, and feature-rich game 
+engine that runs on Windows and Linux.
+An important goal for the engine is to be usable either through its GUI frontend
+called Legendary, as well as its API in code!
 
-The `Build.sh` script will build LegendEngine, Legendary, and all tests for both of them. Build files will then be in the `Build` directory.
+All window management and input is done from scratch and handled by a library called [Tether](https://github.com/BendedWills/Tether).
 
-But if you want to build the project without using the shell script, here is how:
+## How to build
 
-# Linux build instructions
-If you are on linux and want to build this project, you've come to the right place.
+Dependencies:
+* CMake
+* Some toolchain compatible with CMake like Ninja, Makefile, Visual Studio, etc.
+* Vulkan SDK (if building with `LGENG_VULKAN_API`, enabled by default)
 
-First, run `git submodule update --init` to clone all dependencies.
+As well as:
+* googletest (if building tests)
+* Tether
+* Vulkan Memory Allocator (VMA), if `LGENG_VULKAN_API` is enabled
 
-Then, run CMake to generate the Makefile like so: 
+which the above should be fetched automatically by CMake.
 
-	cmake -S . -B Build
-
-Then, run the make command to compile the executable:
-
-	make -j8 -C Build all
-
-The -C option tells make that the makefile is located in the "Build" directory.
-
-The -j8 option tells make to use 8 threads to build the executable. Replace the 8 with however many cores you have on your computer.
-
-And there you go! All projects and tests will now be compiled and can be run by their executables in the build directory.
-
-Something to note is that if you are compiling this with Tether in an external directory, you'll want to set these cmake options:
+After you have the necessary dependencies, simply clone the project and run `cmake .` in the root directory.
+You may need to install the [Vulkan SDK](https://vulkan.lunarg.com/), or run this command if you're on a debian-based linux:
 ```
--DTETHER_BIN2CPP_DIR=""
--DOPENMC_TETHER_DIR=""
--DTETHER_BUILD_RENDERING=ON
--DLGENG_VULKAN_API=True
--DTETHER_RENDERING_VULKAN_API=ON
--DTETHER_VMA_DIR=""
+sudo apt install libvulkan-dev vulkan-validationlayers vulkan-tools glslc
 ```
+
+## Technologies used
+
+* Vulkan and eventually more modern Graphics APIs
+* GitHub Actions for building and testing the project automatically
+* Kanban-style planners for managing development internally.
