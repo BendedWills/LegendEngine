@@ -60,4 +60,5 @@ target_link_libraries(${PROJECT_NAME}
 	tether
 	tetherRendering
 	${VK_LIBS}
+	stdc++exp
 )
