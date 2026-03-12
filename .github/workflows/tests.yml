@@ -30,4 +30,4 @@ jobs:
 
       - name: Run tests
         run: |
-          ./build/LegendEngine/LegendEngine/Tests/NormalTests
+          ./build/LegendEngine/Tests/NormalTests
