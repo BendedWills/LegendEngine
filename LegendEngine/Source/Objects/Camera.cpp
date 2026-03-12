@@ -1,3 +1,4 @@
+#include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 
 namespace LegendEngine::Objects
@@ -78,6 +79,8 @@ namespace LegendEngine::Objects
         m_Projection = Math::PerspectiveRH_ZO(Math::Radians(m_Fov),
             m_Aspect, m_NearZ, m_FarZ);
         m_Projection[1][1] *= -1;
+
+        LE_INFO("Recalculating projection matrix. Aspect = {}", m_Aspect);
 
         m_CameraDirty = false;
     }

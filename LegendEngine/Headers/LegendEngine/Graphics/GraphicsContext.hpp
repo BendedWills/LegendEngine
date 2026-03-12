@@ -23,7 +23,7 @@ namespace LegendEngine::Graphics
 
         virtual Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) = 0;
         virtual Scope<RenderTargetBridge> CreateHeadlessRenderTargetBridge() = 0;
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         virtual Scope<RenderTargetBridge> CreateWindowRenderTargetBridge(Tether::Window& window) = 0;
 #endif
 

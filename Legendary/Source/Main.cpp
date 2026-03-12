@@ -159,7 +159,7 @@ public:
 	{
 		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
 		{
-			LGENG_INFO("FPS: {}", 1.0f / delta);
+			LE_INFO("FPS: {}", 1.0f / delta);
 			fpsTimer.Set();
 		}
 	}

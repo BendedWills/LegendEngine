@@ -9,7 +9,7 @@ namespace LegendEngine::Events
         Event(false),
         m_Object(object)
     {
-        LGENG_DEBUG("Destroyed object (&object = {:#x})",
+        LE_DEBUG("Destroyed object (&object = {:#x})",
             reinterpret_cast<size_t>(&object));
     }
 

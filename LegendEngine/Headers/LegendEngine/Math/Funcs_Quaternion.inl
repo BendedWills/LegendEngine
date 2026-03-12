@@ -2,18 +2,18 @@
 
 namespace LegendEngine
 {
-	LGENG_MATH_FUNC Quaternion Math::Conjugate(Quaternion q)
+	LE_MATH_FUNC Quaternion Math::Conjugate(Quaternion q)
 	{
 		return Quaternion(q.w, -q.x, -q.y, -q.z);
 	}
 
-	LGENG_MATH_FUNC Quaternion Math::Inverse(Quaternion q)
+	LE_MATH_FUNC Quaternion Math::Inverse(Quaternion q)
 	{
 		return Conjugate(q) / Dot(q, q);
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Quaternion Math::AngleAxis(T angle, Vector3<T> axis)
+	LE_MATH_FUNC Quaternion Math::AngleAxis(T angle, Vector3<T> axis)
 	{
 		T halfAngle = angle / T(2);
 		Vector3<T> saxis = axis * std::sin(halfAngle);
@@ -22,7 +22,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Quaternion Math::Euler(Vector3<T> vec)
+	LE_MATH_FUNC Quaternion Math::Euler(Vector3<T> vec)
 	{
 		Vector3<T> halfVec(vec);
 		halfVec /= T(2);
@@ -45,12 +45,12 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Math::Rotate(Quaternion q, Vector3<T> axis)
+	LE_MATH_FUNC Vector3<T> Math::Rotate(Quaternion q, Vector3<T> axis)
 	{
 		return q * axis;
 	}
 
-	LGENG_MATH_FUNC Quaternion Math::Normalize(Quaternion q)
+	LE_MATH_FUNC Quaternion Math::Normalize(Quaternion q)
 	{
 		float length = Length(q);
 
@@ -66,7 +66,7 @@ namespace LegendEngine
 		);
 	}
 
-	LGENG_MATH_FUNC float Math::Dot(Quaternion q1, Quaternion q2)
+	LE_MATH_FUNC float Math::Dot(Quaternion q1, Quaternion q2)
 	{
 		float product;
 		product = q1.w * q2.w;
@@ -76,7 +76,7 @@ namespace LegendEngine
 		return product;
 	}
 
-	LGENG_MATH_FUNC float Math::Length(Quaternion q)
+	LE_MATH_FUNC float Math::Length(Quaternion q)
 	{
 		return sqrt(Dot(q, q));
 	}

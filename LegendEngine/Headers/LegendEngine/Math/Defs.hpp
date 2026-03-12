@@ -1,3 +1,3 @@
 #pragma once
 
-#define LGENG_MATH_FUNC inline
+#define LE_MATH_FUNC inline

@@ -3,7 +3,7 @@
 namespace LegendEngine
 {
 	template<typename T>
-	LGENG_MATH_FUNC Vector4<T> Math::Normalize(Vector4<T> v)
+	LE_MATH_FUNC Vector4<T> Math::Normalize(Vector4<T> v)
 	{
 		float length = Length(v);
 		if (length == 0)
@@ -18,7 +18,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC T Math::Dot(Vector4<T> v1, Vector4<T> v2)
+	LE_MATH_FUNC T Math::Dot(Vector4<T> v1, Vector4<T> v2)
 	{
 		float product = v1.x * v2.x;
 		product += v1.y * v2.y;
@@ -28,7 +28,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC T Math::Length(Vector4<T> v)
+	LE_MATH_FUNC T Math::Length(Vector4<T> v)
 	{
 		return sqrt(Dot(v, v));
 	}

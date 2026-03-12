@@ -90,7 +90,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y cmake ninja-build libvulkan-dev vulkan-validationlayers vulkan-tools mesa-vulkan-drivers glslc g++-14
-        cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_BUILD_TYPE=Release -DLGENG_BUILD_TESTS=ON -DTETHER_HEADLESS=ON -DLGENG_HEADLESS=ON
+        cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_BUILD_TYPE=Release -DLE_BUILD_TESTS=ON -DTETHER_HEADLESS=ON -DLE_HEADLESS=ON
         cmake --build build --target LegendEngine
 
     - name: Perform CodeQL Analysis

@@ -28,15 +28,15 @@ function(DeclareLibs)
 endfunction()
 
 function(MakeLibsAvailable)
-	if (LGENG_BUILD_TESTS)
+	if (LE_BUILD_TESTS)
 		# For Windows: Prevent overriding the parent project's compiler/linker settings
 		set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 		FetchContent_MakeAvailable(googletest)
 	endif()
 
-    if (NOT LGENG_TETHER_EXTERN)
-        if (LGENG_VULKAN_API)
+    if (NOT LE_TETHER_EXTERN)
+        if (LE_VULKAN_API)
             option(TETHER_RENDERING_VULKAN_API ON)
             set(TETHER_RENDERING_VULKAN_API ON)
         endif()

@@ -5,7 +5,7 @@
 namespace LegendEngine
 {
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::Scale(Matrix4x4<T> m, Vector3<T> scale)
+	LE_MATH_FUNC Matrix4x4<T> Math::Scale(Matrix4x4<T> m, Vector3<T> scale)
 	{
 		Matrix4x4<T> product;
 		product.c[0] = m.c[0] * scale.x;
@@ -17,7 +17,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::Rotate(Matrix4x4<T> m, T a, Vector3<T> rotation)
+	LE_MATH_FUNC Matrix4x4<T> Math::Rotate(Matrix4x4<T> m, T a, Vector3<T> rotation)
 	{
 		T ca = cos(a);
 		T sa = sin(a);
@@ -48,7 +48,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::Translate(Matrix4x4<T> m, Vector3<T> pos)
+	LE_MATH_FUNC Matrix4x4<T> Math::Translate(Matrix4x4<T> m, Vector3<T> pos)
 	{
 		Matrix4x4<T> product = m;
 		product.c[3] = m[0] * pos.x + m[1] * pos.y + m[2] * pos.z + m[3];
@@ -57,7 +57,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::LookAt(Vector3<T> position, Vector3<T> target,
+	LE_MATH_FUNC Matrix4x4<T> Math::LookAt(Vector3<T> position, Vector3<T> target,
 		Vector3<T> up)
 	{
 		Vector3<T> centerDir = Vector3<T>::Normalize(target - position);
@@ -82,7 +82,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::Ortho(T left, T right, T bottom, T top, T near, T far)
+	LE_MATH_FUNC Matrix4x4<T> Math::Ortho(T left, T right, T bottom, T top, T near, T far)
 	{
 		Matrix4x4<T> product = Matrix4x4<T>::MakeIdentity();
 		product[0][0] =  T(2) / (right - left);
@@ -96,7 +96,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_ZO(T fov, T aspect, T nearZ, T farZ)
+	LE_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_ZO(T fov, T aspect, T nearZ, T farZ)
 	{
 		if (abs(aspect - std::numeric_limits<T>::epsilon()) <= T(0))
 			return Matrix4x4<T>(0);
@@ -114,7 +114,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_NO(T fov, T aspect, T nearZ, T farZ)
+	LE_MATH_FUNC Matrix4x4<T> Math::PerspectiveRH_NO(T fov, T aspect, T nearZ, T farZ)
 	{
 		if (abs(aspect - std::numeric_limits<T>::epsilon()) <= T(0))
 			return Matrix4x4<T>(0);

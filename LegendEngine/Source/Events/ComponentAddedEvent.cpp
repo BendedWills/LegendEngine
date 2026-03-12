@@ -12,7 +12,7 @@ namespace LegendEngine::Events
         m_Component(component),
         m_ComponentTypeIndex(typeIndex)
     {
-        LGENG_DEBUG("Component added to Object (&object = {:#x})",
+        LE_DEBUG("Component added to Object (&object = {:#x})",
             reinterpret_cast<size_t>(&object));
     }
 

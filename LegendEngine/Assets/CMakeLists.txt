@@ -26,7 +26,7 @@ set (BUILD_SHADER_HEADER_DIR
 	"${CMAKE_CURRENT_BINARY_DIR}/${SHADER_HEADER_DIR}"
 )
 
-if (LGENG_VULKAN_API)
+if (LE_VULKAN_API)
 	# Firstly, compile Vulkan shaders into .spv.
 
 	add_custom_target(compile${APPLICATION_NAME}VKSpv)
@@ -101,7 +101,7 @@ file(MAKE_DIRECTORY ${BUILD_COMPILED_DIR})
 
 # If Tether.Rendering is compiled with Vulkan features, then add the target that
 # compiles VULKAN shaders into SPV.
-if (LGENG_VULKAN_API)
+if (LE_VULKAN_API)
 	add_dependencies(compile${APPLICATION_NAME}Assets convert${APPLICATION_NAME}SpvToHeaders)
 endif()
 

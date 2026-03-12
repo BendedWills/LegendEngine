@@ -41,7 +41,7 @@ namespace LegendEngine::Graphics::Vulkan
         m_PhysicalDevice(m_Context.GetPhysicalDevice()),
         m_DepthFormat(depthFormat)
     {
-        LGENG_ASSERT(!static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).IsHeadless(),
+        LE_ASSERT(!static_cast<VulkanRenderTargetBridge&>(renderTarget.GetBridge()).IsHeadless(),
             "Renderers can't be created with a headless surface");
 
         // Application::Get() doesn't work here
@@ -61,7 +61,7 @@ namespace LegendEngine::Graphics::Vulkan
 
     VulkanRenderer::~VulkanRenderer()
     {
-        LGENG_DEBUG("Destroying renderer");
+        LE_DEBUG("Destroying renderer");
 
         vkDeviceWaitIdle(m_Device);
 
@@ -74,7 +74,7 @@ namespace LegendEngine::Graphics::Vulkan
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
         }
 
-        LGENG_DEBUG("Destroyed renderer");
+        LE_DEBUG("Destroyed renderer");
     }
 
     void VulkanRenderer::SetVSyncEnabled(const bool vsync)

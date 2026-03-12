@@ -11,7 +11,7 @@ namespace LegendEngine
 {
     Scope<Application> Application::m_Instance = nullptr;
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
     Application::Application(
         int width, int height,
         std::string_view applicationName,
@@ -22,7 +22,7 @@ namespace LegendEngine
         m_Renderer(CreateRenderer()),
         m_GlobalScene(m_EventBus)
     {
-        LGENG_INFO("Application created");
+        LE_INFO("Application created");
     }
 
     Graphics::WindowRenderTarget& Application::GetWindowRenderTarget() const
@@ -76,7 +76,7 @@ namespace LegendEngine
     Graphics::GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
                                                                   GraphicsAPI api)
     {
-        LGENG_INFO("Creating graphics context");
+        LE_INFO("Creating graphics context");
         return *(m_ManagedGraphicsContext = Graphics::GraphicsContext::Create(api, applicationName));
     }
 
@@ -87,17 +87,17 @@ namespace LegendEngine
         std::mbstowcs(title.data(), applicationName.data(),
                       applicationName.size());
 
-        LGENG_INFO("Creating window");
+        LE_INFO("Creating window");
         m_Window = Tether::Window::Create(width, height,
                                           title, false);
 
-        LGENG_INFO("Creating render target");
+        LE_INFO("Creating render target");
         return *(m_WindowRenderTarget = std::make_unique<Graphics::WindowRenderTarget>(*m_ManagedGraphicsContext, *m_Window));
     }
 
     Graphics::Renderer& Application::CreateRenderer()
     {
-        LGENG_INFO("Creating renderer");
+        LE_INFO("Creating renderer");
         return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
     }
 #else
@@ -106,15 +106,15 @@ namespace LegendEngine
         m_GraphicsContext(ctx),
         m_GlobalScene(m_EventBus)
     {
-        LGENG_INFO("Application created");
+        LE_INFO("Application created");
     }
 #endif
 
     Application::~Application()
     {
-        LGENG_INFO("Destroying application");
+        LE_INFO("Destroying application");
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         m_RenderTarget.SetVisible(false);
 #endif
     }
@@ -186,16 +186,16 @@ namespace LegendEngine
 
         OnSetup();
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         m_RenderTarget.SetVisible(true);
 #endif
 
-        LGENG_INFO("Application setup complete");
+        LE_INFO("Application setup complete");
     }
 
     void Application::Update(const float delta, const bool updateWindow)
     {
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         if (updateWindow)
             Tether::Application::Get().PollEvents();
 #endif

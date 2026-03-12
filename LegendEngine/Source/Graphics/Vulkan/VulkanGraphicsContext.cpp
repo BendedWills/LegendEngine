@@ -113,7 +113,7 @@ namespace LegendEngine::Graphics::Vulkan
         return std::make_unique<VulkanRenderTargetBridge>(m_GraphicsContext);
     }
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
     Scope<RenderTargetBridge> VulkanGraphicsContext::CreateWindowRenderTargetBridge(Tether::Window& window)
     {
         return std::make_unique<VulkanRenderTargetBridge>(m_GraphicsContext, window);

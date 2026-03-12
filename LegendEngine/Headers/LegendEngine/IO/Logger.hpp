@@ -7,23 +7,23 @@
 #include <vector>
 
 #ifndef NDEBUG
-#define LGENG_INFO(...) LegendEngine::IO::Logger::GetGlobalLogger().Info(__VA_ARGS__)
-#define LGENG_WARN(...) LegendEngine::IO::Logger::GetGlobalLogger().Warn(__VA_ARGS__)
-#define LGENG_ERROR(...) LegendEngine::IO::Logger::GetGlobalLogger().Error(__VA_ARGS__)
-#define LGENG_DEBUG(...) LegendEngine::IO::Logger::GetGlobalLogger().Debug(__VA_ARGS__)
-#define LGENG_INFO_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().InfoTrace(std::source_location::current(), __VA_ARGS__)
-#define LGENG_WARN_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().WarnTrace(std::source_location::current(), __VA_ARGS__)
-#define LGENG_ERROR_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().ErrorTrace(std::source_location::current(), __VA_ARGS__)
-#define LGENG_DEBUG_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().DebugTrace(std::source_location::current(), __VA_ARGS__)
+#define LE_INFO(...) LegendEngine::IO::Logger::GetGlobalLogger().Info(__VA_ARGS__)
+#define LE_WARN(...) LegendEngine::IO::Logger::GetGlobalLogger().Warn(__VA_ARGS__)
+#define LE_ERROR(...) LegendEngine::IO::Logger::GetGlobalLogger().Error(__VA_ARGS__)
+#define LE_DEBUG(...) LegendEngine::IO::Logger::GetGlobalLogger().Debug(__VA_ARGS__)
+#define LE_INFO_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().InfoTrace(std::source_location::current(), __VA_ARGS__)
+#define LE_WARN_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().WarnTrace(std::source_location::current(), __VA_ARGS__)
+#define LE_ERROR_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().ErrorTrace(std::source_location::current(), __VA_ARGS__)
+#define LE_DEBUG_TRACE(...) LegendEngine::IO::Logger::GetGlobalLogger().DebugTrace(std::source_location::current(), __VA_ARGS__)
 #else
-#define LGENG_INFO(...)
-#define LGENG_WARN(...)
-#define LGENG_ERROR(...)
-#define LGENG_DEBUG(...)
-#define LGENG_INFO_TRACE(...)
-#define LGENG_WARN_TRACE(...)
-#define LGENG_ERROR_TRACE(...)
-#define LGENG_DEBUG_TRACE(...)
+#define LE_INFO(...)
+#define LE_WARN(...)
+#define LE_ERROR(...)
+#define LE_DEBUG(...)
+#define LE_INFO_TRACE(...)
+#define LE_WARN_TRACE(...)
+#define LE_ERROR_TRACE(...)
+#define LE_DEBUG_TRACE(...)
 #endif
 
 namespace LegendEngine::IO

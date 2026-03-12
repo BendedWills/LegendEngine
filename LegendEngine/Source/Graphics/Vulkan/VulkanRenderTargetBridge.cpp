@@ -8,7 +8,7 @@ namespace LegendEngine::Graphics::Vulkan
         m_IsHeadless(true)
     {}
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
     VulkanRenderTargetBridge::VulkanRenderTargetBridge(TetherVulkan::GraphicsContext& context,
         Tether::Window& window)
         :

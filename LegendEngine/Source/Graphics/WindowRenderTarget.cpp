@@ -3,7 +3,7 @@
 
 namespace LegendEngine::Graphics
 {
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
     WindowRenderTarget::WindowRenderTarget(GraphicsContext& ctx,
         Tether::Window& window)
         :

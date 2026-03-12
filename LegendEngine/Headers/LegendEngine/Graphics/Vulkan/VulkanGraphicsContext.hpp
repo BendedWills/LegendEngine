@@ -20,7 +20,7 @@ namespace LegendEngine::Graphics::Vulkan
 
         Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) override;
         Scope<RenderTargetBridge> CreateHeadlessRenderTargetBridge() override;
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         Scope<RenderTargetBridge> CreateWindowRenderTargetBridge(Tether::Window& window) override;
 #endif
 

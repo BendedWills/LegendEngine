@@ -5,18 +5,18 @@
 namespace LegendEngine
 {
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>::Vector2()
+	LE_MATH_FUNC Vector2<T>::Vector2()
 	{}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>::Vector2(T value)
+	LE_MATH_FUNC Vector2<T>::Vector2(T value)
 		:
 		x(value),
 		y(value)
 	{}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>::Vector2(T x, T y)
+	LE_MATH_FUNC Vector2<T>::Vector2(T x, T y)
 		:
 		x(x),
 		y(y)
@@ -24,14 +24,14 @@ namespace LegendEngine
 
 	// The ref is the one to copy from (I always forget that)
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>::Vector2(const Vector2<T>& ref)
+	LE_MATH_FUNC Vector2<T>::Vector2(const Vector2<T>& ref)
 	{
 		x = ref.x;
 		y = ref.y;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC T& Vector2<T>::operator[](int index)
+	LE_MATH_FUNC T& Vector2<T>::operator[](int index)
 	{
 		switch (index)
 		{
@@ -42,7 +42,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator=(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator=(const Vector2<T>& value)
 	{
 		x = value.x;
 		y = value.y;
@@ -50,55 +50,55 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator+(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator+(const Vector2<T>& value)
 	{
 		return Vector2<T>(*this) += value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator-(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator-(const Vector2<T>& value)
 	{
 		return Vector2<T>(*this) -= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator*(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator*(const Vector2<T>& value)
 	{
 		return Vector2<T>(*this) *= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator/(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator/(const Vector2<T>& value)
 	{
 		return Vector2<T>(*this) /= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator+(const T& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator+(const T& value)
 	{
 		return Vector2<T>(*this) += value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator-(const T& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator-(const T& value)
 	{
 		return Vector2<T>(*this) -= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator*(const T& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator*(const T& value)
 	{
 		return Vector2<T>(*this) *= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T> Vector2<T>::operator/(const T& value)
+	LE_MATH_FUNC Vector2<T> Vector2<T>::operator/(const T& value)
 	{
 		return Vector2<T>(*this) /= value;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator+=(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator+=(const Vector2<T>& value)
 	{
 		x += value.x;
 		y += value.y;
@@ -106,7 +106,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator-=(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator-=(const Vector2<T>& value)
 	{
 		x -= value.x;
 		y -= value.y;
@@ -114,7 +114,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator*=(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator*=(const Vector2<T>& value)
 	{
 		x *= value.x;
 		y *= value.y;
@@ -122,7 +122,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator/=(const Vector2<T>& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator/=(const Vector2<T>& value)
 	{
 		x /= value.x;
 		y /= value.y;
@@ -130,7 +130,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator+=(const T& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator+=(const T& value)
 	{
 		x += value;
 		y += value;
@@ -138,7 +138,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator-=(const T& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator-=(const T& value)
 	{
 		x -= value;
 		y -= value;
@@ -146,7 +146,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator*=(const T& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator*=(const T& value)
 	{
 		x *= value;
 		y *= value;
@@ -154,7 +154,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector2<T>& Vector2<T>::operator/=(const T& value)
+	LE_MATH_FUNC Vector2<T>& Vector2<T>::operator/=(const T& value)
 	{
 		x /= value;
 		y /= value;

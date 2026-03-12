@@ -9,8 +9,7 @@ namespace LegendEngine::Graphics
         m_RenderTarget(renderTarget)
     {}
 
-    Renderer::~Renderer()
-    {}
+    Renderer::~Renderer() = default;
 
     void Renderer::RenderFrame(const std::span<Scene*> scenes)
     {

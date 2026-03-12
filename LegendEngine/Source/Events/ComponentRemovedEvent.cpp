@@ -13,7 +13,7 @@ namespace LegendEngine::Events
         m_Component(component),
         m_ComponentTypeIndex(typeIndex)
     {
-        LGENG_DEBUG("Component removed from Object (&object = {:#x})",
+        LE_DEBUG("Component removed from Object (&object = {:#x})",
             reinterpret_cast<size_t>(&object));
     }
 

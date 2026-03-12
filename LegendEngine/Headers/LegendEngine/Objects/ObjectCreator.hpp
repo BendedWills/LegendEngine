@@ -13,7 +13,7 @@ namespace LegendEngine::Objects
     {
         Scope<T> object = std::make_unique<T>(args...);
 
-        LGENG_DEBUG("Object created (&object = {:#x}, typeid().name() = \"{}\")",
+        LE_DEBUG("Object created (&object = {:#x}, typeid().name() = \"{}\")",
             reinterpret_cast<size_t>(object.get()),
             typeid(T).name());
 

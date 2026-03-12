@@ -4,15 +4,15 @@
 #include <LegendEngine/IO/Logger.hpp>
 
 #ifndef NDEBUG
-#ifdef LGENG_PLATFORM_WINDOWS
-#define LGENG_DEBUGBREAK() __debugbreak()
-#elif defined(LGENG_PLATFORM_MACOS) || defined(LGENG_PLATFORM_LINUX)
+#ifdef LE_PLATFORM_WINDOWS
+#define LE_DEBUGBREAK() __debugbreak()
+#elif defined(LE_PLATFORM_MACOS) || defined(LE_PLATFORM_LINUX)
 #include <signal.h>
-#define LGENG_DEBUGBREAK() raise(SIGTRAP)
+#define LE_DEBUGBREAK() raise(SIGTRAP)
 #endif
 
-#define LGENG_ASSERT(check, ...) do { if (!(check)) { LGENG_ERROR_TRACE(__VA_ARGS__); LGENG_DEBUGBREAK(); } } while(0)
+#define LE_ASSERT(check, ...) do { if (!(check)) { LE_ERROR_TRACE(__VA_ARGS__); LE_DEBUGBREAK(); } } while(0)
 #else
-#define LGENG_DEBUGBREAK()
-#define LGENG_ASSERT(...)
+#define LE_DEBUGBREAK()
+#define LE_ASSERT(...)
 #endif

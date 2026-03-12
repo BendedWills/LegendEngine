@@ -14,7 +14,7 @@
 
 #include "Graphics/WindowRenderTarget.hpp"
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
 #include <LegendEngine/Graphics/WindowRenderTarget.hpp>
 #endif
 
@@ -26,7 +26,7 @@ namespace LegendEngine
     class Application
     {
     public:
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         // Creates the Application with a WindowRenderTarget
         Application(
             int width, int height,
@@ -61,7 +61,7 @@ namespace LegendEngine
             requires std::is_base_of_v<Application, T>
         static int RunApplication(Args&&... args)
         {
-            LGENG_ASSERT(!m_Instance, "Application already exists");
+            LE_ASSERT(!m_Instance, "Application already exists");
 
             m_Instance = std::make_unique<T>(args...);
             m_Instance->SetupApplication();
@@ -72,7 +72,7 @@ namespace LegendEngine
             }
             catch (const std::exception& e)
             {
-                LGENG_ERROR_TRACE("Uncaught exception! {}", e.what());
+                LE_ERROR_TRACE("Uncaught exception! {}", e.what());
                 return EXIT_FAILURE;
             }
 
@@ -82,12 +82,12 @@ namespace LegendEngine
             return EXIT_SUCCESS;
         }
 
-#ifdef LGENG_HEADLESS
+#ifdef LE_HEADLESS
         template<typename T, typename... Args>
             requires std::is_base_of_v<Application, T>
         static Application& CreateHeadless(Args&&... args)
         {
-            LGENG_ASSERT(!m_Instance, "Application already exists");
+            LE_ASSERT(!m_Instance, "Application already exists");
 
             m_Instance = std::make_unique<T>(args...);
             m_Instance->SetupApplication();
@@ -116,7 +116,7 @@ namespace LegendEngine
 
         Events::EventBus m_EventBus;
 
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         Graphics::GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
             GraphicsAPI api);
         Graphics::RenderTarget& CreateRenderTarget(int width, int height,
@@ -131,7 +131,7 @@ namespace LegendEngine
 
 #endif
         Graphics::GraphicsContext& m_GraphicsContext;
-#ifndef LGENG_HEADLESS
+#ifndef LE_HEADLESS
         Graphics::RenderTarget& m_RenderTarget;
         Graphics::Renderer& m_Renderer;
 #endif

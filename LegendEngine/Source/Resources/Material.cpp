@@ -56,7 +56,7 @@ namespace LegendEngine::Resources
 
     Scope<Material> Material::Create()
     {
-        LGENG_DEBUG("Material created");
+        LE_DEBUG("Material created");
         return Application::Get().GetGraphicsContext().CreateMaterial();
     }
 }

@@ -3,18 +3,18 @@
 namespace LegendEngine
 {
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>::Matrix4x4()
+	LE_MATH_FUNC Matrix4x4<T>::Matrix4x4()
 	{}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>::Matrix4x4(T value)
+	LE_MATH_FUNC Matrix4x4<T>::Matrix4x4(T value)
 	{
 		for (uint8_t i = 0; i < COL_COUNT; i++)
 			c[i] = Vector4<T>(value);
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>::Matrix4x4(Quaternion q)
+	LE_MATH_FUNC Matrix4x4<T>::Matrix4x4(Quaternion q)
 	{
 		// Construct a 4x4 matrix from a quaternion q
 
@@ -45,32 +45,32 @@ namespace LegendEngine
 
 	// The ref is the one to copy from (I always forget that)
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>::Matrix4x4(const Matrix4x4& ref)
+	LE_MATH_FUNC Matrix4x4<T>::Matrix4x4(const Matrix4x4& ref)
 	{
 		memcpy(c, ref.c, sizeof(c));
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector4<T>& Matrix4x4<T>::operator[](int index)
+	LE_MATH_FUNC Vector4<T>& Matrix4x4<T>::operator[](int index)
 	{
 		return c[index];
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::operator=(const Matrix4x4<T>& toSet)
+	LE_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::operator=(const Matrix4x4<T>& toSet)
 	{
 		memcpy(c, toSet.c, sizeof(c));
 		return *this;
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::operator*(const Matrix4x4<T>& m)
+	LE_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::operator*(const Matrix4x4<T>& m)
 	{
 		return Multiply(m);
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>& Matrix4x4<T>::operator*(T& m)
+	LE_MATH_FUNC Matrix4x4<T>& Matrix4x4<T>::operator*(T& m)
 	{
 		c[0] *= m;
 		c[1] *= m;
@@ -81,7 +81,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>& Matrix4x4<T>::operator*=(const Matrix4x4<T>& m)
+	LE_MATH_FUNC Matrix4x4<T>& Matrix4x4<T>::operator*=(const Matrix4x4<T>& m)
 	{
 		Matrix4x4<T> product = Multiply(m);
 		memcpy(c, product.c, sizeof(c));
@@ -90,7 +90,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T>& Matrix4x4<T>::operator*=(T m)
+	LE_MATH_FUNC Matrix4x4<T>& Matrix4x4<T>::operator*=(T m)
 	{
 		c[0] *= m;
 		c[1] *= m;
@@ -101,7 +101,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::MakeIdentity()
+	LE_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::MakeIdentity()
 	{
 		Matrix4x4<T> mat;
 		mat.c[0] = Vector4<T>(1, 0, 0, 0);
@@ -113,7 +113,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::Multiply(Matrix4x4<T> m)
+	LE_MATH_FUNC Matrix4x4<T> Matrix4x4<T>::Multiply(Matrix4x4<T> m)
 	{
 		Matrix4x4<T> product;
 		product.c[0] = Vector4<T>(

@@ -26,12 +26,12 @@ Here's a simple scene:
 Dependencies:
 * **CMake**
 * Some toolchain compatible with CMake like **Ninja**, **Makefile**, **Visual Studio**, etc.
-* **Vulkan SDK** *(if building with `LGENG_VULKAN_API`, enabled by default)*
+* **Vulkan SDK** *(if building with `LE_VULKAN_API`, enabled by default)*
 
 As well as:
 * **googletest** *(if building tests)*
 * **Tether**
-* **Vulkan Memory Allocator (VMA)**, *if `LGENG_VULKAN_API` is enabled*
+* **Vulkan Memory Allocator (VMA)**, *if `LE_VULKAN_API` is enabled*
 
 which the above should be fetched automatically by CMake.
 

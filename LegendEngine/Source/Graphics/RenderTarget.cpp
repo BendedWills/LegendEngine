@@ -15,7 +15,7 @@ namespace LegendEngine::Graphics
 
     bool RenderTarget::IsCloseRequested() const
     {
-        LGENG_WARN(
+        LE_WARN(
             "RenderTarget::IsCloseRequested called but it was not "
             "implemented. Is the application running headless?");
         return false;

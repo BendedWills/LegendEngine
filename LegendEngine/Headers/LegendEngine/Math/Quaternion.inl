@@ -6,10 +6,10 @@
 
 namespace LegendEngine
 {
-	LGENG_MATH_FUNC Quaternion::Quaternion()
+	LE_MATH_FUNC Quaternion::Quaternion()
 	{}
 
-	LGENG_MATH_FUNC Quaternion::Quaternion(float w, float x, float y, float z)
+	LE_MATH_FUNC Quaternion::Quaternion(float w, float x, float y, float z)
 		:
 		w(w),
 		x(x),
@@ -17,7 +17,7 @@ namespace LegendEngine
 		z(z)
 	{}
 
-	LGENG_MATH_FUNC Quaternion::Quaternion(const Quaternion& ref)
+	LE_MATH_FUNC Quaternion::Quaternion(const Quaternion& ref)
 	{
 		w = ref.w;
 		x = ref.x;
@@ -25,7 +25,7 @@ namespace LegendEngine
 		z = ref.z;
 	}
 
-	LGENG_MATH_FUNC Quaternion Quaternion::operator=(const Quaternion& ref)
+	LE_MATH_FUNC Quaternion Quaternion::operator=(const Quaternion& ref)
 	{
 		w = ref.w;
 		x = ref.x;
@@ -35,7 +35,7 @@ namespace LegendEngine
 	}
 
 	template<typename T>
-	LGENG_MATH_FUNC Vector3<T> Quaternion::operator*(const Vector3<T>& v)
+	LE_MATH_FUNC Vector3<T> Quaternion::operator*(const Vector3<T>& v)
 	{
 		Vector3<T> quatVec(x, y, z);
 		Vector3<T> uv(Math::Cross(quatVec, v));
@@ -44,17 +44,17 @@ namespace LegendEngine
 		return v + ((uv * w) + uuv) * static_cast<T>(2);
 	}
 
-	LGENG_MATH_FUNC Quaternion Quaternion::operator/(float v)
+	LE_MATH_FUNC Quaternion Quaternion::operator/(float v)
 	{
 		return Quaternion(w / v, x / v, y / v, z / v);
 	}
 
-	LGENG_MATH_FUNC Quaternion Quaternion::operator*(const Quaternion& q)
+	LE_MATH_FUNC Quaternion Quaternion::operator*(const Quaternion& q)
 	{
 		return Quaternion(*this) *= q;
 	}
 
-	LGENG_MATH_FUNC Quaternion& Quaternion::operator*=(const Quaternion& q)
+	LE_MATH_FUNC Quaternion& Quaternion::operator*=(const Quaternion& q)
 	{
 		Quaternion p(*this);
 
@@ -65,7 +65,7 @@ namespace LegendEngine
 		return *this;
 	}
 
-	LGENG_MATH_FUNC Vector3<float> Quaternion::GetEulerAngles()
+	LE_MATH_FUNC Vector3<float> Quaternion::GetEulerAngles()
 	{
 		Vector3<float> angles;
 
