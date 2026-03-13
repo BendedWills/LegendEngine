@@ -28,3 +28,8 @@ namespace le
 		return m_UID;
 	}
 }
+
+size_t std::hash<le::UID>::operator()(const le::UID& uid) const noexcept
+{
+	return std::hash<size_t>{}(uid.Get());
+}

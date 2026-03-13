@@ -1,24 +1,9 @@
+#include <ranges>
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Scene.hpp>
 
-#include <LegendEngine/Events/ObjectDestroyedEvent.hpp>
-
 namespace le
 {
-    Scene::Scene()
-        :
-        m_EventSubscriber(Application::Get().GetEventBus())
-    {
-        ListenForEvents();
-    }
-
-    Scene::Scene(EventBus& eventBus)
-        :
-        m_EventSubscriber(eventBus)
-    {
-        ListenForEvents();
-    }
-
     bool Scene::HasObject(const Object& object) const
     {
         return HasObject(object.uid);
@@ -26,25 +11,24 @@ namespace le
 
     bool Scene::HasObject(const UID objectID) const
     {
-        for (const auto& object : m_Objects)
-            if (object && object->uid == objectID)
-                return true;
+        if (!m_Objects.contains(objectID))
+            return false;
 
-        return false;
+        return m_Objects.at(objectID) != nullptr;
     }
 
     void Scene::RemoveObject(Object& toRemove)
     {
-        for (size_t i = 0; i < m_Objects.size(); ++i)
+        for (const auto& uid : m_Objects | std::views::keys)
         {
-            if (m_Objects[i]->uid != toRemove.uid)
+            if (uid != toRemove.uid)
                 continue;
 
             LE_DEBUG("Removed object with uid {} from scene {:#x}",
-                 static_cast<uint64_t>(toRemove.uid), reinterpret_cast<size_t>(this));
+                 static_cast<uint64_t>(uid), reinterpret_cast<size_t>(this));
 
             RemoveObjectComponents(toRemove);
-            m_Objects.erase(m_Objects.begin() + i);
+            m_Objects.erase(uid);
             return;
         }
     }
@@ -54,7 +38,7 @@ namespace le
         m_Objects.clear();
     }
 
-    const std::vector<Scope<Object>>& Scene::GetObjects() const
+    const Scene::ObjectsType& Scene::GetObjects() const
     {
         return m_Objects;
     }
@@ -76,7 +60,8 @@ namespace le
         while (HasObject(object->uid))
             object->uid = UID();
 
-        const Scope<Object>& added = m_Objects.emplace_back(std::move(object));
+        const Scope<Object>& added = m_Objects[object->uid] = std::move(object);
+        added->m_pScene = this;
 
         AddObjectComponents(*added);
 
@@ -84,14 +69,6 @@ namespace le
             static_cast<uint64_t>(added->uid), reinterpret_cast<size_t>(this));
 
         return added.get();
-    }
-
-    void Scene::ListenForEvents()
-    {
-        m_EventSubscriber.AddEventHandler<ComponentAddedEvent>(
-        [this](const ComponentAddedEvent& event){ OnComponentAdd(event); });
-        m_EventSubscriber.AddEventHandler<ComponentRemovedEvent>(
-        [this](const ComponentRemovedEvent& event){ OnComponentRemove(event); });
     }
 
     void Scene::AddObjectComponents(Object& object)
@@ -106,19 +83,13 @@ namespace le
             std::erase(m_Components[key], value.get());
     }
 
-    void Scene::OnComponentAdd(const ComponentAddedEvent& event)
+    void Scene::OnComponentAdd(const std::type_index id, Component& component)
     {
-        if (!HasObject(event.GetObject()))
-            return;
-
-        m_Components[event.GetComponentTypeIndex()].push_back(&event.GetComponent());
+        m_Components[id].push_back(&component);
     }
 
-    void Scene::OnComponentRemove(const ComponentRemovedEvent& event)
+    void Scene::OnComponentRemove(const std::type_index id, Component& component)
     {
-        if (!HasObject(event.GetObject()))
-            return;
-
-        std::erase(m_Components[event.GetComponentTypeIndex()], &event.GetComponent());
+        std::erase(m_Components[id], &component);
     }
 }

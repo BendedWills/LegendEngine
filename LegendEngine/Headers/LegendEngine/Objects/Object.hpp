@@ -14,12 +14,12 @@ namespace le
 {
     class Object : public ScriptHolder, public ComponentHolder
     {
+        friend class Scene;
     public:
         using ScriptsType = std::unordered_map<std::type_index,
             Scope<Script>>;
 
         explicit Object(bool calculatesMatrices = true);
-        ~Object() override;
         LEGENDENGINE_NO_COPY(Object);
 
         void Enable();
@@ -54,9 +54,11 @@ namespace le
         Matrix4x4f m_Transform;
 
         bool m_Dirty = false;
+
+        Scene* m_pScene = nullptr;
     private:
-        void SpawnAddEvent(std::type_index type, Component& component) override;
-        void SpawnRemoveEvent(std::type_index type, Component& component) override;
+        void ComponentAdded(std::type_index type, Component& component) override;
+        void ComponentRemoved(std::type_index type, Component& component) override;
 
         bool m_Enabled = true;
         bool m_CalculatesMatrices;

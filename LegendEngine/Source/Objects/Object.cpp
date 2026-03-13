@@ -2,10 +2,6 @@
 
 #include <LegendEngine/Application.hpp>
 
-#include <LegendEngine/Events/ComponentAddedEvent.hpp>
-#include <LegendEngine/Events/ComponentRemovedEvent.hpp>
-#include <LegendEngine/Events/ObjectDestroyedEvent.hpp>
-
 namespace le
 {
     Object::Object(const bool calculatesMatrices)
@@ -15,16 +11,6 @@ namespace le
     {
         SetObject(this);
         CalculateTransformMatrix();
-    }
-
-    Object::~Object()
-    {
-        Application::Get().GetEventBus().DispatchEvent<ObjectDestroyedEvent>(
-            ObjectDestroyedEvent(*this));
-
-        // Calls a virtual function, so the components must be cleared before
-        // destruction of this object class
-        ClearComponents();
     }
 
     void Object::Enable()
@@ -117,19 +103,21 @@ namespace le
         m_Dirty = false;
     }
 
-    void Object::SpawnAddEvent(const std::type_index type,
+    void Object::ComponentAdded(const std::type_index type,
         Component& component)
     {
         OnComponentAdd(type, component);
-        Application::Get().GetEventBus().DispatchEvent<ComponentAddedEvent>(
-            ComponentAddedEvent(*this, component, type));
+
+        if (m_pScene)
+            m_pScene->OnComponentAdd(type, component);
     }
 
-    void Object::SpawnRemoveEvent(const std::type_index type,
+    void Object::ComponentRemoved(const std::type_index type,
         Component& component)
     {
         OnComponentRemove(type, component);
-        Application::Get().GetEventBus().DispatchEvent<ComponentRemovedEvent>(
-            ComponentRemovedEvent(*this, component, type));
+
+        if (m_pScene)
+            m_pScene->OnComponentRemove(type, component);
     }
 }

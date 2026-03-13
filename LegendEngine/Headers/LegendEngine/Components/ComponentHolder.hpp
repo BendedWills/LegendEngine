@@ -50,7 +50,7 @@ namespace le
 			if (componentIter == m_Components.end())
 				return false;
 
-			SpawnRemoveEvent(index, *componentIter->second.get());
+			ComponentRemoved(index, *componentIter->second.get());
 			m_Components.erase(componentIter);
 
 			return true;
@@ -71,7 +71,7 @@ namespace le
 
 			m_Components.emplace(index, std::make_unique<T>(args...));
 		    m_Components[index]->m_pObject = m_pObject;
-			SpawnAddEvent(index, *m_Components[index].get());
+			ComponentAdded(index, *m_Components[index].get());
 
 			return true;
 		}
@@ -85,8 +85,8 @@ namespace le
 
 		HolderType m_Components;
 	private:
-		virtual void SpawnAddEvent(const std::type_index type, Component& component) = 0;
-		virtual void SpawnRemoveEvent(const std::type_index type, Component& component) = 0;
+		virtual void ComponentAdded(const std::type_index type, Component& component) = 0;
+		virtual void ComponentRemoved(const std::type_index type, Component& component) = 0;
 
 	    Object* m_pObject = nullptr;
 	};

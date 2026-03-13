@@ -2,8 +2,6 @@
 
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Events/EventBus.hpp>
-#include <LegendEngine/Events/ComponentAddedEvent.hpp>
-#include <LegendEngine/Events/ComponentRemovedEvent.hpp>
 
 #include <memory>
 #include <typeindex>
@@ -13,12 +11,13 @@ namespace le
 {
     class Scene final
     {
+        friend class Object;
     public:
+        using ObjectsType = std::unordered_map<UID, Scope<Object>>;
         using ComponentsVecType = std::unordered_map<std::type_index,
             std::vector<Component*>>;
 
-        Scene();
-        explicit Scene(EventBus& eventBus);
+        Scene() = default;
         LEGENDENGINE_NO_COPY(Scene);
 
         template <typename T, typename... Args>
@@ -34,24 +33,20 @@ namespace le
 
         void Clear();
 
-        const std::vector<Scope<Object>>& GetObjects() const;
+        const ObjectsType& GetObjects() const;
         ComponentsVecType& GetObjectComponents();
 
         static Scope<Scene> Create();
+    protected:
+        void OnComponentAdd(std::type_index id, Component& component);
+        void OnComponentRemove(std::type_index id, Component& component);
     private:
         Object* AddObject(Scope<Object> object);
-
-        void ListenForEvents();
 
         void AddObjectComponents(Object& object);
         void RemoveObjectComponents(Object& object);
 
-        void OnComponentAdd(const ComponentAddedEvent& event);
-        void OnComponentRemove(const ComponentRemovedEvent& event);
-
-        std::vector<Scope<Object>> m_Objects;
+        ObjectsType m_Objects;
         ComponentsVecType m_Components;
-
-        EventBusSubscriber m_EventSubscriber;
     };
 }

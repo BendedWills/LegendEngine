@@ -13,7 +13,7 @@ namespace le
     void ComponentHolder::ClearComponents()
     {
         for (auto& [key, val] : m_Components)
-            SpawnRemoveEvent(key, *val);
+            ComponentRemoved(key, *val);
 
         m_Components.clear();
     }

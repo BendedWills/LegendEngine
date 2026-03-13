@@ -1,5 +1,6 @@
 #include "LegendEngine/Application.hpp"
 
+#include <ranges>
 #include <LegendEngine/Common/Stopwatch.hpp>
 #include <LegendEngine/Graphics/GraphicsContext.hpp>
 #include <LegendEngine/Events/RenderEvent.hpp>
@@ -33,8 +34,7 @@ namespace le
         m_ResizeHandler(*this),
         m_GraphicsContext(CreateGraphicsContext(applicationName, api)),
         m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
-        m_Renderer(CreateRenderer()),
-        m_GlobalScene(m_EventBus)
+        m_Renderer(CreateRenderer())
     {
         LE_INFO("Application created");
     }
@@ -212,7 +212,7 @@ namespace le
 
     void Application::RecalculateTransforms(const Scene& scene)
     {
-        for (const auto& object : scene.GetObjects())
+        for (const auto& object : scene.GetObjects() | std::views::values)
             if (object->IsDirty())
                 object->CalculateTransformMatrix();
     }

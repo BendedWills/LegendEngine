@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cstdint>
 
 namespace le
@@ -17,3 +18,9 @@ namespace le
 		uint64_t m_UID;
 	};
 }
+
+template<>
+struct std::hash<le::UID>
+{
+	size_t operator()(const le::UID& uid) const noexcept;
+};

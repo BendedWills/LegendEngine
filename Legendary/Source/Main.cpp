@@ -4,6 +4,8 @@
 
 #include <LegendEngine/LegendEngine.hpp>
 #include <../../LegendEngine/Headers/LegendEngine/IO/Logger.hpp>
+#include <LegendEngine/Events/RenderEvent.hpp>
+#include <LegendEngine/Events/UpdateEvent.hpp>
 
 using namespace le;
 
@@ -193,15 +195,21 @@ public:
 		Utils::Window& window = m_App.GetWindow();
 		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		window.SetRawInputEnabled(true);
+
+		m_Sub.AddEventHandler<UpdateEvent>(
+			[this](const UpdateEvent& e) { OnUpdate(); });
 	}
 
-	void OnUpdate(const float delta)
+	void OnUpdate()
 	{
 		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
 		{
-			LE_INFO("FPS: {}", 1.0f / delta);
+			LE_INFO("FPS: {}", m_Frames / 5);
 			fpsTimer.Set();
+			m_Frames = 0;
 		}
+
+		m_Frames++;
 	}
 private:
 	void CreateMaterials()
@@ -236,7 +244,7 @@ private:
 
 		light = m_App.GetGlobalScene().CreateObject<Light>();
 	    LightComponent& lightComponent = light->GetLightComponent();
-	    lightComponent.SetColor(Color(1, 0, 0, 1));
+	    lightComponent.SetColor(Color(1, 1, 0, 1));
 	}
 
 	Application& m_App;
@@ -256,6 +264,8 @@ private:
 	Scope<Material> material2;
 	Scope<Texture2D> texture;
 	Scope<Texture2D> texture2;
+
+	size_t m_Frames = 0;
 };
 
 #include <LegendEngine/Common/Entrypoint.hpp>
