@@ -119,8 +119,7 @@ namespace le
 #else
     Application::Application(GraphicsContext& ctx)
         :
-        m_GraphicsContext(ctx),
-        m_GlobalScene(m_EventBus)
+        m_GraphicsContext(ctx)
     {
         LE_INFO("Application created");
     }
