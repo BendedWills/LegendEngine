@@ -96,8 +96,7 @@ namespace le
 
         // If this frame is still in flight, wait for it to finish rendering before
         // rendering another frame.
-        vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame],
-            VK_TRUE, UINT64_MAX);
+        vkQueueWaitIdle(m_Context.GetQueue());
 
         // The swapchain has one more than the minimum images, so the index
         // might not be the same as m_CurrentFrame
