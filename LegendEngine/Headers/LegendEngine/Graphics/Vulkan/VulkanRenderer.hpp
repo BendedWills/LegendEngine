@@ -107,6 +107,5 @@ namespace le
 
         VkDescriptorSet m_Sets[3] = {};
         VulkanShader* m_pCurrentShader = nullptr;
-        bool m_CurrentlyUsingMaterial = false;
     };
 }

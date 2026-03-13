@@ -24,9 +24,8 @@ namespace le
         Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;
 #endif
 
-        Scope<VertexBuffer> CreateVertexBuffer(
-            std::span<VertexTypes::Vertex3> vertices,
-            std::span<uint32_t> indices) override;
+        Scope<VertexBuffer> CreateVertexBuffer(size_t initialVertexCount,
+            size_t initialIndexCount) override;
         Scope<Texture2D> CreateTexture2D(const TextureData& loader) override;
         Scope<Shader> CreateShader(
             std::span<Shader::Stage> stages) override;
@@ -91,6 +90,8 @@ namespace le
         std::vector<VkDescriptorSetLayout> m_SetLayouts;
 
         std::optional<VulkanShaderManager> m_ShaderManager;
+
+        VkFence test;
 
         VkFormat m_DepthFormat;
     };

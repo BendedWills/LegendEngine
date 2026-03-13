@@ -16,5 +16,6 @@
 #include <LegendEngine/Resources/Material.hpp>
 #include <LegendEngine/Resources/Texture2D.hpp>
 
-#include <LegendEngine/Script.hpp>
 #include <LegendEngine/Application.hpp>
+#include <LegendEngine/Script.hpp>
+#include <LegendEngine/TetherBindings.hpp>

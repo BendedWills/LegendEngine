@@ -202,7 +202,6 @@ namespace le
 
     void VulkanRenderer::UseMaterial(Material* pMaterial)
     {
-        m_CurrentlyUsingMaterial = pMaterial;
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
 
         auto pShader = static_cast<VulkanShader*>(m_ShaderManager.GetByID("solid"));
@@ -239,7 +238,7 @@ namespace le
 
         // The sets that have a chance of not being used should be at the end
         // of m_Sets
-        const size_t setCount = std::size(m_Sets) - 1 + m_CurrentlyUsingMaterial;
+        const size_t setCount = std::size(m_Sets);
 
         vkCmdBindDescriptorSets(
             buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

@@ -27,9 +27,8 @@ namespace le
         virtual Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) = 0;
 #endif
 
-        virtual Scope<VertexBuffer> CreateVertexBuffer(
-            std::span<VertexTypes::Vertex3> vertices,
-            std::span<uint32_t> indices) = 0;
+        virtual Scope<VertexBuffer> CreateVertexBuffer(size_t initialVertexCount,
+            size_t initialIndexCount) = 0;
         virtual Scope<Texture2D> CreateTexture2D(const TextureData& loader) = 0;
         virtual Scope<Shader> CreateShader(
             std::span<Shader::Stage> stages) = 0;

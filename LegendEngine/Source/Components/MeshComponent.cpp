@@ -4,12 +4,27 @@
 namespace le
 {
     MeshComponent::MeshComponent(const std::span<VertexTypes::Vertex3> vertices,
-            const std::span<uint32_t> indices)
+        const std::span<uint32_t> indices)
         :
         m_VertexBuffer(Application::Get().GetGraphicsContext().CreateVertexBuffer(
-            vertices, indices)),
+            vertices.size(), indices.size())),
         m_IndexCount(indices.size())
+    {
+        UpdateMesh(vertices, indices);
+    }
+
+    MeshComponent::MeshComponent(size_t initialVertexCount, size_t initialIndexCount)
+        :
+        m_VertexBuffer(Application::Get().GetGraphicsContext().CreateVertexBuffer(
+            initialVertexCount, initialIndexCount)),
+        m_IndexCount(initialIndexCount)
     {}
+
+    void MeshComponent::UpdateMesh(const std::span<VertexTypes::Vertex3> vertices,
+        const std::span<uint32_t> indices) const
+    {
+        m_VertexBuffer->Update(vertices, indices);
+    }
 
     void MeshComponent::SetMaterial(Material* pMaterial)
     {

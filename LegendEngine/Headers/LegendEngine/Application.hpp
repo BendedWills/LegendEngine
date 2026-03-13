@@ -8,15 +8,13 @@
 #include <LegendEngine/Graphics/GraphicsContext.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
 #include <LegendEngine/Graphics/RenderTarget.hpp>
+#include <LegendEngine/TetherBindings.hpp>
 #include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 #include <Tether/Window.hpp>
 
 namespace le
 {
-    namespace Input = Tether::Input;
-    namespace Utils = Tether;
-
     class Application final
     {
     public:
@@ -106,7 +104,7 @@ namespace le
         Scope<RenderTarget> m_WindowRenderTarget = nullptr;
         Scope<Renderer> m_ManagedRenderer = nullptr;
 
-        Scope<Utils::Window> m_Window = nullptr;
+        Scope<Window> m_Window = nullptr;
 #endif
         GraphicsContext& m_GraphicsContext;
 #ifndef LE_HEADLESS

@@ -80,11 +80,20 @@ namespace le
 
         m_DepthFormat = FindDepthFormat();
         m_ShaderManager.emplace(m_GraphicsContext, m_SetLayouts, m_DepthFormat);
+
+        VkFenceCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        vkCreateFence(m_GraphicsContext.GetDevice(), &info, nullptr, &test);
     }
 
     VulkanGraphicsContext::~VulkanGraphicsContext()
     {
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
+
+        vkWaitForFences(m_GraphicsContext.GetDevice(), 1, &test, true, UINT64_MAX);
+        vkDestroyFence(m_GraphicsContext.GetDevice(), test, nullptr);
 
         m_ShaderManager.reset();
 
@@ -121,11 +130,9 @@ namespace le
 #endif
 
     Scope<VertexBuffer> VulkanGraphicsContext::CreateVertexBuffer(
-            std::span<VertexTypes::Vertex3> vertices,
-            std::span<uint32_t> indices
-        )
+        size_t initialVertexCount, size_t initialIndexCount)
     {
-        return std::make_unique<VulkanVertexBuffer>(m_GraphicsContext, vertices, indices);
+        return std::make_unique<VulkanVertexBuffer>(m_GraphicsContext, initialVertexCount, initialIndexCount);
     }
 
     Scope<Texture2D> VulkanGraphicsContext::CreateTexture2D(const TextureData& loader)

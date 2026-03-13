@@ -13,6 +13,10 @@ namespace le
     public:
         MeshComponent(std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices);
+        MeshComponent(size_t initialVertexCount, size_t initialIndexCount);
+
+        void UpdateMesh(std::span<VertexTypes::Vertex3> vertices,
+            std::span<uint32_t> indices) const;
 
         void SetMaterial(Material* pMaterial);
         Material* GetMaterial() const;

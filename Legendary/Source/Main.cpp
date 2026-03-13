@@ -3,8 +3,7 @@
 #include <thread>
 
 #include <LegendEngine/LegendEngine.hpp>
-#include <../../LegendEngine/Headers/LegendEngine/IO/Logger.hpp>
-#include <LegendEngine/Events/RenderEvent.hpp>
+#include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Events/UpdateEvent.hpp>
 
 using namespace le;
