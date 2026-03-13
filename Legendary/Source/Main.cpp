@@ -244,7 +244,7 @@ private:
 
 		light = m_App.GetGlobalScene().CreateObject<Light>();
 	    LightComponent& lightComponent = light->GetLightComponent();
-	    lightComponent.SetColor(Color(1, 1, 0, 1));
+	    lightComponent.SetColor(Color(1, 0, 0, 1));
 	}
 
 	Application& m_App;
