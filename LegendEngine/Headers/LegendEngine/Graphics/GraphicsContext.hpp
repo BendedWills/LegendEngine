@@ -10,12 +10,12 @@
 #include <LegendEngine/Resources/Shader.hpp>
 #include <Tether/Window.hpp>
 
-namespace LegendEngine::Graphics
+namespace le
 {
     class GraphicsContext
     {
     public:
-        using ShaderStages = std::span<Resources::Shader::Stage>;
+        using ShaderStages = std::span<Shader::Stage>;
 
         GraphicsContext() = default;
         virtual ~GraphicsContext() = 0;
@@ -30,10 +30,10 @@ namespace LegendEngine::Graphics
         virtual Scope<VertexBuffer> CreateVertexBuffer(
             std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices) = 0;
-        virtual Scope<Resources::Texture2D> CreateTexture2D(const IO::TextureData& loader) = 0;
-        virtual Scope<Resources::Shader> CreateShader(
-            std::span<Resources::Shader::Stage> stages) = 0;
-        virtual Scope<Resources::Material> CreateMaterial() = 0;
+        virtual Scope<Texture2D> CreateTexture2D(const TextureData& loader) = 0;
+        virtual Scope<Shader> CreateShader(
+            std::span<Shader::Stage> stages) = 0;
+        virtual Scope<Material> CreateMaterial() = 0;
 
         [[nodiscard]] virtual const ShaderManager& GetShaderManager() const = 0;
 

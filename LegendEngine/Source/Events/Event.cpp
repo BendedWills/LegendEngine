@@ -1,7 +1,7 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Events/Event.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     Event::Event(const bool cancelable)
         :

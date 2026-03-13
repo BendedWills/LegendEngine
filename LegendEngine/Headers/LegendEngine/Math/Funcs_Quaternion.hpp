@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Quaternion.hpp>
 
-namespace LegendEngine::Math
+namespace le::Math
 {
 	Quaternion Normalize(Quaternion q);
 	float Dot(Quaternion q1, Quaternion q2);

@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <algorithm>
 
-namespace LegendEngine::Events
+namespace le
 {
     class EventBus final
     {

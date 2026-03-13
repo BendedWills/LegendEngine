@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-namespace LegendEngine::IO
+namespace le
 {
 	enum class LogLevel;
 

@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Vector2.hpp>
 
-namespace LegendEngine
+namespace le
 {
 	// Vector3 must be of a numeric type
 	template<typename T>

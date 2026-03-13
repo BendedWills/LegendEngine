@@ -1,14 +1,14 @@
 #include <LegendEngine/Objects/Light.hpp>
 
-namespace LegendEngine::Objects
+namespace le
 {
     Light::Light()
     {
-        AddComponent<Components::LightComponent>();
+        AddComponent<LightComponent>();
     }
 
-    Components::LightComponent& Light::GetLightComponent()
+    LightComponent& Light::GetLightComponent()
     {
-        return *GetComponent<Components::LightComponent>();
+        return *GetComponent<LightComponent>();
     }
 }

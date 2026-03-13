@@ -6,7 +6,7 @@
 #include <LegendEngine/Events/ComponentRemovedEvent.hpp>
 #include <LegendEngine/Events/ObjectDestroyedEvent.hpp>
 
-namespace LegendEngine::Objects
+namespace le
 {
     Object::Object(const bool calculatesMatrices)
         :
@@ -19,8 +19,8 @@ namespace LegendEngine::Objects
 
     Object::~Object()
     {
-        Application::Get().GetEventBus().DispatchEvent<Events::ObjectDestroyedEvent>(
-            Events::ObjectDestroyedEvent(*this));
+        Application::Get().GetEventBus().DispatchEvent<ObjectDestroyedEvent>(
+            ObjectDestroyedEvent(*this));
 
         // Calls a virtual function, so the components must be cleared before
         // destruction of this object class
@@ -118,18 +118,18 @@ namespace LegendEngine::Objects
     }
 
     void Object::SpawnAddEvent(const std::type_index type,
-        Components::Component& component)
+        Component& component)
     {
         OnComponentAdd(type, component);
-        Application::Get().GetEventBus().DispatchEvent<Events::ComponentAddedEvent>(
-            Events::ComponentAddedEvent(*this, component, type));
+        Application::Get().GetEventBus().DispatchEvent<ComponentAddedEvent>(
+            ComponentAddedEvent(*this, component, type));
     }
 
     void Object::SpawnRemoveEvent(const std::type_index type,
-        Components::Component& component)
+        Component& component)
     {
         OnComponentRemove(type, component);
-        Application::Get().GetEventBus().DispatchEvent<Events::ComponentRemovedEvent>(
-            Events::ComponentRemovedEvent(*this, component, type));
+        Application::Get().GetEventBus().DispatchEvent<ComponentRemovedEvent>(
+            ComponentRemovedEvent(*this, component, type));
     }
 }

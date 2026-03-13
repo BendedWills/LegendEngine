@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Events/Event.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     class UpdateEvent : public Event
     {

@@ -2,7 +2,7 @@
 
 #include <limits>
 
-namespace LegendEngine
+namespace le
 {
 	template<typename T>
 	LE_MATH_FUNC Matrix4x4<T> Math::Scale(Matrix4x4<T> m, Vector3<T> scale)

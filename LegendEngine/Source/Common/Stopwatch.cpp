@@ -1,6 +1,6 @@
 #include <LegendEngine/Common/Stopwatch.hpp>
 
-namespace LegendEngine
+namespace le
 {
 	Stopwatch::Stopwatch()
 		:

@@ -15,10 +15,8 @@
 // #define VMA_IMPLEMENTATION
 // #include <vk_mem_alloc.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
-    using namespace Resources;
-
     VulkanRenderer::VulkanRenderer(
             TetherVulkan::GraphicsContext& tetherCtx,
             RenderTarget& renderTarget,
@@ -225,10 +223,10 @@ namespace LegendEngine::Graphics::Vulkan
         m_pCurrentShader = pShader;
     }
 
-    void VulkanRenderer::DrawMesh(const Components::MeshComponent& mesh)
+    void VulkanRenderer::DrawMesh(const MeshComponent& mesh)
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
-        const Objects::Object& object = mesh.GetObject();
+        const Object& object = mesh.GetObject();
         auto& vertexBuffer = static_cast<VulkanVertexBuffer&>(
             mesh.GetVertexBuffer());
 
@@ -334,16 +332,16 @@ namespace LegendEngine::Graphics::Vulkan
         m_CurrentFrame = (m_CurrentFrame + 1) % m_Context.GetFramesInFlight();
     }
 
-    void VulkanRenderer::UpdateCameraUniforms(const Objects::Camera& camera)
+    void VulkanRenderer::UpdateCameraUniforms(const Camera& camera)
     {
-        Objects::Camera::CameraUniforms uniforms;
+        Camera::CameraUniforms uniforms;
         uniforms.projection = camera.GetProjectionMatrix();
         uniforms.view = camera.GetViewMatrix();
 
         for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
         {
             void* data = m_CameraUniforms->GetMappedData(i);
-            *static_cast<Objects::Camera::CameraUniforms*>(data) = uniforms;
+            *static_cast<Camera::CameraUniforms*>(data) = uniforms;
         }
     }
 
@@ -381,7 +379,7 @@ namespace LegendEngine::Graphics::Vulkan
             std::size(sizes), sizes);
 
         m_CameraSet.emplace(*m_StaticUniformPool, cameraLayout, framesInFlight);
-        m_CameraUniforms.emplace(m_Context, sizeof(Objects::Camera::CameraUniforms), *m_CameraSet,
+        m_CameraUniforms.emplace(m_Context, sizeof(Camera::CameraUniforms), *m_CameraSet,
             0);
 
         m_SceneSet.emplace(*m_StaticUniformPool, sceneLayout, framesInFlight);

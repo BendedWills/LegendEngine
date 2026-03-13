@@ -6,7 +6,7 @@
 #include <typeindex>
 #include <functional>
 
-namespace LegendEngine::Events
+namespace le
 {
     template<typename T>
     using EventFunc = std::function<void(const T&)>;

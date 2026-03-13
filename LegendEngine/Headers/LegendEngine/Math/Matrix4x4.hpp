@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cmath>
 
-namespace LegendEngine
+namespace le
 {
 	// Matrix4x4 must be of a numeric type
 	template<typename T>

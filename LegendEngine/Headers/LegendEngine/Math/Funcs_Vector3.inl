@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LegendEngine
+namespace le
 {
 	template<typename T>
 	LE_MATH_FUNC Vector3<T> Math::Normalize(Vector3<T> v)

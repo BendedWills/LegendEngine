@@ -1,6 +1,6 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderTarget.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     VulkanRenderTarget::VulkanRenderTarget(TetherVulkan::GraphicsContext& context)
         :

@@ -4,7 +4,7 @@
 #include <LegendEngine/Math/Funcs_Vector3.hpp>
 #include <cmath>
 
-namespace LegendEngine
+namespace le
 {
 	LE_MATH_FUNC Quaternion::Quaternion()
 	{}

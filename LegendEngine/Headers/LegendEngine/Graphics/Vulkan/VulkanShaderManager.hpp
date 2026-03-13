@@ -2,7 +2,7 @@
 #include <LegendEngine/Graphics/ShaderManager.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 

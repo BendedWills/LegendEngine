@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <LegendEngine/Resources/Material.hpp>
 
-namespace LegendEngine::Components
+namespace le
 {
     class MeshComponent : public Component
     {
@@ -14,12 +14,12 @@ namespace LegendEngine::Components
         MeshComponent(std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices);
 
-        void SetMaterial(Resources::Material* pMaterial);
-        Resources::Material* GetMaterial() const;
+        void SetMaterial(Material* pMaterial);
+        Material* GetMaterial() const;
         VertexBuffer& GetVertexBuffer() const;
         uint32_t GetIndexCount() const;
     private:
-        Resources::Material* m_pMaterial = nullptr;
+        Material* m_pMaterial = nullptr;
         Scope<VertexBuffer> m_VertexBuffer;
         uint64_t m_IndexCount = 0;
     };

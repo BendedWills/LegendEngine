@@ -1,7 +1,7 @@
 #include <LegendEngine/Events/EventBus.hpp>
 #include <LegendEngine/Events/EventBusSubscriber.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     EventBusSubscriber::EventBusSubscriber(EventBus& eventBus)
         :

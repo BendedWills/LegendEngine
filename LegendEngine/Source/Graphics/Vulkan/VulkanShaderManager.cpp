@@ -5,12 +5,12 @@
 #include <Assets/CompiledShaders/textured.vert.spv.h>
 #include <Assets/CompiledShaders/textured.frag.spv.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
-    using namespace Resources::VulkanShaders;
+    using namespace shaders;
 
 #define STAGES(id) \
-    static Resources::Shader::Stage STAGES_##id[] = { \
+    static Shader::Stage STAGES_##id[] = { \
         { ShaderType::VERTEX, _binary_##id##_vert_spv, \
             sizeof(_binary_##id##_vert_spv) }, \
         { ShaderType::FRAG, _binary_##id##_frag_spv, \

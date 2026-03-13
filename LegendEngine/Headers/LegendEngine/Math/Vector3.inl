@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace LegendEngine
+namespace le
 {
 	template<typename T>
 	LE_MATH_FUNC Vector3<T>::Vector3()

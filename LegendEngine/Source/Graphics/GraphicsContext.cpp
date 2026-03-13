@@ -4,7 +4,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanGraphicsContext.hpp>
 #endif
 
-namespace LegendEngine::Graphics
+namespace le
 {
     GraphicsContext::~GraphicsContext() {}
 
@@ -14,7 +14,7 @@ namespace LegendEngine::Graphics
         switch (api)
         {
 #ifdef _VULKAN_API
-            case GraphicsAPI::VULKAN: return std::make_unique<Vulkan::VulkanGraphicsContext>(
+            case GraphicsAPI::VULKAN: return std::make_unique<VulkanGraphicsContext>(
                 applicationName);
 #endif
         }

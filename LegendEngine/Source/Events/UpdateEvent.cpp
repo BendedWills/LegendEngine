@@ -1,6 +1,6 @@
 #include <LegendEngine/Events/UpdateEvent.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     UpdateEvent::UpdateEvent(float deltaTime)
         :

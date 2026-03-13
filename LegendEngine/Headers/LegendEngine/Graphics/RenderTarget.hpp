@@ -1,7 +1,7 @@
 #pragma once
 #include <LegendEngine/Objects/Camera.hpp>
 
-namespace LegendEngine::Graphics
+namespace le
 {
     class RenderTarget
     {
@@ -12,9 +12,9 @@ namespace LegendEngine::Graphics
         virtual uint32_t GetWidth() const;
         virtual uint32_t GetHeight() const;
 
-        void SetCamera(Objects::Camera* camera);
-        [[nodiscard]] Objects::Camera* GetCamera() const;
+        void SetCamera(Camera* camera);
+        [[nodiscard]] Camera* GetCamera() const;
     protected:
-        Objects::Camera* m_pCamera = nullptr;
+        Camera* m_pCamera = nullptr;
     };
 }

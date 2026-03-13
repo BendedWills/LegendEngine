@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LegendEngine::Events
+namespace le
 {
     class Event
     {

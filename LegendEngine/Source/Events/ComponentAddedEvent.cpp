@@ -1,10 +1,10 @@
 #include <LegendEngine/Events/ComponentAddedEvent.hpp>
 #include <LegendEngine/Application.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
-    ComponentAddedEvent::ComponentAddedEvent(Objects::Object& object,
-        Components::Component& component,
+    ComponentAddedEvent::ComponentAddedEvent(Object& object,
+        Component& component,
         const std::type_index& typeIndex)
         :
         Event(false),
@@ -16,12 +16,12 @@ namespace LegendEngine::Events
             reinterpret_cast<size_t>(&object));
     }
 
-    Objects::Object& ComponentAddedEvent::GetObject() const
+    Object& ComponentAddedEvent::GetObject() const
     {
         return m_Object;
     }
 
-    Components::Component& ComponentAddedEvent::GetComponent() const
+    Component& ComponentAddedEvent::GetComponent() const
     {
         return m_Component;
     }

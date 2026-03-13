@@ -8,7 +8,7 @@
 #include <LegendEngine/Graphics/ShaderManager.hpp>
 #include <LegendEngine/Resources/Shader.hpp>
 
-namespace LegendEngine::Resources
+namespace le
 {
 	class Material : public Resource
 	{
@@ -28,7 +28,7 @@ namespace LegendEngine::Resources
 
 		static Scope<Material> Create();
 	private:
-	    const Graphics::ShaderManager& m_ShaderManager;
+	    const ShaderManager& m_ShaderManager;
 
 		Texture2D* m_pTexture = nullptr;
 	    Shader* m_pShader;

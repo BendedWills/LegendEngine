@@ -6,7 +6,7 @@
 #include <span>
 #include <vulkan/vulkan.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     class VulkanVertexBuffer : public VertexBuffer
     {

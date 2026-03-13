@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Common/Defs.hpp>
 
-namespace LegendEngine
+namespace le
 {
     namespace VertexTypes
     {

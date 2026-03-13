@@ -2,9 +2,9 @@
 #include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Events/ObjectDestroyedEvent.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
-    ObjectDestroyedEvent::ObjectDestroyedEvent(Objects::Object& object)
+    ObjectDestroyedEvent::ObjectDestroyedEvent(Object& object)
         :
         Event(false),
         m_Object(object)
@@ -13,7 +13,7 @@ namespace LegendEngine::Events
             reinterpret_cast<size_t>(&object));
     }
 
-    Objects::Object& ObjectDestroyedEvent::GetObject() const
+    Object& ObjectDestroyedEvent::GetObject() const
     {
         return m_Object;
     }

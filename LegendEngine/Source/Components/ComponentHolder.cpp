@@ -1,6 +1,6 @@
 #include <LegendEngine/Components/ComponentHolder.hpp>
 
-namespace LegendEngine::Components
+namespace le
 {
     ComponentHolder::~ComponentHolder()
     {}
@@ -10,7 +10,7 @@ namespace LegendEngine::Components
         return m_Components;
     }
 
-    void ComponentHolder::SetObject(Objects::Object* pObject)
+    void ComponentHolder::SetObject(Object* pObject)
     {
         m_pObject = pObject;
     }

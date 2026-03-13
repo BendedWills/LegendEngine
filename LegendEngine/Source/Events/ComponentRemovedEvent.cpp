@@ -2,10 +2,10 @@
 #include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Events/ComponentRemovedEvent.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
-    ComponentRemovedEvent::ComponentRemovedEvent(Objects::Object& object,
-        Components::Component& component,
+    ComponentRemovedEvent::ComponentRemovedEvent(Object& object,
+        Component& component,
         const std::type_index& typeIndex)
         :
         Event(false),
@@ -17,12 +17,12 @@ namespace LegendEngine::Events
             reinterpret_cast<size_t>(&object));
     }
 
-    Objects::Object& ComponentRemovedEvent::GetObject() const
+    Object& ComponentRemovedEvent::GetObject() const
     {
         return m_Object;
     }
 
-    Components::Component& ComponentRemovedEvent::GetComponent() const
+    Component& ComponentRemovedEvent::GetComponent() const
     {
         return m_Component;
     }

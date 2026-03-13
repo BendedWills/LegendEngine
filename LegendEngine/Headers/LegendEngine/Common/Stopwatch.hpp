@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace LegendEngine
+namespace le
 {
 	class Stopwatch 
 	{

@@ -3,13 +3,13 @@
 #include <LegendEngine/Resources/Shader.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     class ShaderModule final
     {
     public:
         ShaderModule(Tether::Rendering::Vulkan::GraphicsContext& context,
-            const Resources::Shader::Stage& stage);
+            const Shader::Stage& stage);
         ShaderModule(ShaderModule&& other) noexcept;
         ShaderModule(const ShaderModule&) = delete;
         ~ShaderModule();

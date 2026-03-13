@@ -9,24 +9,24 @@
 #include <typeindex>
 #include <vector>
 
-namespace LegendEngine
+namespace le
 {
     class Scene final
     {
     public:
-        using ObjectsVecType = std::vector<Objects::Object*>;
+        using ObjectsVecType = std::vector<Object*>;
         using ComponentsVecType = std::unordered_map<std::type_index,
-            std::vector<Components::Component*>>;
+            std::vector<Component*>>;
 
         Scene();
-        explicit Scene(Events::EventBus& eventBus);
+        explicit Scene(EventBus& eventBus);
         ~Scene();
 
         LEGENDENGINE_NO_COPY(Scene);
 
-        void AddObject(Objects::Object& object);
-        bool HasObject(const Objects::Object& object);
-        void RemoveObject(Objects::Object& object);
+        void AddObject(Object& object);
+        bool HasObject(const Object& object);
+        void RemoveObject(Object& object);
 
         void Clear();
 
@@ -37,16 +37,16 @@ namespace LegendEngine
     private:
         void ListenForEvents();
 
-        void AddObjectComponents(Objects::Object& object);
-        void RemoveObjectComponents(Objects::Object& object);
+        void AddObjectComponents(Object& object);
+        void RemoveObjectComponents(Object& object);
 
-        void OnComponentAdd(const Events::ComponentAddedEvent& event);
-        void OnComponentRemove(const Events::ComponentRemovedEvent& event);
+        void OnComponentAdd(const ComponentAddedEvent& event);
+        void OnComponentRemove(const ComponentRemovedEvent& event);
 
         ObjectsVecType m_Objects;
         ComponentsVecType m_Components;
 
-        Events::EventBus& m_EventBus;
-        Events::EventBusSubscriber m_EventSubscriber;
+        EventBus& m_EventBus;
+        EventBusSubscriber m_EventSubscriber;
     };
 }

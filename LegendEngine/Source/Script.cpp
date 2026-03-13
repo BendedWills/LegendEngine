@@ -4,9 +4,9 @@
 #include <LegendEngine/Events/UpdateEvent.hpp>
 #include <LegendEngine/Events/RenderEvent.hpp>
 
-namespace LegendEngine
+namespace le
 {
-    Script::Script(Objects::Object& object)
+    Script::Script(Object& object)
         :
         m_Object(object),
         m_EventBus(Application::Get().GetEventBus()),
@@ -22,7 +22,7 @@ namespace LegendEngine
         reinterpret_cast<size_t>(this), reinterpret_cast<size_t>(&m_Object));
     }
 
-    Objects::Object& Script::GetObject() const
+    Object& Script::GetObject() const
     {
         return m_Object;
     }
@@ -34,8 +34,8 @@ namespace LegendEngine
 
         m_IsUpdateListener = true;
 
-        m_EventBus.Subscribe<Events::UpdateEvent>(m_EventSubscriber,
-        [this](const Events::UpdateEvent& event)
+        m_EventBus.Subscribe<UpdateEvent>(m_EventSubscriber,
+        [this](const UpdateEvent& event)
         {
             OnUpdate(event.GetDeltaTime());
         });
@@ -48,8 +48,8 @@ namespace LegendEngine
 
         m_IsRenderListener = true;
 
-        m_EventBus.Subscribe<Events::RenderEvent>(m_EventSubscriber,
-        [this](const Events::RenderEvent& event)
+        m_EventBus.Subscribe<RenderEvent>(m_EventSubscriber,
+        [this](const RenderEvent& event)
         {
             OnUpdate(event.GetDeltaTime());
         });

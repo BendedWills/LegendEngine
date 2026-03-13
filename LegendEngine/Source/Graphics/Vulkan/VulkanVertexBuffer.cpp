@@ -1,6 +1,6 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     using namespace Tether::Rendering::Vulkan;
 

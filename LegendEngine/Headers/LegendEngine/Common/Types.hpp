@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace LegendEngine
+namespace le
 {
     template<typename T>
     using Ref = std::shared_ptr<T>;

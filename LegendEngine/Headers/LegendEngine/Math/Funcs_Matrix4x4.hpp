@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Matrix4x4.hpp>
 
-namespace LegendEngine::Math
+namespace le::Math
 {
 	template<typename T>
 		Matrix4x4<T> Scale(Matrix4x4<T> m, Vector3<T> scale);

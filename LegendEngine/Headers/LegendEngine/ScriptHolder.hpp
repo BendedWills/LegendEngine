@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <memory>
 
-namespace LegendEngine
+namespace le
 {
     class ScriptHolder
     {

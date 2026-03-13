@@ -1,7 +1,7 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Components/MeshComponent.hpp>
 
-namespace LegendEngine::Components
+namespace le
 {
     MeshComponent::MeshComponent(const std::span<VertexTypes::Vertex3> vertices,
             const std::span<uint32_t> indices)
@@ -11,12 +11,12 @@ namespace LegendEngine::Components
         m_IndexCount(indices.size())
     {}
 
-    void MeshComponent::SetMaterial(Resources::Material* pMaterial)
+    void MeshComponent::SetMaterial(Material* pMaterial)
     {
         m_pMaterial = pMaterial;
     }
 
-    Resources::Material* MeshComponent::GetMaterial() const
+    Material* MeshComponent::GetMaterial() const
     {
         return m_pMaterial;
     }

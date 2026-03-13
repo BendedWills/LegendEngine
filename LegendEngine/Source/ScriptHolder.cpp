@@ -1,6 +1,6 @@
 #include <LegendEngine/ScriptHolder.hpp>
 
-namespace LegendEngine
+namespace le
 {
     ScriptHolder::HolderType& ScriptHolder::GetScripts()
     {

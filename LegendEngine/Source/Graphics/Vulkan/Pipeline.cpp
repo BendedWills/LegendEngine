@@ -1,7 +1,7 @@
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/Pipeline.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     Pipeline::Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context,
         const Info& info)

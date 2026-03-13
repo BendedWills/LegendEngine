@@ -2,7 +2,7 @@
 #include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Resources/Resource.hpp>
 
-namespace LegendEngine::Resources
+namespace le
 {
     Resource::Resource()
     {

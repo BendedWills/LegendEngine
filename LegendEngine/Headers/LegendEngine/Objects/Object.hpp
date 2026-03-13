@@ -4,14 +4,14 @@
 #include <LegendEngine/Components/ComponentHolder.hpp>
 #include <LegendEngine/Math/Math.hpp>
 
-namespace LegendEngine
+namespace le
 {
     class Scene;
 }
 
-namespace LegendEngine::Objects
+namespace le
 {
-    class Object : public ScriptHolder, public Components::ComponentHolder
+    class Object : public ScriptHolder, public ComponentHolder
     {
     public:
         using ScriptsType = std::unordered_map<std::type_index,
@@ -52,8 +52,8 @@ namespace LegendEngine::Objects
 
         bool m_Dirty = false;
     private:
-        void SpawnAddEvent(std::type_index type, Components::Component& component) override;
-        void SpawnRemoveEvent(std::type_index type, Components::Component& component) override;
+        void SpawnAddEvent(std::type_index type, Component& component) override;
+        void SpawnRemoveEvent(std::type_index type, Component& component) override;
 
         bool m_Enabled = true;
         bool m_CalculatesMatrices;

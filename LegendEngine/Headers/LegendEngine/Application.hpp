@@ -12,7 +12,7 @@
 #include <LegendEngine/Objects/Camera.hpp>
 #include <Tether/Window.hpp>
 
-namespace LegendEngine
+namespace le
 {
     namespace Input = Tether::Input;
     namespace Utils = Tether;
@@ -27,25 +27,25 @@ namespace LegendEngine
             std::string_view applicationName,
             GraphicsAPI api);
 
-        [[nodiscard]] Graphics::Renderer& GetRenderer() const;
+        [[nodiscard]] Renderer& GetRenderer() const;
         Tether::Window& GetWindow() const;
 #else
-        Application(Graphics::GraphicsContext& ctx); // Headless application constructor
+        Application(GraphicsContext& ctx); // Headless application constructor
 #endif
         virtual ~Application() = 0;
 
         LEGENDENGINE_NO_COPY(Application);
 
-        void SetActiveCamera(Objects::Camera* pCamera);
+        void SetActiveCamera(Camera* pCamera);
         void SetActiveScene(Scene& scene);
 
         void ClearActiveScene();
 
-        Graphics::GraphicsContext& GetGraphicsContext() const;
-        Graphics::RenderTarget& GetRenderTarget() const;
-        Events::EventBus& GetEventBus();
+        GraphicsContext& GetGraphicsContext() const;
+        RenderTarget& GetRenderTarget() const;
+        EventBus& GetEventBus();
         Scene& GetGlobalScene();
-        Objects::Camera* GetActiveCamera() const;
+        Camera* GetActiveCamera() const;
         Scene* GetActiveScene() const;
 
         void Update(float delta, bool updateWindow = true);
@@ -71,7 +71,7 @@ namespace LegendEngine
             }
 
             // TODO: convert app to own resources so this can go in Destroy
-            IO::Logger::DestroyGlobalLogger();
+            Logger::DestroyGlobalLogger();
 
             return EXIT_SUCCESS;
         }
@@ -108,7 +108,7 @@ namespace LegendEngine
 
         static void RecalculateTransforms(Scene& scene);
 
-        Events::EventBus m_EventBus;
+        EventBus m_EventBus;
 
 #ifndef LE_HEADLESS
         class ResizeHandler : public Tether::Events::EventHandler
@@ -122,28 +122,28 @@ namespace LegendEngine
         };
         ResizeHandler m_ResizeHandler;
 
-        Graphics::GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
+        GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
             GraphicsAPI api);
-        Graphics::RenderTarget& CreateRenderTarget(int width, int height,
+        RenderTarget& CreateRenderTarget(int width, int height,
             std::string_view applicationName);
-        Graphics::Renderer& CreateRenderer();
+        Renderer& CreateRenderer();
 
-        Scope<Graphics::GraphicsContext> m_ManagedGraphicsContext = nullptr;
-        Scope<Graphics::RenderTarget> m_WindowRenderTarget = nullptr;
-        Scope<Graphics::Renderer> m_ManagedRenderer = nullptr;
+        Scope<GraphicsContext> m_ManagedGraphicsContext = nullptr;
+        Scope<RenderTarget> m_WindowRenderTarget = nullptr;
+        Scope<Renderer> m_ManagedRenderer = nullptr;
 
         Scope<Utils::Window> m_Window = nullptr;
 #endif
-        Graphics::GraphicsContext& m_GraphicsContext;
+        GraphicsContext& m_GraphicsContext;
 #ifndef LE_HEADLESS
-        Graphics::RenderTarget& m_RenderTarget;
-        Graphics::Renderer& m_Renderer;
+        RenderTarget& m_RenderTarget;
+        Renderer& m_Renderer;
 #endif
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;
 
-        Objects::Camera* m_pActiveCamera = nullptr;
+        Camera* m_pActiveCamera = nullptr;
 
         bool m_IsSetUp = false;
         bool m_Headless = false;

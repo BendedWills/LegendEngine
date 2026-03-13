@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <memory>
 
-namespace LegendEngine::Components
+namespace le
 {
 	class ComponentHolder
 	{
@@ -59,7 +59,7 @@ namespace LegendEngine::Components
 		HolderType& GetComponents();
 		void ClearComponents();
 	protected:
-	    void SetObject(Objects::Object* pObject);
+	    void SetObject(Object* pObject);
 
 		// Returns true if the component was created
 		template<typename T, typename... Args>
@@ -88,6 +88,6 @@ namespace LegendEngine::Components
 		virtual void SpawnAddEvent(const std::type_index type, Component& component) = 0;
 		virtual void SpawnRemoveEvent(const std::type_index type, Component& component) = 0;
 
-	    Objects::Object* m_pObject = nullptr;
+	    Object* m_pObject = nullptr;
 	};
 }

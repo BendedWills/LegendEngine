@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Matrix4x4.hpp>
 
-namespace LegendEngine::Math
+namespace le::Math
 {
 	template<typename T>
 	T Abs(T arg0);

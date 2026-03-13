@@ -3,7 +3,7 @@
 #include <iostream>
 #include <print>
 
-namespace LegendEngine::IO
+namespace le
 {
 	void StdoutSink::Log(std::string_view prettyMessage, std::string_view)
 	{

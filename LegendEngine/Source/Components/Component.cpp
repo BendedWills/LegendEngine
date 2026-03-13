@@ -1,13 +1,13 @@
 #include <LegendEngine/Components/Component.hpp>
 
-namespace LegendEngine::Components
+namespace le
 {
     Component::~Component()
     {
 
     }
 
-    Objects::Object& Component::GetObject() const
+    Object& Component::GetObject() const
     {
         return *m_pObject;
     }

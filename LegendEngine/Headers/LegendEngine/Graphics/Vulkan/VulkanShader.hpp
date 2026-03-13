@@ -5,9 +5,9 @@
 
 #include <vulkan/vulkan.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
-    class VulkanShader : public Resources::Shader
+    class VulkanShader : public Shader
     {
     public:
         VulkanShader(Tether::Rendering::Vulkan::GraphicsContext& context,

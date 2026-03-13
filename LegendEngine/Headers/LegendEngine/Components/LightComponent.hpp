@@ -3,7 +3,7 @@
 #include <LegendEngine/Components/Component.hpp>
 #include <LegendEngine/Math/Types.hpp>
 
-namespace LegendEngine::Components
+namespace le
 {
     class LightComponent : public Component
     {

@@ -78,7 +78,7 @@ if (LE_VULKAN_API)
 				bin2cpp
 				-s ${source}
 				-o \"${BUILD_SHADER_HEADER_DIR}/${FILENAME}.h\"
-				-n LegendEngine::Resources::VulkanShaders
+				-n le::shaders
 		)
 	endforeach()
 endif()

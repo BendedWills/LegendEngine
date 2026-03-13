@@ -7,14 +7,14 @@
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 #include <vulkan/vulkan.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
-    class VulkanTexture2D final : public Resources::Texture2D,
+    class VulkanTexture2D final : public Texture2D,
         public Tether::Rendering::Vulkan::DescriptorSetWritable
     {
     public:
         VulkanTexture2D(Tether::Rendering::Vulkan::GraphicsContext& context,
-            const IO::TextureData& loader);
+            const TextureData& loader);
         ~VulkanTexture2D() override;
 
         VkDescriptorType GetDescriptorType() override;

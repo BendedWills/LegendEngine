@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LegendEngine
+namespace le
 {
 	template<typename T>
 	LE_MATH_FUNC T Math::Abs(T arg0)

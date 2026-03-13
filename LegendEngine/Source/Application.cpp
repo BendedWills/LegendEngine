@@ -5,7 +5,7 @@
 #include <LegendEngine/Events/RenderEvent.hpp>
 #include <LegendEngine/Events/UpdateEvent.hpp>
 
-namespace LegendEngine
+namespace le
 {
     Scope<Application> Application::m_Instance = nullptr;
 
@@ -39,18 +39,18 @@ namespace LegendEngine
         LE_INFO("Application created");
     }
 
-    Graphics::Renderer& Application::GetRenderer() const
+    Renderer& Application::GetRenderer() const
     {
         return m_Renderer;
     }
 
-    void Application::SetActiveCamera(Objects::Camera* pCamera)
+    void Application::SetActiveCamera(Camera* pCamera)
     {
         m_pActiveCamera = pCamera;
         m_RenderTarget.SetCamera(pCamera);
     }
 
-    Graphics::RenderTarget& Application::GetRenderTarget() const
+    RenderTarget& Application::GetRenderTarget() const
     {
         return m_RenderTarget;
     }
@@ -61,7 +61,7 @@ namespace LegendEngine
         m_Renderer.RenderFrame(scenes);
 
         OnRender(delta);
-        m_EventBus.DispatchEvent<Events::RenderEvent>(Events::RenderEvent(delta));
+        m_EventBus.DispatchEvent<RenderEvent>(RenderEvent(delta));
     }
 
     void Application::Run()
@@ -82,14 +82,14 @@ namespace LegendEngine
         Render(delta);
     }
 
-    Graphics::GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
+    GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
                                                                   GraphicsAPI api)
     {
         LE_INFO("Creating graphics context");
-        return *(m_ManagedGraphicsContext = Graphics::GraphicsContext::Create(api, applicationName));
+        return *(m_ManagedGraphicsContext = GraphicsContext::Create(api, applicationName));
     }
 
-    Graphics::RenderTarget& Application::CreateRenderTarget(int width, int height,
+    RenderTarget& Application::CreateRenderTarget(int width, int height,
                                                             std::string_view applicationName)
     {
         std::wstring title(applicationName.size(), L' ');
@@ -105,7 +105,7 @@ namespace LegendEngine
         return *(m_WindowRenderTarget = m_GraphicsContext.CreateWindowRenderTarget(*m_Window));
     }
 
-    Graphics::Renderer& Application::CreateRenderer()
+    Renderer& Application::CreateRenderer()
     {
         LE_INFO("Creating renderer");
         return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
@@ -116,7 +116,7 @@ namespace LegendEngine
         return *m_Window;
     }
 #else
-    Application::Application(Graphics::GraphicsContext& ctx)
+    Application::Application(GraphicsContext& ctx)
         :
         m_GraphicsContext(ctx),
         m_GlobalScene(m_EventBus)
@@ -144,12 +144,12 @@ namespace LegendEngine
         m_pActiveScene = nullptr;
     }
 
-    Graphics::GraphicsContext& Application::GetGraphicsContext() const
+    GraphicsContext& Application::GetGraphicsContext() const
     {
         return m_GraphicsContext;
     }
 
-    Events::EventBus& Application::GetEventBus()
+    EventBus& Application::GetEventBus()
     {
         return m_EventBus;
     }
@@ -159,7 +159,7 @@ namespace LegendEngine
         return m_GlobalScene;
     }
 
-    Objects::Camera* Application::GetActiveCamera() const
+    Camera* Application::GetActiveCamera() const
     {
         return m_pActiveCamera;
     }
@@ -220,12 +220,12 @@ namespace LegendEngine
             RecalculateTransforms(*m_pActiveScene);
 
         OnUpdate(delta);
-        m_EventBus.DispatchEvent<Events::UpdateEvent>(Events::UpdateEvent(delta));
+        m_EventBus.DispatchEvent<UpdateEvent>(UpdateEvent(delta));
     }
 
     void Application::RecalculateTransforms(Scene& scene)
     {
-        for (Objects::Object* object : scene.GetObjects())
+        for (Object* object : scene.GetObjects())
             if (object->IsDirty())
                 object->CalculateTransformMatrix();
     }

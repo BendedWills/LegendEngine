@@ -3,7 +3,7 @@
 #include <LegendEngine/Math/Matrix4x4.hpp>
 #include <LegendEngine/Math/Vector4.hpp>
 
-namespace LegendEngine
+namespace le
 {
 	// Matrix types
 	using Matrix4x4f = Matrix4x4<float>;

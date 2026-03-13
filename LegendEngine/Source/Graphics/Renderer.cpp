@@ -2,7 +2,7 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Components/MeshComponent.hpp>
 
-namespace LegendEngine::Graphics
+namespace le
 {
     Renderer::Renderer(RenderTarget& renderTarget)
         :
@@ -16,7 +16,7 @@ namespace LegendEngine::Graphics
         if (!StartFrame())
             return;
 
-        Objects::Camera* pCamera = m_RenderTarget.GetCamera();
+        Camera* pCamera = m_RenderTarget.GetCamera();
         if (!pCamera || !pCamera->IsEnabled())
         {
             EndFrame();
@@ -34,10 +34,6 @@ namespace LegendEngine::Graphics
 
     void Renderer::RenderScene(Scene& scene)
     {
-        using namespace Components;
-        using namespace Resources;
-        using namespace Objects;
-
         const std::type_index meshType = typeid(MeshComponent);
         const auto& components = scene.GetObjectComponents();
         if (!components.contains(meshType))
@@ -74,7 +70,7 @@ namespace LegendEngine::Graphics
         return m_RenderTarget;
     }
 
-    void Renderer::UpdateCamera(Objects::Camera* pCamera)
+    void Renderer::UpdateCamera(Camera* pCamera)
     {
         if (pCamera->IsDirty())
         {

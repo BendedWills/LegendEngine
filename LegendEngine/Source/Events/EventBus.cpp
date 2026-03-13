@@ -1,7 +1,7 @@
 #include <ranges>
 #include <LegendEngine/Events/EventBus.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     void EventBus::UnsubscribeAll(EventBusSubscriber& subscriber)
     {

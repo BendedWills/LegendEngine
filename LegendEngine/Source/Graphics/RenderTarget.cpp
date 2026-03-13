@@ -1,7 +1,7 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Graphics/RenderTarget.hpp>
 
-namespace LegendEngine::Graphics
+namespace le
 {
     uint32_t RenderTarget::GetWidth() const
     {
@@ -13,12 +13,12 @@ namespace LegendEngine::Graphics
         return 100;
     }
 
-    void RenderTarget::SetCamera(Objects::Camera* camera)
+    void RenderTarget::SetCamera(Camera* camera)
     {
         m_pCamera = camera;
     }
 
-    Objects::Camera* RenderTarget::GetCamera() const
+    Camera* RenderTarget::GetCamera() const
     {
         return m_pCamera;
     }

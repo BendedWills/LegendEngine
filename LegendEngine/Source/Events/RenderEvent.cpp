@@ -1,6 +1,6 @@
 #include <LegendEngine/Events/RenderEvent.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     RenderEvent::RenderEvent(float deltaTime)
         :

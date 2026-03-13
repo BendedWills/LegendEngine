@@ -6,7 +6,7 @@
 #include <format>
 #include <LegendEngine/Common/Types.hpp>
 
-namespace LegendEngine::IO
+namespace le
 {
 	namespace Color
 	{

@@ -7,9 +7,9 @@
 
 #include <vulkan/vulkan.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
-    class VulkanMaterial final : public Resources::Material
+    class VulkanMaterial final : public Material
     {
     public:
         struct Uniforms

@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Objects/Object.hpp>
 
-namespace LegendEngine::Objects
+namespace le
 {
     class Camera final : public Object
     {

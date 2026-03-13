@@ -8,7 +8,7 @@
 #include <Tether/Rendering/Vulkan/Instance.hpp>
 #include <Tether/Rendering/Vulkan/UniformBuffer.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
@@ -27,10 +27,10 @@ namespace LegendEngine::Graphics::Vulkan
         Scope<VertexBuffer> CreateVertexBuffer(
             std::span<VertexTypes::Vertex3> vertices,
             std::span<uint32_t> indices) override;
-        Scope<Resources::Texture2D> CreateTexture2D(const IO::TextureData& loader) override;
-        Scope<Resources::Shader> CreateShader(
-            std::span<Resources::Shader::Stage> stages) override;
-        Scope<Resources::Material> CreateMaterial() override;
+        Scope<Texture2D> CreateTexture2D(const TextureData& loader) override;
+        Scope<Shader> CreateShader(
+            std::span<Shader::Stage> stages) override;
+        Scope<Material> CreateMaterial() override;
 
         VkDescriptorSetLayout GetCameraLayout() const;
         VkDescriptorSetLayout GetMaterialLayout() const;

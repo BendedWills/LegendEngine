@@ -7,7 +7,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 #include <LegendEngine/IO/Logger.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     static const char* EXTENTIONS[] =
         { VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
@@ -31,25 +31,25 @@ namespace LegendEngine::Graphics::Vulkan
         std::stringstream ss;
         ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
 
-        IO::Logger::Level level;
+        Logger::Level level;
         switch (messageSeverity)
         {
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-                level = IO::Logger::Level::INFO;
+                level = Logger::Level::INFO;
                 break;
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-                level = IO::Logger::Level::WARN;
+                level = Logger::Level::WARN;
                 break;
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-                level = IO::Logger::Level::ERROR;
+                level = Logger::Level::ERROR;
                 break;
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-                level = IO::Logger::Level::DEBUG;
+                level = Logger::Level::DEBUG;
                 break;
-            default: level = IO::Logger::Level::INFO;
+            default: level = Logger::Level::INFO;
         }
 
-        IO::Logger::GetGlobalLogger().Log(level, ss.str());
+        Logger::GetGlobalLogger().Log(level, ss.str());
     }
 
     VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName)
@@ -128,17 +128,17 @@ namespace LegendEngine::Graphics::Vulkan
         return std::make_unique<VulkanVertexBuffer>(m_GraphicsContext, vertices, indices);
     }
 
-    Scope<Resources::Texture2D> VulkanGraphicsContext::CreateTexture2D(const IO::TextureData& loader)
+    Scope<Texture2D> VulkanGraphicsContext::CreateTexture2D(const TextureData& loader)
     {
         return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader);
     }
 
-    Scope<Resources::Shader> VulkanGraphicsContext::CreateShader(std::span<Resources::Shader::Stage> stages)
+    Scope<Shader> VulkanGraphicsContext::CreateShader(std::span<Shader::Stage> stages)
     {
         return std::make_unique<VulkanShader>(m_GraphicsContext, stages, m_SetLayouts, m_DepthFormat);
     }
 
-    Scope<Resources::Material> VulkanGraphicsContext::CreateMaterial()
+    Scope<Material> VulkanGraphicsContext::CreateMaterial()
     {
         return std::make_unique<VulkanMaterial>(m_GraphicsContext, m_MaterialLayout);
     }
@@ -267,7 +267,7 @@ namespace LegendEngine::Graphics::Vulkan
             std::size(sizes), sizes);
 
         m_CameraSet.emplace(*m_StaticUniformPool, m_CameraLayout, framesInFlight);
-        m_CameraUniforms.emplace(m_GraphicsContext, sizeof(Objects::Camera::CameraUniforms), *m_CameraSet,
+        m_CameraUniforms.emplace(m_GraphicsContext, sizeof(Camera::CameraUniforms), *m_CameraSet,
             0);
 
         m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);

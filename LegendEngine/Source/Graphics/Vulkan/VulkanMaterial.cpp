@@ -1,7 +1,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     using namespace Tether::Rendering::Vulkan;
 

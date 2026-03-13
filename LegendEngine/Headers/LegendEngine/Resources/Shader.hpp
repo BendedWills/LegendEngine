@@ -6,7 +6,7 @@
 #include <memory>
 #include <span>
 
-namespace LegendEngine::Resources
+namespace le
 {
     class Shader : public Resource
     {

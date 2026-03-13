@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Vector2.hpp>
 
-namespace LegendEngine::Math
+namespace le::Math
 {
 	template<typename T>
 	Vector2<T> Normalize(Vector2<T> v);

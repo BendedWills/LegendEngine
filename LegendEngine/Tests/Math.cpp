@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Math.hpp>
 
-using namespace LegendEngine;
+using namespace le
 using namespace Math;
 
 #define EXPECT_VEC_EQ(a, b) \

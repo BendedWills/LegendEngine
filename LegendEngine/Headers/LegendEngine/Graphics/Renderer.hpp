@@ -7,12 +7,12 @@
 #include <LegendEngine/Resources/Material.hpp>
 #include <LegendEngine/Resources/Shader.hpp>
 
-namespace LegendEngine
+namespace le
 {
     class Application;
 }
 
-namespace LegendEngine::Graphics
+namespace le
 {
     class GraphicsContext;
     class Renderer
@@ -30,16 +30,16 @@ namespace LegendEngine::Graphics
         RenderTarget& GetRenderTarget() const;
     protected:
         virtual bool StartFrame() = 0;
-        virtual void UseMaterial(Resources::Material* pMaterial) = 0;
-        virtual void DrawMesh(const Components::MeshComponent& mesh) = 0;
+        virtual void UseMaterial(Material* pMaterial) = 0;
+        virtual void DrawMesh(const MeshComponent& mesh) = 0;
         virtual void EndFrame() = 0;
 
-        virtual void UpdateCameraUniforms(const Objects::Camera& camera) = 0;
+        virtual void UpdateCameraUniforms(const Camera& camera) = 0;
 
         RenderTarget& m_RenderTarget;
     private:
         void RenderScene(Scene& scene);
-        void UpdateCamera(Objects::Camera* pCamera);
+        void UpdateCamera(Camera* pCamera);
 
         Scene* m_Scene = nullptr;
     };

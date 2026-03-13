@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LegendEngine
+namespace le
 {
 	template<typename T>
 	LE_MATH_FUNC Matrix4x4<T>::Matrix4x4()

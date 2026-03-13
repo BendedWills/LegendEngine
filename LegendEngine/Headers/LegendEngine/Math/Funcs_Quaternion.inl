@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LegendEngine
+namespace le
 {
 	LE_MATH_FUNC Quaternion Math::Conjugate(Quaternion q)
 	{

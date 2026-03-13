@@ -3,7 +3,7 @@
 #include <LegendEngine/Resources/Shader.hpp>
 #include <unordered_map>
 
-namespace LegendEngine::Graphics
+namespace le
 {
     class ShaderManager
     {
@@ -12,11 +12,11 @@ namespace LegendEngine::Graphics
         virtual ~ShaderManager() = 0;
         LEGENDENGINE_NO_COPY(ShaderManager);
 
-        Resources::Shader* GetByID(std::string_view shaderID) const;
+        Shader* GetByID(std::string_view shaderID) const;
     protected:
         // The shader object MUST exist for the life of the base class
-        void RegisterShader(std::string_view id, Resources::Shader& shader);
+        void RegisterShader(std::string_view id, Shader& shader);
     private:
-        std::unordered_map<std::string, Resources::Shader*> m_Shaders;
+        std::unordered_map<std::string, Shader*> m_Shaders;
     };
 }

@@ -1,6 +1,6 @@
 #include <LegendEngine/Components/LightComponent.hpp>
 
-namespace LegendEngine::Components
+namespace le
 {
     void LightComponent::SetIntensity(const float intensity)
     {

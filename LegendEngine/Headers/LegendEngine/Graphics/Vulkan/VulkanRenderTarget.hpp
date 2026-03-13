@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 

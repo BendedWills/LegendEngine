@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Common/Defs.hpp>
 
-namespace LegendEngine::Resources
+namespace le
 {
     class Resource
     {

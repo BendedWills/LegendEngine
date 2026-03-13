@@ -5,10 +5,7 @@
 #include <LegendEngine/LegendEngine.hpp>
 #include <../../LegendEngine/Headers/LegendEngine/IO/Logger.hpp>
 
-using namespace LegendEngine;
-using namespace Objects;
-using namespace Resources;
-using namespace Components;
+using namespace le;
 
 using namespace std::literals::chrono_literals;
 
@@ -193,7 +190,7 @@ private:
 	    testScene = Scene::Create();
 
 		// Create the camera
-		camera = Objects::Create<Camera>();
+		camera = ObjectCreator::Create<Camera>();
 		camera->AddScript<CameraScript>(camera.get());
 		camera->SetNearZ(0.01f);
 	    testScene->AddObject(*camera);
@@ -215,8 +212,8 @@ private:
 		material = Material::Create();
 		material2 = Material::Create();
 
-		std::future<IO::TextureData> planksLoader = IO::TextureData::FromFile("Assets/planks.png");
-		std::future<IO::TextureData> tilesLoader = IO::TextureData::FromFile("Assets/tiles.png");
+		std::future<TextureData> planksLoader = TextureData::FromFile("Assets/planks.png");
+		std::future<TextureData> tilesLoader = TextureData::FromFile("Assets/tiles.png");
 
 		texture = Texture2D::Create(planksLoader.get());
 		texture2 = Texture2D::Create(tilesLoader.get());
@@ -227,20 +224,20 @@ private:
 
 	void CreateObjects()
 	{
-		cube1 = Objects::Create<Object>();
+		cube1 = ObjectCreator::Create<Object>();
 		cube1->AddScript<TestScript>(cube1.get(), material.get());
 		cube1->SetPosition(Vector3f(0, 0.5f, 0));
 
-		cube2 = Objects::Create<Object>();
+		cube2 = ObjectCreator::Create<Object>();
 		cube2->AddScript<TestScript>(cube2.get(), material.get());
 		cube2->SetPosition(Vector3f(3, 0.5f, 0));
 
-		floor = Objects::Create<Object>();
+		floor = ObjectCreator::Create<Object>();
 		floor->AddScript<TestScript>(floor.get(), material2.get());
 		floor->SetScale(Vector3f(10));
 		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 
-	    light = Objects::Create<Light>();
+	    light = ObjectCreator::Create<Light>();
 	    LightComponent& lightComponent = light->GetLightComponent();
 	    lightComponent.SetColor(Color(1, 0, 0, 1));
 

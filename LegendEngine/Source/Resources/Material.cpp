@@ -1,7 +1,7 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Resources/Material.hpp>
 
-namespace LegendEngine::Resources
+namespace le
 {
     Material::Material()
         :
@@ -13,7 +13,7 @@ namespace LegendEngine::Resources
     {
         m_pTexture = toSet;
 
-        const Graphics::ShaderManager& manager =
+        const ShaderManager& manager =
             Application::Get().GetGraphicsContext().GetShaderManager();
         if (toSet)
             m_pShader = manager.GetByID("textured");

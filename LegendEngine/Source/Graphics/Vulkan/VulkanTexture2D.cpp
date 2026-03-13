@@ -1,12 +1,12 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <Tether/Rendering/Vulkan/ImageStager.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     using namespace Tether::Rendering::Vulkan;
 
     VulkanTexture2D::VulkanTexture2D(GraphicsContext& context,
-        const IO::TextureData& loader)
+        const TextureData& loader)
         :
         Texture2D(loader),
         m_Context(context)

@@ -10,7 +10,7 @@
 #include <Tether/Rendering/Vulkan/UniformBuffer.hpp>
 #include <Tether/Rendering/Vulkan/Resources/BufferedImage.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
@@ -36,7 +36,7 @@ namespace LegendEngine::Graphics::Vulkan
         {
             Color color;
             alignas(16) Vector3f position;
-            Components::LightComponent::LightType type;
+            LightComponent::LightType type;
         };
 
         struct SceneUniforms
@@ -47,12 +47,12 @@ namespace LegendEngine::Graphics::Vulkan
 
         bool StartFrame() override;
         void BeginCommandBuffer();
-        void UseMaterial(Resources::Material* pMaterial) override;
-        void DrawMesh(const Components::MeshComponent& mesh) override;
+        void UseMaterial(Material* pMaterial) override;
+        void DrawMesh(const MeshComponent& mesh) override;
         void EndCommandBuffer() const;
         void EndFrame() override;
 
-        void UpdateCameraUniforms(const Objects::Camera& camera) override;
+        void UpdateCameraUniforms(const Camera& camera) override;
 
         void CreateSwapchain(const TetherVulkan::SwapchainDetails& details);
         void CreateUniforms(VkDescriptorSetLayout cameraLayout,

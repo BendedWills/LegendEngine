@@ -5,21 +5,21 @@
 #include <LegendEngine/Events/Event.hpp>
 #include <LegendEngine/Objects/Object.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     class ComponentAddedEvent : public Event
     {
     public:
-        ComponentAddedEvent(Objects::Object& object,
-            Components::Component& component,
+        ComponentAddedEvent(Object& object,
+            Component& component,
             const std::type_index& typeIndex);
 
-        Objects::Object& GetObject() const;
-        Components::Component& GetComponent() const;
+        Object& GetObject() const;
+        Component& GetComponent() const;
         std::type_index GetComponentTypeIndex() const;
     private:
-        Objects::Object& m_Object;
-        Components::Component& m_Component;
+        Object& m_Object;
+        Component& m_Component;
         std::type_index m_ComponentTypeIndex;
     };
 }

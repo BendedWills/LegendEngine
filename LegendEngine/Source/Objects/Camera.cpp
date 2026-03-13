@@ -1,7 +1,7 @@
 #include <LegendEngine/IO/Logger.hpp>
 #include <LegendEngine/Objects/Camera.hpp>
 
-namespace LegendEngine::Objects
+namespace le
 {
     Camera::Camera()
         :

@@ -2,12 +2,12 @@
 
 #include <LegendEngine/Common/Defs.hpp>
 
-namespace LegendEngine::Objects
+namespace le
 {
     class Object;
 }
 
-namespace LegendEngine::Components
+namespace le
 {
     class Component
     {
@@ -17,8 +17,8 @@ namespace LegendEngine::Components
         virtual ~Component();
         LEGENDENGINE_NO_COPY(Component);
 
-        Objects::Object& GetObject() const;
+        Object& GetObject() const;
     protected:
-        Objects::Object* m_pObject = nullptr;
+        Object* m_pObject = nullptr;
     };
 }

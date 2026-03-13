@@ -1,6 +1,6 @@
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
 
-namespace LegendEngine
+namespace le
 {
     VertexBuffer::~VertexBuffer() {}
 }

@@ -1,11 +1,11 @@
 #include <LegendEngine/Graphics/Vulkan/ShaderModule.hpp>
 
-namespace LegendEngine::Graphics::Vulkan
+namespace le
 {
     using namespace Tether::Rendering::Vulkan;
 
     ShaderModule::ShaderModule(GraphicsContext& context,
-        const Resources::Shader::Stage& stage)
+        const Shader::Stage& stage)
         :
         m_Context(context)
     {

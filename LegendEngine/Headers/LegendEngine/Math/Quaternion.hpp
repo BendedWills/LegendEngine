@@ -2,7 +2,7 @@
 
 #include <LegendEngine/Math/Vector3.hpp>
 
-namespace LegendEngine
+namespace le
 {
 	class Quaternion
 	{

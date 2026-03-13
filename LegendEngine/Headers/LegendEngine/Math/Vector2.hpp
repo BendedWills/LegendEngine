@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cmath>
 
-namespace LegendEngine
+namespace le
 {
 	// Vector2 must be of a numeric type
 	template<typename T>

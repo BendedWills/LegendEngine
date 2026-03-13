@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <future>
 
-namespace LegendEngine::IO
+namespace le
 {
     class TextureData final
     {

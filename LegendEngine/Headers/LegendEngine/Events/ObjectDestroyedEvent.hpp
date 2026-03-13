@@ -3,15 +3,15 @@
 #include <LegendEngine/Objects/Object.hpp>
 #include <LegendEngine/Events/Event.hpp>
 
-namespace LegendEngine::Events
+namespace le
 {
     class ObjectDestroyedEvent : public Event
     {
     public:
-        explicit ObjectDestroyedEvent(Objects::Object& object);
+        explicit ObjectDestroyedEvent(Object& object);
 
-        Objects::Object& GetObject() const;
+        Object& GetObject() const;
     private:
-        Objects::Object& m_Object;
+        Object& m_Object;
     };
 }

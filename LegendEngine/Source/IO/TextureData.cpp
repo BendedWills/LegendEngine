@@ -3,7 +3,7 @@
 #include <stb_image.h>
 #include <LegendEngine/Common/Assert.hpp>
 
-namespace LegendEngine::IO
+namespace le
 {
     TextureData::TextureData(const uint64_t width,
         const uint64_t height, const uint8_t channels, uint8_t* data, bool shouldFree)
