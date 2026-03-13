@@ -91,8 +91,6 @@ namespace le
 
         std::optional<VulkanShaderManager> m_ShaderManager;
 
-        VkFence test;
-
         VkFormat m_DepthFormat;
     };
 }

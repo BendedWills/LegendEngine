@@ -169,6 +169,9 @@ namespace le
 
     void Application::Destroy()
     {
+        if (!m_Instance)
+            return;
+
         LE_INFO("Destroying application");
 
 #ifndef LE_HEADLESS

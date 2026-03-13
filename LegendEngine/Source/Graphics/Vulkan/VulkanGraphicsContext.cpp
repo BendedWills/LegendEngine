@@ -84,16 +84,11 @@ namespace le
         VkFenceCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        vkCreateFence(m_GraphicsContext.GetDevice(), &info, nullptr, &test);
     }
 
     VulkanGraphicsContext::~VulkanGraphicsContext()
     {
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
-
-        vkWaitForFences(m_GraphicsContext.GetDevice(), 1, &test, true, UINT64_MAX);
-        vkDestroyFence(m_GraphicsContext.GetDevice(), test, nullptr);
 
         m_ShaderManager.reset();
 

@@ -272,7 +272,10 @@ LEGENDENGINE_MAIN
 {
 	Application::Create(1280, 720, "Legendary", GraphicsAPI::VULKAN);
 
-	Legendary legend(Application::Get());
+	{
+		Legendary legend(Application::Get());
+		Application::Run();
+	}
 
-	Application::Run();
+	Application::Destroy();
 }
