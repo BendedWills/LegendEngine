@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LegendEngine/ScriptHolder.hpp>
+#include <LegendEngine/Common/UID.hpp>
 #include <LegendEngine/Components/ComponentHolder.hpp>
 #include <LegendEngine/Math/Math.hpp>
 
@@ -40,6 +41,8 @@ namespace le
 
         void CalculateTransformMatrix();
         Matrix4x4f GetTransformationMatrix() const;
+
+        UID uid;
     protected:
         virtual void TransformChanged() {}
 

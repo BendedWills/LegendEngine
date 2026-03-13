@@ -17,9 +17,20 @@ namespace le
     namespace Input = Tether::Input;
     namespace Utils = Tether;
 
-    class Application
+    class Application final
     {
     public:
+        class Listener
+        {
+        public:
+            virtual ~Listener() = default;
+
+            virtual void OnSetup() = 0;
+
+            virtual void OnUpdate(float delta) {}
+            virtual void OnRender(float delta) {}
+        };
+
 #ifndef LE_HEADLESS
         // Creates the Application with a WindowRenderTarget
         Application(
@@ -32,7 +43,7 @@ namespace le
 #else
         Application(GraphicsContext& ctx); // Headless application constructor
 #endif
-        virtual ~Application() = 0;
+        ~Application();
 
         LEGENDENGINE_NO_COPY(Application);
 
@@ -51,29 +62,11 @@ namespace le
         void Update(float delta, bool updateWindow = true);
         void Render(float delta);
 
-        template<typename T, typename... Args>
-            requires std::is_base_of_v<Application, T>
-        static int RunApplication(Args&&... args)
+        template<typename... Args>
+        static void Create(Args&&... args)
         {
             LE_ASSERT(!m_Instance, "Application already exists");
-
-            m_Instance = std::make_unique<T>(args...);
-            m_Instance->SetupApplication();
-
-            try
-            {
-                m_Instance->Run();
-            }
-            catch (const std::exception& e)
-            {
-                LE_ERROR_TRACE("Uncaught exception! {}", e.what());
-                return EXIT_FAILURE;
-            }
-
-            // TODO: convert app to own resources so this can go in Destroy
-            Logger::DestroyGlobalLogger();
-
-            return EXIT_SUCCESS;
+            m_Instance = std::make_unique<Application>(args...);
         }
 
 #ifdef LE_HEADLESS
@@ -90,23 +83,18 @@ namespace le
         }
 #endif
 
+        static void Run();
         static void Destroy();
 
         static bool HasConstructed();
         static Application& Get();
-    protected:
-        virtual void OnSetup() = 0;
-
-        virtual void OnUpdate(float deltaTime) {}
-        virtual void OnRender(float deltaTime) {}
     private:
-        void SetupApplication();
-        void Run();
+        void RunInstance();
 
         // Must be called on the main thread
         void RenderFrame(float delta = 1.0f);
 
-        static void RecalculateTransforms(Scene& scene);
+        static void RecalculateTransforms(const Scene& scene);
 
         EventBus m_EventBus;
 
@@ -145,7 +133,6 @@ namespace le
 
         Camera* m_pActiveCamera = nullptr;
 
-        bool m_IsSetUp = false;
         bool m_Headless = false;
 
         static Scope<Application> m_Instance;

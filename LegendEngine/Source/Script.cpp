@@ -34,7 +34,7 @@ namespace le
 
         m_IsUpdateListener = true;
 
-        m_EventBus.Subscribe<UpdateEvent>(m_EventSubscriber,
+        m_EventSubscriber.AddEventHandler<UpdateEvent>(
         [this](const UpdateEvent& event)
         {
             OnUpdate(event.GetDeltaTime());
@@ -48,7 +48,7 @@ namespace le
 
         m_IsRenderListener = true;
 
-        m_EventBus.Subscribe<RenderEvent>(m_EventSubscriber,
+        m_EventSubscriber.AddEventHandler<RenderEvent>(
         [this](const RenderEvent& event)
         {
             OnUpdate(event.GetDeltaTime());

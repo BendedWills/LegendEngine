@@ -4,11 +4,11 @@
 #include <ctime>
 #include <chrono>
 #include <format>
-#include <LegendEngine/Common/Types.hpp>
+#include <LegendEngine/Application.hpp>
 
 namespace le
 {
-	namespace Color
+	namespace LogColor
 	{
 		static const std::string BLUE = "\x1b[38;2;0;120;220m";
 		static const std::string GOLD = "\x1b[38;2;255;213;0m";
@@ -18,6 +18,20 @@ namespace le
 		static const std::string DARK_GRAY = "\x1b[38;2;148;148;148m";
 		static const std::string RESET = "\x1b[0m";
 	}
+
+	class GlobalLogger : public Logger
+	{
+	public:
+		explicit GlobalLogger(const std::string_view name)
+			:
+			Logger(name)
+		{}
+
+		~GlobalLogger()
+		{
+			Application::Destroy();
+		}
+	};
 
 	Logger::Logger(const std::string_view name, bool addStdoutSink)
 		:
@@ -37,28 +51,28 @@ namespace le
 			case Level::INFO:
 			{
 				severity = "INFO";
-				color = Color::BLUE;
+				color = LogColor::BLUE;
 			}
 			break;
 
 			case Level::WARN:
 			{
 				severity = "WARN";
-				color = Color::GOLD;
+				color = LogColor::GOLD;
 			}
 			break;
 
 			case Level::DEBUG:
 			{
 				severity = "DEBUG";
-				color = Color::GREEN;
+				color = LogColor::GREEN;
 			}
 			break;
 
 			case Level::ERROR:
 			{
 				severity = "ERROR";
-				color = Color::RED;
+				color = LogColor::RED;
 			}
 			break;
 		}
@@ -67,11 +81,11 @@ namespace le
 
 		std::string colorized = std::format(
 			"{0}[{1}{2}{0}] [{1}{3}{0}] {4}: {5}[{6}]",
-			Color::LIGHT_GRAY,
-			Color::DARK_GRAY,
+			LogColor::LIGHT_GRAY,
+			LogColor::DARK_GRAY,
 			time,
 			m_Name,
-			Color::RESET,
+			LogColor::RESET,
 			color,
 			severity
 		);
@@ -91,29 +105,17 @@ namespace le
 			plain += formattedSource;
 		}
 
-		colorized += std::format(" => {}{}", message, Color::RESET);
+		colorized += std::format(" => {}{}", message, LogColor::RESET);
 		plain += std::format(" => {}", message);
 
 		for (auto& sink : m_Sinks)
 			sink->Log(colorized, plain);
 	}
 
-	void Logger::CreateGlobalLogger(std::string_view name)
+	Logger& Logger::GetGlobalLogger(const std::string_view name)
 	{
-		m_Instance = std::make_unique<Logger>(name);
-	}
-
-	void Logger::DestroyGlobalLogger()
-	{
-		m_Instance.reset();
-	}
-
-	Logger& Logger::GetGlobalLogger()
-	{
-		if (!m_Instance)
-			CreateGlobalLogger("LegendEngine");
-
-		return *m_Instance;
+		static GlobalLogger logger(name);
+		return logger;
 	}
 
 	std::string Logger::GetFormattedTime()
@@ -134,6 +136,4 @@ namespace le
 	{
 		return std::format(" {}:{} ({}) ", location.file_name(), location.line(), location.function_name());
 	}
-
-	Scope<Logger> Logger::m_Instance = nullptr;
 }

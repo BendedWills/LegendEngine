@@ -10,16 +10,16 @@ namespace le
         return m_Components;
     }
 
-    void ComponentHolder::SetObject(Object* pObject)
-    {
-        m_pObject = pObject;
-    }
-
     void ComponentHolder::ClearComponents()
     {
         for (auto& [key, val] : m_Components)
             SpawnRemoveEvent(key, *val);
 
         m_Components.clear();
+    }
+
+    void ComponentHolder::SetObject(Object* pObject)
+    {
+        m_pObject = pObject;
     }
 }

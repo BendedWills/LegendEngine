@@ -32,6 +32,8 @@ namespace le
             {
                 func(static_cast<const T&>(event));
             };
+
+            AddSubscription(typeid(T));
         }
 
         template<typename T>
@@ -39,6 +41,7 @@ namespace le
         void RemoveEventHandler()
         {
             m_Handlers.erase(typeid(T));
+            RemoveSubscription(typeid(T));
         }
 
         template<typename T>
@@ -48,6 +51,9 @@ namespace le
             m_Handlers[typeid(T)](event);
         }
     private:
+        void AddSubscription(std::type_index id);
+        void RemoveSubscription(std::type_index id);
+
         EventBus& m_EventBus;
 
         std::unordered_map<std::type_index, EventFunc<Event>> m_Handlers;

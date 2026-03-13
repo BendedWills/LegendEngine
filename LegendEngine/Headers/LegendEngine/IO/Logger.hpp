@@ -85,16 +85,12 @@ namespace le
 			Log(Level::DEBUG, std::format(format, std::forward<Args>(args)...), location);
 		}
 
-		static void CreateGlobalLogger(std::string_view name);
-		static void DestroyGlobalLogger();
-		static Logger& GetGlobalLogger();
+		static Logger& GetGlobalLogger(std::string_view name = "LegendEngine");
 	private:
 		static std::string GetFormattedTime();
 		static std::string GetFormattedSource(const std::source_location& location);
 
 		std::string m_Name;
 		std::vector<std::shared_ptr<LoggerSink>> m_Sinks;
-
-		static std::unique_ptr<Logger> m_Instance;
 	};
 }

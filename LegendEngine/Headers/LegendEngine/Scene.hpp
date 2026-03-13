@@ -14,27 +14,33 @@ namespace le
     class Scene final
     {
     public:
-        using ObjectsVecType = std::vector<Object*>;
         using ComponentsVecType = std::unordered_map<std::type_index,
             std::vector<Component*>>;
 
         Scene();
         explicit Scene(EventBus& eventBus);
-        ~Scene();
-
         LEGENDENGINE_NO_COPY(Scene);
 
-        void AddObject(Object& object);
-        bool HasObject(const Object& object);
-        void RemoveObject(Object& object);
+        template <typename T, typename... Args>
+            requires std::is_base_of_v<Object, T>
+        T* CreateObject(Args&&... args)
+        {
+            return reinterpret_cast<T*>(AddObject(std::make_unique<T>(std::forward<Args>(args)...)));
+        }
+
+        bool HasObject(const Object& object) const;
+        bool HasObject(UID objectID) const;
+        void RemoveObject(Object& toRemove);
 
         void Clear();
 
-        ObjectsVecType& GetObjects();
+        const std::vector<Scope<Object>>& GetObjects() const;
         ComponentsVecType& GetObjectComponents();
 
         static Scope<Scene> Create();
     private:
+        Object* AddObject(Scope<Object> object);
+
         void ListenForEvents();
 
         void AddObjectComponents(Object& object);
@@ -43,10 +49,9 @@ namespace le
         void OnComponentAdd(const ComponentAddedEvent& event);
         void OnComponentRemove(const ComponentRemovedEvent& event);
 
-        ObjectsVecType m_Objects;
+        std::vector<Scope<Object>> m_Objects;
         ComponentsVecType m_Components;
 
-        EventBus& m_EventBus;
         EventBusSubscriber m_EventSubscriber;
     };
 }

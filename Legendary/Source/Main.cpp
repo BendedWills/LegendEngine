@@ -124,16 +124,16 @@ public:
 		if (!m_CaptureMouse)
 			return;
 
-		horz += static_cast<float>(info.GetRawX()) * sense;
-		vert += static_cast<float>(info.GetRawY()) * sense;
+		horizontal += static_cast<float>(info.GetRawX()) * sense;
+		vertical += static_cast<float>(info.GetRawY()) * sense;
 
-		if (vert > 89.9f)
-			vert = 89.9f;
-		if (vert < -89.9f)
-			vert = -89.9f;
+		if (vertical > 89.9f)
+			vertical = 89.9f;
+		if (vertical < -89.9f)
+			vertical = -89.9f;
 
-		Quaternion q = Math::AngleAxis(Math::Radians(vert), Vector3f(1, 0, 0));
-		q *= Math::AngleAxis(Math::Radians(horz), Vector3f(0, 1, 0));
+		Quaternion q = Math::AngleAxis(Math::Radians(vertical), Vector3f(1, 0, 0));
+		q *= Math::AngleAxis(Math::Radians(horizontal), Vector3f(0, 1, 0));
 		
 		m_Object.SetRotation(q);
 	}
@@ -159,8 +159,8 @@ public:
 	};
 	Keys keys;
 
-	float horz = 0.0f;
-	float vert = 0.0f;
+	float horizontal = 0.0f;
+	float vertical = 0.0f;
 private:
 	bool m_CaptureMouse = true;
 
@@ -168,15 +168,34 @@ private:
 	Tether::Window& m_Window;
 };
 
-class Legendary final : public Application
+class Legendary final
 {
 public:
-	Legendary()
+	explicit Legendary(Application& app)
 		:
-		Application(1280, 720, "Legendary", GraphicsAPI::VULKAN)
-	{}
+		m_App(app),
+		m_Sub(m_App.GetEventBus())
+	{
+		testScene = Scene::Create();
 
-	void OnUpdate(const float delta) override
+		// Create the camera
+		camera = testScene->CreateObject<Camera>();
+		camera->AddScript<CameraScript>(camera);
+		camera->SetNearZ(0.01f);
+
+		m_App.SetActiveCamera(camera);
+
+		CreateMaterials();
+		CreateObjects();
+
+		m_App.SetActiveScene(*testScene);
+
+		Utils::Window& window = m_App.GetWindow();
+		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
+		window.SetRawInputEnabled(true);
+	}
+
+	void OnUpdate(const float delta)
 	{
 		if (fpsTimer.GetElapsedMillis() >= 5000.0f)
 		{
@@ -185,28 +204,6 @@ public:
 		}
 	}
 private:
-	void OnSetup() override
-	{
-	    testScene = Scene::Create();
-
-		// Create the camera
-		camera = ObjectCreator::Create<Camera>();
-		camera->AddScript<CameraScript>(camera.get());
-		camera->SetNearZ(0.01f);
-	    testScene->AddObject(*camera);
-
-		SetActiveCamera(camera.get());
-
-		CreateMaterials();
-		CreateObjects();
-
-		SetActiveScene(*testScene);
-
-		Utils::Window& window = GetWindow();
-		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
-		window.SetRawInputEnabled(true);
-	}
-
 	void CreateMaterials()
 	{
 		material = Material::Create();
@@ -224,48 +221,49 @@ private:
 
 	void CreateObjects()
 	{
-		cube1 = ObjectCreator::Create<Object>();
-		cube1->AddScript<TestScript>(cube1.get(), material.get());
+		cube1 = testScene->CreateObject<Object>();
+		cube1->AddScript<TestScript>(cube1, material.get());
 		cube1->SetPosition(Vector3f(0, 0.5f, 0));
 
-		cube2 = ObjectCreator::Create<Object>();
-		cube2->AddScript<TestScript>(cube2.get(), material.get());
+		cube2 = testScene->CreateObject<Object>();
+		cube2->AddScript<TestScript>(cube2, material.get());
 		cube2->SetPosition(Vector3f(3, 0.5f, 0));
 
-		floor = ObjectCreator::Create<Object>();
-		floor->AddScript<TestScript>(floor.get(), material2.get());
+		floor = m_App.GetGlobalScene().CreateObject<Object>();
+		floor->AddScript<TestScript>(floor, material2.get());
 		floor->SetScale(Vector3f(10));
 		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 
-	    light = ObjectCreator::Create<Light>();
+		light = m_App.GetGlobalScene().CreateObject<Light>();
 	    LightComponent& lightComponent = light->GetLightComponent();
 	    lightComponent.SetColor(Color(1, 0, 0, 1));
-
-		testScene->AddObject(*cube1);
-		testScene->AddObject(*cube2);
-	    GetGlobalScene().AddObject(*light);
-		GetGlobalScene().AddObject(*floor);
 	}
 
+	Application& m_App;
+	EventBusSubscriber m_Sub;
+
 	Stopwatch fpsTimer;
-	Stopwatch timer;
 
 	Scope<Scene> testScene;
 
-	std::unique_ptr<Camera> camera;
-	std::unique_ptr<Object> cube1;
-	std::unique_ptr<Object> cube2;
-	std::unique_ptr<Object> floor;
-    std::unique_ptr<Light> light;
+	Camera* camera = nullptr;
+	Object* cube1 = nullptr;
+	Object* cube2 = nullptr;
+	Object* floor = nullptr;
+    Light* light = nullptr;
 
-	std::unique_ptr<Material> material;
-	std::unique_ptr<Material> material2;
-	std::unique_ptr<Texture2D> texture;
-	std::unique_ptr<Texture2D> texture2;
+	Scope<Material> material;
+	Scope<Material> material2;
+	Scope<Texture2D> texture;
+	Scope<Texture2D> texture2;
 };
 
 #include <LegendEngine/Common/Entrypoint.hpp>
 LEGENDENGINE_MAIN
 {
-	return Application::RunApplication<Legendary>();
+	Application::Create(1280, 720, "Legendary", GraphicsAPI::VULKAN);
+
+	Legendary legend(Application::Get());
+
+	Application::Run();
 }

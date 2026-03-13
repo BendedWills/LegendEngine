@@ -12,4 +12,14 @@ namespace le
     {
         m_EventBus.UnsubscribeAll(*this);
     }
+
+    void EventBusSubscriber::AddSubscription(const std::type_index id)
+    {
+        m_EventBus.Subscribe(id, *this);
+    }
+
+    void EventBusSubscriber::RemoveSubscription(const std::type_index id)
+    {
+        m_EventBus.Unsubscribe(id, *this);
+    }
 }

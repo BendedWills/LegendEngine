@@ -26,9 +26,9 @@ namespace le
     }
 
     Application::Application(
-        int width, int height,
-        std::string_view applicationName,
-        GraphicsAPI api)
+        const int width, const int height,
+        const std::string_view applicationName,
+        const GraphicsAPI api)
         :
         m_ResizeHandler(*this),
         m_GraphicsContext(CreateGraphicsContext(applicationName, api)),
@@ -60,12 +60,13 @@ namespace le
         Scene* scenes[] = { &m_GlobalScene, m_pActiveScene };
         m_Renderer.RenderFrame(scenes);
 
-        OnRender(delta);
         m_EventBus.DispatchEvent<RenderEvent>(RenderEvent(delta));
     }
 
-    void Application::Run()
+    void Application::RunInstance()
     {
+        m_Window->SetVisible(true);
+
         Stopwatch deltaTimer;
         while (!m_Window->IsCloseRequested())
         {
@@ -127,8 +128,6 @@ namespace le
 
     Application::~Application()
     {
-        LE_INFO("Destroying application");
-
 #ifndef LE_HEADLESS
         m_Window->SetVisible(false);
 #endif
@@ -171,6 +170,13 @@ namespace le
 
     void Application::Destroy()
     {
+        LE_INFO("Destroying application");
+
+#ifndef LE_HEADLESS
+        m_Instance->m_Window->SetVisible(false);
+#endif
+        m_Instance->m_GlobalScene.Clear();
+
         m_Instance.reset();
     }
 
@@ -184,28 +190,10 @@ namespace le
         if (!m_Instance)
             throw std::runtime_error(
                 "Application::Get() called before it was constructed. "
-                "No LegendEngine objects may be used before Application::Run(), "
-                "Application::Destroy must be called if running in headless mode");
-
-        if (!m_Instance->m_IsSetUp)
-            throw std::runtime_error(
-                "Application not set up"
-                "No LegendEngine objects may be used before SetupApplication()");
+                "No LegendEngine objects may be used before application creation and "
+                "Application::Destroy must be called if the application wasn't created with Application::Run");
 
         return *m_Instance;
-    }
-
-    void Application::SetupApplication()
-    {
-        m_IsSetUp = true;
-
-        OnSetup();
-
-#ifndef LE_HEADLESS
-        m_Window->SetVisible(true);
-#endif
-
-        LE_INFO("Application setup complete");
     }
 
     void Application::Update(const float delta, const bool updateWindow)
@@ -219,14 +207,20 @@ namespace le
         if (m_pActiveScene)
             RecalculateTransforms(*m_pActiveScene);
 
-        OnUpdate(delta);
         m_EventBus.DispatchEvent<UpdateEvent>(UpdateEvent(delta));
     }
 
-    void Application::RecalculateTransforms(Scene& scene)
+    void Application::RecalculateTransforms(const Scene& scene)
     {
-        for (Object* object : scene.GetObjects())
+        for (const auto& object : scene.GetObjects())
             if (object->IsDirty())
                 object->CalculateTransformMatrix();
+    }
+
+    void Application::Run()
+    {
+        LE_ASSERT(m_Instance, "Run was called before Application::Create");
+
+        m_Instance->RunInstance();
     }
 }
