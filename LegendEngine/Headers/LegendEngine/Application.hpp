@@ -69,20 +69,6 @@ namespace le
             m_Instance = std::make_unique<Application>(args...);
         }
 
-#ifdef LE_HEADLESS
-        template<typename T, typename... Args>
-            requires std::is_base_of_v<Application, T>
-        static Application& CreateHeadless(Args&&... args)
-        {
-            LE_ASSERT(!m_Instance, "Application already exists");
-
-            m_Instance = std::make_unique<T>(args...);
-            m_Instance->SetupApplication();
-
-            return *m_Instance;
-        }
-#endif
-
         static void Run();
         static void Destroy();
 
