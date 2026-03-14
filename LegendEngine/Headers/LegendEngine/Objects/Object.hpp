@@ -1,6 +1,5 @@
 #pragma once
 
-#include <LegendEngine/ScriptHolder.hpp>
 #include <LegendEngine/Common/UID.hpp>
 #include <LegendEngine/Components/ComponentHolder.hpp>
 #include <LegendEngine/Math/Math.hpp>
@@ -8,17 +7,10 @@
 namespace le
 {
     class Scene;
-}
-
-namespace le
-{
-    class Object : public ScriptHolder, public ComponentHolder
+    class Object : public ComponentHolder
     {
         friend class Scene;
     public:
-        using ScriptsType = std::unordered_map<std::type_index,
-            Scope<Script>>;
-
         explicit Object(bool calculatesMatrices = true);
         LEGENDENGINE_NO_COPY(Object);
 

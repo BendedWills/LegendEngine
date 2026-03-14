@@ -10,14 +10,13 @@ using namespace le;
 
 using namespace std::literals::chrono_literals;
 
-class TestScript final : public Script
+class ObjectManager
 {
 public:
-	explicit TestScript(Object* pObject, Material* material)
-		:
-		Script(*pObject),
-		m_Material(*material)
+	explicit ObjectManager(Scene* pScene)
 	{
+		m_Object = pScene->CreateObject<Object>();
+
 		// Add the mesh component
 		{
 			VertexTypes::Vertex3 testVertices[] =
@@ -34,37 +33,45 @@ public:
 				1, 2, 3
 			};
 
-			auto& mesh = m_Object.AddComponent<MeshComponent>(
-			    std::span<VertexTypes::Vertex3>(testVertices),
-			    std::span<uint32_t>(indices));
-			mesh.SetMaterial(&m_Material);
+			m_Mesh = &m_Object->AddComponent<MeshComponent>(
+				std::span<VertexTypes::Vertex3>(testVertices),
+				std::span<uint32_t>(indices));
 		}
 
-		m_Object.SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
+		m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
 	}
-private:
-	Material& m_Material;
+
+	Object* m_Object = nullptr;
+	MeshComponent* m_Mesh = nullptr;
 };
 
-class CameraScript final : public Script, public Input::InputListener
+class CameraManager final : public Input::InputListener
 {
 public:
-	explicit CameraScript(Camera* camera)
+	explicit CameraManager(Scene* pScene)
 		:
-		Script(*camera),
 		m_Window(Application::Get().GetWindow()),
-		m_Camera(*camera)
+		m_Sub(Application::Get().GetEventBus())
 	{
+		// Create the camera
+		m_Camera = pScene->CreateObject<Camera>();
+		m_Camera->SetNearZ(0.01f);
+
+		Application::Get().SetActiveCamera(m_Camera);
+
 		m_Window.AddInputListener(*this, Input::InputType::KEY);
 		m_Window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
 		m_Window.AddInputListener(*this, Input::InputType::MOUSE_CLICK);
 
-		m_Camera.SetPosition(Vector3f(-1.0f, 2.0f, 4.0f));
+		m_Camera->SetPosition(Vector3f(-1.0f, 2.0f, 4.0f));
 
-		ListenForUpdates();
+		m_Sub.AddEventHandler<UpdateEvent>([this](const UpdateEvent& e)
+		{
+			OnUpdate(e.GetDeltaTime());
+		});
 	}
 
-	void OnUpdate(const float delta) override
+	void OnUpdate(const float delta) const
 	{
 		Vector2f moveDir;
 		if (keys.w)
@@ -80,18 +87,18 @@ public:
 		if (keys.ctrl)
 			normMoveDir *= 3.0f;
 
-		Vector3f forward = m_Camera.GetForwardVector();
+		Vector3f forward = m_Camera->GetForwardVector();
 		forward.y = 0;
 		forward = Math::Normalize(forward);
 
-		m_Object.AddPosition(forward * normMoveDir.x * delta);
-		m_Object.AddPosition(m_Camera.GetRightVector() * normMoveDir.y * delta);
+		m_Camera->AddPosition(forward * normMoveDir.x * delta);
+		m_Camera->AddPosition(m_Camera->GetRightVector() * normMoveDir.y * delta);
 
 		// Vertical movement
 		if (keys.space)
-			m_Object.AddPosition(Vector3f(0, 1, 0) * delta);
+			m_Camera->AddPosition(Vector3f(0, 1, 0) * delta);
 		if (keys.shift)
-			m_Object.AddPosition(Vector3f(0, -1, 0) * delta);
+			m_Camera->AddPosition(Vector3f(0, -1, 0) * delta);
 	}
 
 	void OnKey(Input::KeyInfo& info) override
@@ -136,7 +143,7 @@ public:
 		Quaternion q = Math::AngleAxis(Math::Radians(vertical), Vector3f(1, 0, 0));
 		q *= Math::AngleAxis(Math::Radians(horizontal), Vector3f(0, 1, 0));
 		
-		m_Object.SetRotation(q);
+		m_Camera->SetRotation(q);
 	}
 
 	void OnMouseClick(Input::MouseClickInfo& info) override
@@ -165,8 +172,9 @@ public:
 private:
 	bool m_CaptureMouse = true;
 
-	Camera& m_Camera;
+	Camera* m_Camera = nullptr;
 	Tether::Window& m_Window;
+	EventBusSubscriber m_Sub;
 };
 
 class Legendary final
@@ -175,17 +183,13 @@ public:
 	explicit Legendary(Application& app)
 		:
 		m_App(app),
-		m_Sub(m_App.GetEventBus())
+		m_Sub(m_App.GetEventBus()),
+		testScene(Scene::Create()),
+		camera(testScene.get()),
+		cube1(testScene.get()),
+		cube2(testScene.get()),
+		floor(testScene.get())
 	{
-		testScene = Scene::Create();
-
-		// Create the camera
-		camera = testScene->CreateObject<Camera>();
-		camera->AddScript<CameraScript>(camera);
-		camera->SetNearZ(0.01f);
-
-		m_App.SetActiveCamera(camera);
-
 		CreateMaterials();
 		CreateObjects();
 
@@ -228,18 +232,13 @@ private:
 
 	void CreateObjects()
 	{
-		cube1 = testScene->CreateObject<Object>();
-		cube1->AddScript<TestScript>(cube1, material.get());
-		cube1->SetPosition(Vector3f(0, 0.5f, 0));
-
-		cube2 = testScene->CreateObject<Object>();
-		cube2->AddScript<TestScript>(cube2, material.get());
-		cube2->SetPosition(Vector3f(3, 0.5f, 0));
-
-		floor = m_App.GetGlobalScene().CreateObject<Object>();
-		floor->AddScript<TestScript>(floor, material2.get());
-		floor->SetScale(Vector3f(10));
-		floor->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
+		cube1.m_Object->SetPosition(Vector3f(0, 0.5f, 0));
+		cube1.m_Mesh->SetMaterial(material.get());
+		cube2.m_Object->SetPosition(Vector3f(3, 0.5f, 0));
+		cube2.m_Mesh->SetMaterial(material.get());
+		floor.m_Object->SetScale(Vector3f(10));
+		floor.m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
+		floor.m_Mesh->SetMaterial(material2.get());
 
 		light = m_App.GetGlobalScene().CreateObject<Light>();
 	    LightComponent& lightComponent = light->GetLightComponent();
@@ -253,10 +252,10 @@ private:
 
 	Scope<Scene> testScene;
 
-	Camera* camera = nullptr;
-	Object* cube1 = nullptr;
-	Object* cube2 = nullptr;
-	Object* floor = nullptr;
+	CameraManager camera;
+	ObjectManager cube1;
+	ObjectManager cube2;
+	ObjectManager floor;
     Light* light = nullptr;
 
 	Scope<Material> material;

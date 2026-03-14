@@ -6,6 +6,7 @@
 #include <memory>
 #include <typeindex>
 #include <vector>
+#include <shared_mutex>
 
 namespace le
 {
@@ -27,8 +28,8 @@ namespace le
             return reinterpret_cast<T*>(AddObject(std::make_unique<T>(std::forward<Args>(args)...)));
         }
 
-        bool HasObject(const Object& object) const;
-        bool HasObject(UID objectID) const;
+        bool HasObject(const Object& object);
+        bool HasObject(UID objectID);
         void RemoveObject(Object& toRemove);
 
         void Clear();
@@ -46,7 +47,10 @@ namespace le
         void AddObjectComponents(Object& object);
         void RemoveObjectComponents(Object& object);
 
+        std::shared_mutex m_ObjectsMutex;
         ObjectsType m_Objects;
+
+        std::shared_mutex m_ComponentsMutex;
         ComponentsVecType m_Components;
     };
 }

@@ -33,8 +33,8 @@ namespace le
         ~Pipeline();
         LEGENDENGINE_NO_COPY(Pipeline);
 
-        VkPipeline Get() const;
-        VkPipelineLayout GetPipelineLayout() const;
+        [[nodiscard]] VkPipeline Get() const;
+        [[nodiscard]] VkPipelineLayout GetPipelineLayout() const;
     private:
         Tether::Rendering::Vulkan::GraphicsContext& m_Context;
 
