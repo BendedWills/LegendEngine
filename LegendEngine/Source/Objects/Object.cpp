@@ -9,7 +9,6 @@ namespace le
         m_Transform(Matrix4x4f::MakeIdentity()),
         m_CalculatesMatrices(calculatesMatrices)
     {
-        SetObject(this);
         CalculateTransformMatrix();
     }
 
@@ -106,8 +105,6 @@ namespace le
     void Object::ComponentAdded(const std::type_index type,
         Component& component)
     {
-        OnComponentAdd(type, component);
-
         if (m_pScene)
             m_pScene->OnComponentAdd(type, component);
     }
@@ -115,9 +112,20 @@ namespace le
     void Object::ComponentRemoved(const std::type_index type,
         Component& component)
     {
-        OnComponentRemove(type, component);
-
         if (m_pScene)
             m_pScene->OnComponentRemove(type, component);
+    }
+
+    Object::HolderType& Object::GetComponents()
+    {
+        return m_Components;
+    }
+
+    void Object::ClearComponents()
+    {
+        for (auto& [key, val] : m_Components)
+            ComponentRemoved(key, *val);
+
+        m_Components.clear();
     }
 }

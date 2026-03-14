@@ -11,7 +11,7 @@ namespace le
 {
     class Component
     {
-        friend class ComponentHolder;
+        friend class Object;
     public:
         Component() = default;
         virtual ~Component();
