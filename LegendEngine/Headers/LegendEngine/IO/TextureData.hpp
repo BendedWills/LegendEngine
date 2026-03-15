@@ -12,7 +12,7 @@ namespace le
     public:
         TextureData(uint64_t width, uint64_t height, uint8_t channels,
             uint8_t* data, bool shouldFree = true);
-        TextureData(TextureData&&);
+        TextureData(TextureData&&) noexcept;
         ~TextureData();
 
         uint64_t GetWidth() const;

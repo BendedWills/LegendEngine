@@ -13,7 +13,7 @@ namespace le
         UpdateMesh(vertices, indices);
     }
 
-    MeshComponent::MeshComponent(size_t initialVertexCount, size_t initialIndexCount)
+    MeshComponent::MeshComponent(const size_t initialVertexCount, const size_t initialIndexCount)
         :
         m_VertexBuffer(Application::Get().GetGraphicsContext().CreateVertexBuffer(
             initialVertexCount, initialIndexCount)),

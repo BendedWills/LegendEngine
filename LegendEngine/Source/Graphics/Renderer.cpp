@@ -35,7 +35,7 @@ namespace le
     void Renderer::RenderScene(Scene& scene)
     {
         const std::type_index meshType = typeid(MeshComponent);
-        const auto& components = scene.GetObjectComponents();
+        const auto components = scene.GetObjectComponents();
         if (!components.contains(meshType))
             return;
         const std::vector<Component*>* meshComponents = &components.at(meshType);

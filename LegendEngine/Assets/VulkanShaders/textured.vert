@@ -5,6 +5,7 @@ layout(location = 1) in vec2 texcoord;
 
 layout(location = 0) out vec2 fragCoord;
 layout(location = 1) out vec3 fragPos;
+layout(location = 2) out vec3 fragWorldPos;
 
 layout(set = 0, binding = 0) uniform Camera
 {
@@ -23,6 +24,7 @@ void main()
 
     fragCoord = texcoord;
     fragPos = worldPos.xyz;
+    fragWorldPos = worldPos.xyz;
 
     gl_Position = cam.projection * cam.view * worldPos;
 }

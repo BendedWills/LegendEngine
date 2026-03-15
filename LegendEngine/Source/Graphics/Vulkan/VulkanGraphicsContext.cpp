@@ -1,3 +1,4 @@
+#include <LegendEngine/Graphics/Vulkan/VkDefs.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanGraphicsContext.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
@@ -9,7 +10,7 @@
 
 namespace le
 {
-    static const char* EXTENTIONS[] =
+    static const char* EXTENSIONS[] =
         { VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
     static constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR DYNAMIC_RENDERING
     {
@@ -17,52 +18,12 @@ namespace le
         .dynamicRendering = true
     };
 
-    VulkanGraphicsContext::DebugCallback::DebugCallback(VulkanGraphicsContext& context)
-        :
-        m_Context(context)
-    {}
-
-    void VulkanGraphicsContext::DebugCallback::OnDebugLog(
-        const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
-    )
-    {
-        std::stringstream ss;
-        ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
-
-        Logger::Level level;
-        switch (messageSeverity)
-        {
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-                level = Logger::Level::INFO;
-                break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-                level = Logger::Level::WARN;
-                break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-                level = Logger::Level::ERROR;
-                break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-                level = Logger::Level::DEBUG;
-                break;
-            default: level = Logger::Level::INFO;
-        }
-
-        Logger::GetGlobalLogger().Log(level, ss.str());
-    }
-
     VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName)
         :
-#ifdef NDEBUG
-        m_Debug(false),
-#else
-        m_Debug(true),
-#endif
-        m_ContextCreator(m_Debug, applicationName, "LegendEngine",
-            EXTENTIONS, &DYNAMIC_RENDERING),
+        m_ContextCreator(GetContextInfo(applicationName)),
         m_GraphicsContext(m_ContextCreator),
-        m_Callback(*this)
+        m_Callback(*this),
+        m_ActualTransferMutex(FindTransferMutex())
     {
         m_ContextCreator.AddDebugMessenger(&m_Callback);
 
@@ -77,6 +38,7 @@ namespace le
         CreateMaterialDescriptorSetLayout();
 
         CreateUniforms();
+        CreateTransferQueue();
 
         m_DepthFormat = FindDepthFormat();
         m_ShaderManager.emplace(m_GraphicsContext, m_SetLayouts, m_DepthFormat);
@@ -117,6 +79,41 @@ namespace le
         return std::make_unique<VulkanRenderTarget>(m_GraphicsContext);
     }
 
+    VulkanGraphicsContext::DebugCallback::DebugCallback(VulkanGraphicsContext& context)
+        :
+        m_Context(context)
+    {}
+
+    void VulkanGraphicsContext::DebugCallback::OnDebugLog(
+        const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
+    )
+    {
+        std::stringstream ss;
+        ss << "Vulkan Validation Layer: " << pCallbackData->pMessage;
+
+        Logger::Level level;
+        switch (messageSeverity)
+        {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+                level = Logger::Level::INFO;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+                level = Logger::Level::WARN;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+                level = Logger::Level::ERROR;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+                level = Logger::Level::DEBUG;
+                break;
+            default: level = Logger::Level::INFO;
+        }
+
+        Logger::GetGlobalLogger().Log(level, ss.str());
+    }
+
 #ifndef LE_HEADLESS
     Scope<RenderTarget> VulkanGraphicsContext::CreateWindowRenderTarget(Tether::Window& window)
     {
@@ -127,7 +124,7 @@ namespace le
     Scope<VertexBuffer> VulkanGraphicsContext::CreateVertexBuffer(
         size_t initialVertexCount, size_t initialIndexCount)
     {
-        return std::make_unique<VulkanVertexBuffer>(m_GraphicsContext, initialVertexCount, initialIndexCount);
+        return std::make_unique<VulkanVertexBuffer>(*this, initialVertexCount, initialIndexCount);
     }
 
     Scope<Texture2D> VulkanGraphicsContext::CreateTexture2D(const TextureData& loader)
@@ -315,5 +312,64 @@ namespace le
     VkFormat VulkanGraphicsContext::GetDepthFormat() const
     {
         return m_DepthFormat;
+    }
+
+    TetherVulkan::ContextCreator::Info VulkanGraphicsContext::GetContextInfo(std::string_view applicationName)
+    {
+        TetherVulkan::ContextCreator::Info info;
+        info.deviceExtensions = EXTENSIONS;
+        info.applicationName = applicationName;
+        info.engineName = "LegendEngine";
+        info.devicePNext = &DYNAMIC_RENDERING;
+        info.deviceExtensions = EXTENSIONS;
+        info.createTransferQueue = true;
+
+        return info;
+    }
+
+    std::mutex& VulkanGraphicsContext::GetGraphicsQueueMutex()
+    {
+        return m_GraphicsQueueMutex;
+    }
+
+    std::mutex& VulkanGraphicsContext::GetTransferQueueMutex() const
+    {
+        return m_ActualTransferMutex;
+    }
+
+    std::mutex& VulkanGraphicsContext::FindTransferMutex()
+    {
+        const Tether::Rendering::Vulkan::QueueFamilyIndices indices = m_ContextCreator.GetQueueFamilyIndices();
+        return indices.graphicsFamilyIndex == indices.transferFamilyIndex ? m_GraphicsQueueMutex : m_TransferQueueMutex;
+    }
+
+    VkQueue VulkanGraphicsContext::GetTransferQueue() const
+    {
+        return m_TransferQueue;
+    }
+
+    VkCommandPool VulkanGraphicsContext::GetTransferPool() const
+    {
+        return m_TransferPool;
+    }
+
+    void VulkanGraphicsContext::CreateTransferQueue()
+    {
+        const Tether::Rendering::Vulkan::QueueFamilyIndices indices = m_ContextCreator.GetQueueFamilyIndices();
+        if (indices.graphicsFamilyIndex == indices.transferFamilyIndex)
+        {
+            m_TransferQueue = m_ContextCreator.GetQueue();
+            m_TransferPool = m_ContextCreator.GetCommandPool();
+            return;
+        }
+
+        m_TransferQueue = m_ContextCreator.GetDeviceQueue(indices.transferFamilyIndex, 0);
+
+        VkCommandPoolCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        info.queueFamilyIndex = indices.transferFamilyIndex;
+
+        LE_CHECK_VK(vkCreateCommandPool(m_ContextCreator.GetDevice(), &info, nullptr, &m_TransferPool));
     }
 }

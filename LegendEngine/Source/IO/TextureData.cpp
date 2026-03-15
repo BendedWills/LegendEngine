@@ -15,7 +15,7 @@ namespace le
         m_ShouldFree = shouldFree;
     }
 
-    TextureData::TextureData(TextureData&& o)
+    TextureData::TextureData(TextureData&& o) noexcept
         :
         m_Width(o.m_Width),
         m_Height(o.m_Height),

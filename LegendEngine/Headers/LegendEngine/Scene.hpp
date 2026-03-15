@@ -35,7 +35,7 @@ namespace le
         void Clear();
 
         const ObjectsType& GetObjects() const;
-        ComponentsVecType& GetObjectComponents();
+        ComponentsVecType GetObjectComponents();
 
         static Scope<Scene> Create();
     protected:

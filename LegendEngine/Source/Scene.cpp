@@ -46,8 +46,9 @@ namespace le
         return m_Objects;
     }
 
-    Scene::ComponentsVecType& Scene::GetObjectComponents()
+    Scene::ComponentsVecType Scene::GetObjectComponents()
     {
+        std::shared_lock lock(m_ComponentsMutex);
         return m_Components;
     }
 

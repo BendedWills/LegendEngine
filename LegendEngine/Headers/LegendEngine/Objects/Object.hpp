@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+#include <shared_mutex>
 #include <LegendEngine/Common/UID.hpp>
 #include <LegendEngine/Math/Math.hpp>
 
@@ -7,6 +9,7 @@
 #include <typeindex>
 #include <LegendEngine/Common/Types.hpp>
 #include <LegendEngine/Components/Component.hpp>
+
 
 namespace le
 {
@@ -52,12 +55,15 @@ namespace le
         template<typename T>
         bool HasComponent() const
         {
+            std::shared_lock lock(m_ComponentsMutex);
             return m_Components.contains(typeid(T));
         }
 
         template<typename T>
         T* GetComponent()
         {
+            std::shared_lock lock(m_ComponentsMutex);
+
             if (const std::type_index index(typeid(T)); m_Components.contains(index))
                 return static_cast<T*>(m_Components[index].get());
 
@@ -67,6 +73,8 @@ namespace le
         template<typename T>
         bool RemoveComponent()
         {
+            std::unique_lock lock(m_ComponentsMutex);
+
             const std::type_index index(typeid(T));
             const auto componentIter = m_Components.find(index);
             if (componentIter == m_Components.end())
@@ -100,6 +108,8 @@ namespace le
         template<typename T, typename... Args>
         bool AssureComponent(Args&&... args)
         {
+            std::unique_lock lock(m_ComponentsMutex);
+
             const std::type_index index(typeid(T));
             if (m_Components.contains(index))
                 return false;
@@ -117,6 +127,7 @@ namespace le
         bool m_Enabled = true;
         bool m_CalculatesMatrices;
 
+        std::shared_mutex m_ComponentsMutex;
         HolderType m_Components;
     };
 }

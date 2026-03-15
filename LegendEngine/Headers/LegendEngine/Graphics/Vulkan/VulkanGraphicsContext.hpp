@@ -41,15 +41,25 @@ namespace le
 
         VkFormat GetDepthFormat() const;
 
+        std::mutex& GetGraphicsQueueMutex();
+        std::mutex& GetTransferQueueMutex() const;
+        VkQueue GetTransferQueue() const;
+        VkCommandPool GetTransferPool() const;
+
         TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
     private:
+        static TetherVulkan::ContextCreator::Info GetContextInfo(std::string_view applicationName);
+
         VkFormat FindDepthFormat() const;
+
+        std::mutex& FindTransferMutex();
 
         void CreateCameraDescriptorSetLayout();
         void CreateSceneDescriptorSetLayout();
         void CreateMaterialDescriptorSetLayout();
 
         void CreateUniforms();
+        void CreateTransferQueue();
         void UpdateDefaultMaterialUniforms();
 
         class DebugCallback final : public TetherVulkan::DebugCallback
@@ -65,8 +75,6 @@ namespace le
         private:
             VulkanGraphicsContext& m_Context;
         };
-
-        bool m_Debug = false;
 
         TetherVulkan::ContextCreator m_ContextCreator;
         TetherVulkan::GraphicsContext m_GraphicsContext;
@@ -90,6 +98,13 @@ namespace le
         std::vector<VkDescriptorSetLayout> m_SetLayouts;
 
         std::optional<VulkanShaderManager> m_ShaderManager;
+
+        std::mutex m_GraphicsQueueMutex;
+        std::mutex m_TransferQueueMutex;
+        std::mutex& m_ActualTransferMutex;
+
+        VkQueue m_TransferQueue = nullptr;
+        VkCommandPool m_TransferPool = nullptr;
 
         VkFormat m_DepthFormat;
     };
