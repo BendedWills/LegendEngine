@@ -221,6 +221,8 @@ namespace le
 
         vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pShader->GetPipeline());
+        vkCmdSetCullMode(buffer, pShader->GetVulkanCullMode());
+
         m_pCurrentShader = pShader;
     }
 

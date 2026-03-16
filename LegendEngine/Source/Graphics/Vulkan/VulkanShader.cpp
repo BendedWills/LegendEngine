@@ -24,8 +24,20 @@ namespace le
         return m_Pipeline.GetPipelineLayout();
     }
 
+    VkCullModeFlags VulkanShader::GetVulkanCullMode() const
+    {
+        switch (m_CullMode)
+        {
+            case CullMode::FRONT: return VK_CULL_MODE_FRONT_BIT;
+            case CullMode::BACK: return VK_CULL_MODE_BACK_BIT;
+            case CullMode::NONE: return VK_CULL_MODE_NONE;
+        }
+
+        return VK_CULL_MODE_NONE;
+    }
+
     Pipeline VulkanShader::CreatePipeline(const std::span<Stage> stages,
-        std::span<VkDescriptorSetLayout> sets, VkFormat depthFormat) const
+                                          std::span<VkDescriptorSetLayout> sets, VkFormat depthFormat) const
     {
         std::vector<VkPipelineShaderStageCreateInfo> vkStages;
         std::vector<ShaderModule> shaderModules;
@@ -55,7 +67,8 @@ namespace le
         VkDynamicState dynamicStates[] =
         {
             VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR
+            VK_DYNAMIC_STATE_SCISSOR,
+            VK_DYNAMIC_STATE_CULL_MODE
         };
 
         Pipeline::Info pipelineInfo{};

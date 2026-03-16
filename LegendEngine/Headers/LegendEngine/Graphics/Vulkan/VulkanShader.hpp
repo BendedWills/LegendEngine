@@ -16,6 +16,7 @@ namespace le
 
         VkPipeline GetPipeline() const;
         VkPipelineLayout GetPipelineLayout() const;
+        VkCullModeFlags GetVulkanCullMode() const;
     private:
         Pipeline CreatePipeline(std::span<Stage> stages,
             std::span<VkDescriptorSetLayout> sets, VkFormat depthFormat) const;

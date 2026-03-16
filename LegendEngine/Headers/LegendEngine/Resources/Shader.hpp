@@ -11,6 +11,13 @@ namespace le
     class Shader : public Resource
     {
     public:
+        enum class CullMode
+        {
+            NONE,
+            BACK,
+            FRONT,
+        };
+
         struct Stage
         {
             ShaderType type;
@@ -18,6 +25,11 @@ namespace le
             size_t compiledShaderSize = 0;
         };
 
+        void SetCullMode(CullMode cullMode);
+        CullMode GetCullMode() const;
+
         static Scope<Shader> Create(std::span<Stage> stages);
+    protected:
+        CullMode m_CullMode = CullMode::BACK;
     };
 }
