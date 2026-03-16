@@ -25,7 +25,7 @@ namespace le
 #endif
 
         Scope<VertexBuffer> CreateVertexBuffer(size_t initialVertexCount,
-            size_t initialIndexCount) override;
+            size_t initialIndexCount, VertexBuffer::UpdateFrequency updateFrequency) override;
         Scope<Texture2D> CreateTexture2D(const TextureData& loader) override;
         Scope<Shader> CreateShader(
             std::span<Shader::Stage> stages) override;

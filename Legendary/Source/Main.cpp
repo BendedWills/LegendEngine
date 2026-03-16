@@ -35,7 +35,7 @@ public:
 
 			m_Mesh = &m_Object->AddComponent<MeshComponent>(
 				std::span<VertexTypes::Vertex3>(testVertices),
-				std::span<uint32_t>(indices));
+				std::span<uint32_t>(indices), MeshComponent::UpdateFrequency::UPDATES_ONCE);
 		}
 
 		m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));

@@ -25,7 +25,8 @@ namespace le
             VkDescriptorSetLayout sceneLayout,
             VkSurfaceFormatKHR surfaceFormat,
             TetherVulkan::DescriptorSet& defaultMatSet,
-            VkFormat depthFormat
+            VkFormat depthFormat,
+            std::mutex& graphicsQueueMutex
         );
         ~VulkanRenderer() override;
 
@@ -107,5 +108,7 @@ namespace le
 
         VkDescriptorSet m_Sets[3] = {};
         VulkanShader* m_pCurrentShader = nullptr;
+
+        std::mutex& m_GraphicsQueueMutex;
     };
 }

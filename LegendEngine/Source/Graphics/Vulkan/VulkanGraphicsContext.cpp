@@ -6,6 +6,8 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/OccasionalUpdateBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/NeverUpdateBuffer.hpp>
 #include <LegendEngine/IO/Logger.hpp>
 
 namespace le
@@ -70,7 +72,7 @@ namespace le
         return std::make_unique<VulkanRenderer>(
             m_GraphicsContext, renderTarget, *m_ShaderManager,
             m_CameraLayout, m_SceneLayout, surfaceFormat, *m_DefaultMatSet,
-            m_DepthFormat
+            m_DepthFormat, m_GraphicsQueueMutex
         );
     }
 
@@ -122,14 +124,26 @@ namespace le
 #endif
 
     Scope<VertexBuffer> VulkanGraphicsContext::CreateVertexBuffer(
-        size_t initialVertexCount, size_t initialIndexCount)
+        size_t initialVertexCount, size_t initialIndexCount, VertexBuffer::UpdateFrequency updateFrequency)
     {
-        return std::make_unique<VulkanVertexBuffer>(*this, initialVertexCount, initialIndexCount);
+        switch (updateFrequency)
+        {
+            case VertexBuffer::UpdateFrequency::UPDATES_ONCE:
+                return std::make_unique<NeverUpdateBuffer>(*this,
+                    initialVertexCount, initialIndexCount);
+
+            case VertexBuffer::UpdateFrequency::UPDATES_OCCASIONALLY:
+                return std::make_unique<OccasionalUpdateBuffer>(*this);
+
+            default: LE_ASSERT(false, "Unsupported update frequency");
+        }
+
+        return nullptr;
     }
 
     Scope<Texture2D> VulkanGraphicsContext::CreateTexture2D(const TextureData& loader)
     {
-        return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader);
+        return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader, m_GraphicsQueueMutex);
     }
 
     Scope<Shader> VulkanGraphicsContext::CreateShader(std::span<Shader::Stage> stages)
@@ -140,11 +154,6 @@ namespace le
     Scope<Material> VulkanGraphicsContext::CreateMaterial()
     {
         return std::make_unique<VulkanMaterial>(m_GraphicsContext, m_MaterialLayout);
-    }
-
-    TetherVulkan::GraphicsContext& VulkanGraphicsContext::GetTetherGraphicsContext()
-    {
-        return m_GraphicsContext;
     }
 
     VkDescriptorSetLayout VulkanGraphicsContext::GetCameraLayout() const
@@ -172,6 +181,77 @@ namespace le
         return *m_ShaderManager;
     }
 
+    VkFormat VulkanGraphicsContext::GetDepthFormat() const
+    {
+        return m_DepthFormat;
+    }
+
+    std::mutex& VulkanGraphicsContext::GetGraphicsQueueMutex()
+    {
+        return m_GraphicsQueueMutex;
+    }
+
+    std::mutex& VulkanGraphicsContext::GetTransferQueueMutex() const
+    {
+        return m_ActualTransferMutex;
+    }
+
+    VkQueue VulkanGraphicsContext::GetTransferQueue() const
+    {
+        return m_TransferQueue;
+    }
+
+    VkCommandPool VulkanGraphicsContext::GetTransferPool() const
+    {
+        return m_TransferPool;
+    }
+
+    TetherVulkan::GraphicsContext& VulkanGraphicsContext::GetTetherGraphicsContext()
+    {
+        return m_GraphicsContext;
+    }
+
+    TetherVulkan::ContextCreator::Info VulkanGraphicsContext::GetContextInfo(std::string_view applicationName)
+    {
+        TetherVulkan::ContextCreator::Info info;
+        info.deviceExtensions = EXTENSIONS;
+        info.applicationName = applicationName;
+        info.engineName = "LegendEngine";
+        info.devicePNext = &DYNAMIC_RENDERING;
+        info.deviceExtensions = EXTENSIONS;
+        info.createTransferQueue = true;
+
+        return info;
+    }
+
+    VkFormat VulkanGraphicsContext::FindDepthFormat() const
+    {
+        constexpr VkFormat candidates[] = {
+            VK_FORMAT_D32_SFLOAT,
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D24_UNORM_S8_UINT
+        };
+
+        constexpr VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        for (const VkFormat format : candidates)
+        {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(m_GraphicsContext.GetPhysicalDevice(), format, &props);
+
+            if ((props.optimalTilingFeatures & features) == features)
+                return format;
+        }
+
+        return candidates[0];
+    }
+
+    std::mutex& VulkanGraphicsContext::FindTransferMutex()
+    {
+        const Tether::Rendering::Vulkan::QueueFamilyIndices indices = m_ContextCreator.GetQueueFamilyIndices();
+        return indices.graphicsFamilyIndex == indices.transferFamilyIndex ? m_GraphicsQueueMutex : m_TransferQueueMutex;
+    }
+
     void VulkanGraphicsContext::CreateCameraDescriptorSetLayout()
     {
         VkDescriptorSetLayoutBinding cameraSetBinding{};
@@ -186,10 +266,30 @@ namespace le
         setInfo.pBindings = &cameraSetBinding;
 
         if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
-            &setInfo, nullptr, &m_CameraLayout) != VK_SUCCESS)
+                                        &setInfo, nullptr, &m_CameraLayout) != VK_SUCCESS)
             throw std::runtime_error("Failed to create descriptor set layout");
 
         m_SetLayouts.push_back(m_CameraLayout);
+    }
+
+    void VulkanGraphicsContext::CreateSceneDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uniformBinding{};
+        uniformBinding.binding = 0;
+        uniformBinding.descriptorCount = 1;
+        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo setInfo{};
+        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        setInfo.bindingCount = 1;
+        setInfo.pBindings = &uniformBinding;
+
+        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
+                                        &setInfo, nullptr, &m_SceneLayout) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create descriptor set layout");
+
+        m_SetLayouts.push_back(m_SceneLayout);
     }
 
     void VulkanGraphicsContext::CreateMaterialDescriptorSetLayout()
@@ -218,30 +318,10 @@ namespace le
         setInfo.pBindings = bindings;
 
         if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
-            &setInfo, nullptr, &m_MaterialLayout) != VK_SUCCESS)
+                                        &setInfo, nullptr, &m_MaterialLayout) != VK_SUCCESS)
             throw std::runtime_error("Failed to create descriptor set layout");
 
         m_SetLayouts.push_back(m_MaterialLayout);
-    }
-
-    void VulkanGraphicsContext::CreateSceneDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding uniformBinding{};
-        uniformBinding.binding = 0;
-        uniformBinding.descriptorCount = 1;
-        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = 1;
-        setInfo.pBindings = &uniformBinding;
-
-        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
-            &setInfo, nullptr, &m_SceneLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-
-        m_SetLayouts.push_back(m_SceneLayout);
     }
 
     void VulkanGraphicsContext::CreateUniforms()
@@ -263,11 +343,11 @@ namespace le
         };
 
         m_StaticUniformPool.emplace(m_GraphicsContext, framesInFlight * 3,
-            std::size(sizes), sizes);
+                                    std::size(sizes), sizes);
 
         m_CameraSet.emplace(*m_StaticUniformPool, m_CameraLayout, framesInFlight);
         m_CameraUniforms.emplace(m_GraphicsContext, sizeof(Camera::CameraUniforms), *m_CameraSet,
-            0);
+                                 0);
 
         m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
         m_DefaultMatUniforms.emplace(m_GraphicsContext, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
@@ -275,82 +355,6 @@ namespace le
         m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
 
         UpdateDefaultMaterialUniforms();
-    }
-
-    void VulkanGraphicsContext::UpdateDefaultMaterialUniforms()
-    {
-        for (uint32_t i = 0; i < m_GraphicsContext.GetFramesInFlight(); i++)
-        {
-            VulkanMaterial::Uniforms uniforms;
-            void* data = m_DefaultMatUniforms->GetMappedData(i);
-            *static_cast<VulkanMaterial::Uniforms*>(data) = uniforms;
-        }
-    }
-
-    VkFormat VulkanGraphicsContext::FindDepthFormat() const
-    {
-        constexpr VkFormat candidates[] = {
-            VK_FORMAT_D32_SFLOAT,
-            VK_FORMAT_D32_SFLOAT_S8_UINT,
-            VK_FORMAT_D24_UNORM_S8_UINT
-        };
-
-        constexpr VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
-
-        for (const VkFormat format : candidates)
-        {
-            VkFormatProperties props;
-            vkGetPhysicalDeviceFormatProperties(m_GraphicsContext.GetPhysicalDevice(), format, &props);
-
-            if ((props.optimalTilingFeatures & features) == features)
-                return format;
-        }
-
-        return candidates[0];
-    }
-
-    VkFormat VulkanGraphicsContext::GetDepthFormat() const
-    {
-        return m_DepthFormat;
-    }
-
-    TetherVulkan::ContextCreator::Info VulkanGraphicsContext::GetContextInfo(std::string_view applicationName)
-    {
-        TetherVulkan::ContextCreator::Info info;
-        info.deviceExtensions = EXTENSIONS;
-        info.applicationName = applicationName;
-        info.engineName = "LegendEngine";
-        info.devicePNext = &DYNAMIC_RENDERING;
-        info.deviceExtensions = EXTENSIONS;
-        info.createTransferQueue = true;
-
-        return info;
-    }
-
-    std::mutex& VulkanGraphicsContext::GetGraphicsQueueMutex()
-    {
-        return m_GraphicsQueueMutex;
-    }
-
-    std::mutex& VulkanGraphicsContext::GetTransferQueueMutex() const
-    {
-        return m_ActualTransferMutex;
-    }
-
-    std::mutex& VulkanGraphicsContext::FindTransferMutex()
-    {
-        const Tether::Rendering::Vulkan::QueueFamilyIndices indices = m_ContextCreator.GetQueueFamilyIndices();
-        return indices.graphicsFamilyIndex == indices.transferFamilyIndex ? m_GraphicsQueueMutex : m_TransferQueueMutex;
-    }
-
-    VkQueue VulkanGraphicsContext::GetTransferQueue() const
-    {
-        return m_TransferQueue;
-    }
-
-    VkCommandPool VulkanGraphicsContext::GetTransferPool() const
-    {
-        return m_TransferPool;
     }
 
     void VulkanGraphicsContext::CreateTransferQueue()
@@ -371,5 +375,15 @@ namespace le
         info.queueFamilyIndex = indices.transferFamilyIndex;
 
         LE_CHECK_VK(vkCreateCommandPool(m_ContextCreator.GetDevice(), &info, nullptr, &m_TransferPool));
+    }
+
+    void VulkanGraphicsContext::UpdateDefaultMaterialUniforms()
+    {
+        for (uint32_t i = 0; i < m_GraphicsContext.GetFramesInFlight(); i++)
+        {
+            VulkanMaterial::Uniforms uniforms;
+            void* data = m_DefaultMatUniforms->GetMappedData(i);
+            *static_cast<VulkanMaterial::Uniforms*>(data) = uniforms;
+        }
     }
 }

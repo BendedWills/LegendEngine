@@ -38,6 +38,9 @@ namespace le
         const auto components = scene.GetObjectComponents();
         if (!components.contains(meshType))
             return;
+
+        // TODO: this has raw pointers to the component and its object.
+        // if the object is destroyed on another thread, this could cause a crash
         const std::vector<Component*>* meshComponents = &components.at(meshType);
 
         const Material* lastMaterial = nullptr;

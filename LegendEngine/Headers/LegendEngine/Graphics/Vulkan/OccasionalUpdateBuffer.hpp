@@ -1,0 +1,57 @@
+#pragma once
+
+#include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
+#include <Tether/Rendering/Vulkan/BufferStager.hpp>
+
+#include <span>
+#include <LegendEngine/Graphics/Vulkan/VulkanBufferStager.hpp>
+
+namespace le
+{
+	class OccasionalUpdateBuffer : public VulkanVertexBuffer
+	{
+	public:
+		OccasionalUpdateBuffer(VulkanGraphicsContext& context);
+		~OccasionalUpdateBuffer() override;
+
+		void Update(std::span<VertexTypes::Vertex3> vertices, std::span<uint32_t> indices) override;
+		void Resize(size_t vertexCount, size_t indexCount) override;
+		size_t GetVertexCount() override;
+		size_t GetIndexCount() override;
+
+		// Called on rendering, by the main thread
+		void DeleteUnusedBuffers(const std::vector<VkFence>& fences, uint32_t currentFrame) override;
+
+		[[nodiscard]] VkBuffer GetVertexBuffer() const override;
+		[[nodiscard]] VkBuffer GetIndexBuffer() const override;
+	private:
+		struct BufferDesc
+		{
+			std::atomic<VkBuffer> vertexBuffer = nullptr;
+			std::atomic<VkBuffer> indexBuffer = nullptr;
+			std::atomic<VmaAllocation> vertexAllocation = nullptr;
+			std::atomic<VmaAllocation> indexAllocation = nullptr;
+
+			size_t vertexCount = 0;
+			size_t indexCount = 0;
+		};
+
+		[[nodiscard]] std::pair<VkBuffer, VmaAllocation> CreateBuffer(VkBufferUsageFlags flags, size_t size) const;
+		BufferDesc* AcquireUnusedBuffer();
+
+		void DestroyBuffer(BufferDesc& buffer) const;
+
+		BufferDesc m_Buffer1;
+		BufferDesc m_Buffer2;
+
+		Tether::Rendering::Vulkan::GraphicsContext& m_Context;
+
+		std::mutex& m_TransferQueueMutex;
+		std::mutex m_UpdateMutex;
+		std::atomic<BufferDesc*> m_CurrentBuffer = nullptr;
+		std::atomic_bool m_HasUpdated = false;
+
+		VulkanBufferStager m_VertexStager;
+		VulkanBufferStager m_IndexStager;
+	};
+}

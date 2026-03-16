@@ -28,7 +28,7 @@ namespace le
 #endif
 
         virtual Scope<VertexBuffer> CreateVertexBuffer(size_t initialVertexCount,
-            size_t initialIndexCount) = 0;
+            size_t initialIndexCount, VertexBuffer::UpdateFrequency frequency) = 0;
         virtual Scope<Texture2D> CreateTexture2D(const TextureData& loader) = 0;
         virtual Scope<Shader> CreateShader(
             std::span<Shader::Stage> stages) = 0;

@@ -71,11 +71,6 @@ namespace le
 
     Object* Scene::AddObject(Scope<Object> object)
     {
-        // Make sure there are no duplicate UIDs
-        // This is like a 1 in a billion chance, but it's technically possible
-        while (HasObject(object->uid))
-            object->uid = UID();
-
         std::unique_lock lock(m_ObjectsMutex);
 
         const Scope<Object>& added = m_Objects[object->uid] = std::move(object);

@@ -1,5 +1,6 @@
 #include <LegendEngine/Application.hpp>
 #include <LegendEngine/Components/MeshComponent.hpp>
+#include <LegendEngine/Graphics/Vulkan/VkDefs.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
@@ -25,7 +26,8 @@ namespace le
             VkDescriptorSetLayout sceneLayout,
             VkSurfaceFormatKHR surfaceFormat,
             TetherVulkan::DescriptorSet& defaultMatSet,
-            VkFormat depthFormat
+            VkFormat depthFormat,
+            std::mutex& graphicsQueueMutex
             )
         :
         Renderer(renderTarget),
@@ -37,7 +39,8 @@ namespace le
         m_SurfaceFormat(surfaceFormat),
         m_Device(m_Context.GetDevice()),
         m_PhysicalDevice(m_Context.GetPhysicalDevice()),
-        m_DepthFormat(depthFormat)
+        m_DepthFormat(depthFormat),
+        m_GraphicsQueueMutex(graphicsQueueMutex)
     {
         LE_ASSERT(!dynamic_cast<VulkanRenderTarget&>(renderTarget).IsHeadless(),
             "Renderers can't be created with a headless surface");
@@ -228,6 +231,8 @@ namespace le
         auto& vertexBuffer = static_cast<VulkanVertexBuffer&>(
             mesh.GetVertexBuffer());
 
+        vertexBuffer.DeleteUnusedBuffers(m_InFlightFences, m_CurrentFrame);
+
         Pipeline::ObjectTransform transform;
         transform.transform = object.GetTransformationMatrix();
 
@@ -246,6 +251,9 @@ namespace le
             m_Sets,
             0, nullptr
         );
+
+        if (!vertexBuffer.GetVertexBuffer())
+            return;
 
         const VkBuffer vBuffers[] = { vertexBuffer.GetVertexBuffer() };
         constexpr VkDeviceSize offsets[] = { 0 };
@@ -310,9 +318,10 @@ namespace le
 
         // The in flight fence for this frame must be reset.
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
-        result = vkQueueSubmit(m_Context.GetQueue(), 1, &submitInfo,
-            m_InFlightFences[m_CurrentFrame]);
-        LE_ASSERT(result == VK_SUCCESS, "Failed to submit queue");
+        m_GraphicsQueueMutex.lock();
+        LE_CHECK_VK(vkQueueSubmit(m_Context.GetQueue(), 1, &submitInfo,
+            m_InFlightFences[m_CurrentFrame]));
+        m_GraphicsQueueMutex.unlock();
 
         // Wait for the frame to be rendered until presenting
         // (hence the wait semaphores being the signal semaphores)
@@ -325,7 +334,9 @@ namespace le
         presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &m_CurrentImageIndex;
 
+        m_GraphicsQueueMutex.lock();
         vkQueuePresentKHR(m_Context.GetQueue(), &presentInfo);
+        m_GraphicsQueueMutex.unlock();
 
         m_CurrentFrame = (m_CurrentFrame + 1) % m_Context.GetFramesInFlight();
     }

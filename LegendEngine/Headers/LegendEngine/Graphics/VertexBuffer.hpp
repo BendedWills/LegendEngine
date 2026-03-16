@@ -16,6 +16,13 @@ namespace le
     class VertexBuffer
     {
     public:
+        enum class UpdateFrequency
+        {
+            UPDATES_ONCE,
+            UPDATES_OCCASIONALLY,
+            UPDATES_OFTEN,
+        };
+
         LEGENDENGINE_NO_COPY(VertexBuffer);
 
     	VertexBuffer() = default;

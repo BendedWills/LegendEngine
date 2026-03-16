@@ -14,7 +14,7 @@ namespace le
     {
     public:
         VulkanTexture2D(Tether::Rendering::Vulkan::GraphicsContext& context,
-            const TextureData& loader);
+            const TextureData& loader, std::mutex& mutex);
         ~VulkanTexture2D() override;
 
         VkDescriptorType GetDescriptorType() override;

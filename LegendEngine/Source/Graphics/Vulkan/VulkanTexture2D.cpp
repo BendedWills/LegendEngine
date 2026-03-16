@@ -6,7 +6,7 @@ namespace le
     using namespace Tether::Rendering::Vulkan;
 
     VulkanTexture2D::VulkanTexture2D(GraphicsContext& context,
-        const TextureData& loader)
+        const TextureData& loader, std::mutex& mutex)
         :
         Texture2D(loader),
         m_Context(context)
@@ -48,6 +48,8 @@ namespace le
             loader.GetData(),
             imageInfo.format
         );
+
+        std::scoped_lock lock(mutex);
         stager.Upload();
     }
 

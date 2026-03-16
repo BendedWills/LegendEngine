@@ -11,12 +11,15 @@ namespace le
     class MeshComponent : public Component
     {
     public:
+        using UpdateFrequency = VertexBuffer::UpdateFrequency;
+
         MeshComponent(std::span<VertexTypes::Vertex3> vertices,
-            std::span<uint32_t> indices);
-        MeshComponent(size_t initialVertexCount, size_t initialIndexCount);
+            std::span<uint32_t> indices, UpdateFrequency frequency);
+        MeshComponent(size_t initialVertexCount, size_t initialIndexCount,
+            UpdateFrequency frequency);
 
         void UpdateMesh(std::span<VertexTypes::Vertex3> vertices,
-            std::span<uint32_t> indices) const;
+            std::span<uint32_t> indices);
 
         void SetMaterial(Material* pMaterial);
         Material* GetMaterial() const;
