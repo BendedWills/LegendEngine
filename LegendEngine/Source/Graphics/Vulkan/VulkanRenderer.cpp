@@ -166,7 +166,13 @@ namespace le
         colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         colorAttachmentInfo.imageView = m_SwapchainImageViews[m_CurrentImageIndex];
         colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachmentInfo.clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+        colorAttachmentInfo.clearValue =
+            {
+                m_ClearColor.x,
+                m_ClearColor.y,
+                m_ClearColor.z,
+                m_ClearColor.w
+            };
         colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 

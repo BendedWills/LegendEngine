@@ -46,7 +46,7 @@ namespace le
 
         for (Stage stage : stages)
         {
-            shaderModules.push_back(ShaderModule(m_Context, stage));
+            shaderModules.emplace_back(m_Context, stage);
 
             VkPipelineShaderStageCreateInfo vkStage{};
             vkStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -81,6 +81,6 @@ namespace le
         pipelineInfo.pSetLayouts = sets.data();
         pipelineInfo.depthFormat = depthFormat;
 
-        return Pipeline(m_Context, pipelineInfo);
+        return { m_Context, pipelineInfo };
     }
 }

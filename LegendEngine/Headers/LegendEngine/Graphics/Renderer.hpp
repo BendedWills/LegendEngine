@@ -24,7 +24,9 @@ namespace le
 
         void RenderFrame(std::span<Scene*> scenes);
 
+        void SetClearColor(const Vector4f& color);
         virtual void SetVSyncEnabled(bool vsync) {}
+
         virtual void NotifyWindowResized() {}
 
         RenderTarget& GetRenderTarget() const;
@@ -37,6 +39,7 @@ namespace le
         virtual void UpdateCameraUniforms(const Camera& camera) = 0;
 
         RenderTarget& m_RenderTarget;
+        Vector4f m_ClearColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
     private:
         void RenderScene(Scene& scene);
         void UpdateCamera(Camera* pCamera);

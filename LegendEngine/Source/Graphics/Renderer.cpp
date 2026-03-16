@@ -68,6 +68,11 @@ namespace le
         }
     }
 
+    void Renderer::SetClearColor(const Vector4f &color)
+    {
+        m_ClearColor = color;
+    }
+
     RenderTarget& Renderer::GetRenderTarget() const
     {
         return m_RenderTarget;
