@@ -5,12 +5,12 @@
 
 namespace le
 {
-	class NeverUpdateBuffer : public VulkanVertexBuffer
+	class SingleUpdateBuffer : public VulkanVertexBuffer
 	{
 	public:
-		NeverUpdateBuffer(VulkanGraphicsContext& context,
+		SingleUpdateBuffer(VulkanGraphicsContext& context,
 			size_t vertexCount, size_t indexCount);
-		~NeverUpdateBuffer() override;
+		~SingleUpdateBuffer() override;
 
 		void Update(std::span<VertexTypes::Vertex3> vertices, std::span<uint32_t> indices) override;
 		void Resize(size_t vertexCount, size_t indexCount) override;

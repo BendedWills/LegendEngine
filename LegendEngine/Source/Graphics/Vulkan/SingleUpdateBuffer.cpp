@@ -1,10 +1,10 @@
-#include <LegendEngine/Graphics/Vulkan/NeverUpdateBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/SingleUpdateBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VkDefs.hpp>
 #include <LegendEngine/IO/Logger.hpp>
 
 namespace le
 {
-	NeverUpdateBuffer::NeverUpdateBuffer(VulkanGraphicsContext& context,
+	SingleUpdateBuffer::SingleUpdateBuffer(VulkanGraphicsContext& context,
 		const size_t vertexCount, const size_t indexCount)
 		:
 		m_Context(context.GetTetherGraphicsContext()),
@@ -31,13 +31,13 @@ namespace le
 		m_IndexStager.CreateStagingBuffer(m_IndexBuffer, indexBufferSize);
 	}
 
-	NeverUpdateBuffer::~NeverUpdateBuffer()
+	SingleUpdateBuffer::~SingleUpdateBuffer()
 	{
 		vmaDestroyBuffer(m_Context.GetAllocator(), m_VertexBuffer, m_VertexAllocation);
 		vmaDestroyBuffer(m_Context.GetAllocator(), m_IndexBuffer, m_IndexAllocation);
 	}
 
-	void NeverUpdateBuffer::Update(std::span<VertexTypes::Vertex3> vertices, std::span<uint32_t> indices)
+	void SingleUpdateBuffer::Update(std::span<VertexTypes::Vertex3> vertices, std::span<uint32_t> indices)
 	{
 		bool hasUpdated = false;
 		if (!m_HasUpdated.compare_exchange_strong(hasUpdated, true))
@@ -50,32 +50,32 @@ namespace le
 
 	}
 
-	void NeverUpdateBuffer::Resize(size_t vertexCount, size_t indexCount)
+	void SingleUpdateBuffer::Resize(size_t vertexCount, size_t indexCount)
 	{
 		LE_WARN("Resize called on a vertex buffer with never update frequency. This won't affect the size.");
 	}
 
-	size_t NeverUpdateBuffer::GetVertexCount()
+	size_t SingleUpdateBuffer::GetVertexCount()
 	{
 		return m_VertexCount;
 	}
 
-	size_t NeverUpdateBuffer::GetIndexCount()
+	size_t SingleUpdateBuffer::GetIndexCount()
 	{
 		return m_IndexCount;
 	}
 
-	VkBuffer NeverUpdateBuffer::GetVertexBuffer() const
+	VkBuffer SingleUpdateBuffer::GetVertexBuffer() const
 	{
 		return m_VertexBuffer;
 	}
 
-	VkBuffer NeverUpdateBuffer::GetIndexBuffer() const
+	VkBuffer SingleUpdateBuffer::GetIndexBuffer() const
 	{
 		return m_IndexBuffer;
 	}
 
-	std::pair<VkBuffer, VmaAllocation> NeverUpdateBuffer::CreateBuffer(VkBufferUsageFlags flags, const size_t size) const
+	std::pair<VkBuffer, VmaAllocation> SingleUpdateBuffer::CreateBuffer(VkBufferUsageFlags flags, const size_t size) const
 	{
 		VkBuffer buffer = nullptr;
 		VmaAllocation allocation = nullptr;

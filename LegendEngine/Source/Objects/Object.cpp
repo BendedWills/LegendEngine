@@ -103,14 +103,14 @@ namespace le
     }
 
     void Object::ComponentAdded(const std::type_index type,
-        Component& component)
+        Component& component) const
     {
         if (m_pScene)
             m_pScene->OnComponentAdd(type, component);
     }
 
     void Object::ComponentRemoved(const std::type_index type,
-        Component& component)
+        Component& component) const
     {
         if (m_pScene)
             m_pScene->OnComponentRemove(type, component);

@@ -80,7 +80,7 @@ namespace le
             if (componentIter == m_Components.end())
                 return false;
 
-            ComponentRemoved(index, *componentIter->second.get());
+            ComponentRemoved(index, *componentIter->second);
             m_Components.erase(componentIter);
 
             return true;
@@ -121,8 +121,8 @@ namespace le
             return true;
         }
 
-        void ComponentAdded(std::type_index type, Component& component);
-        void ComponentRemoved(std::type_index type, Component& component);
+        void ComponentAdded(std::type_index type, Component& component) const;
+        void ComponentRemoved(std::type_index type, Component& component) const;
 
         bool m_Enabled = true;
         bool m_CalculatesMatrices;

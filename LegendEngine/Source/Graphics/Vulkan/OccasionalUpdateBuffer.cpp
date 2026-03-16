@@ -24,9 +24,16 @@ namespace le
 
     void OccasionalUpdateBuffer::Update(const std::span<VertexTypes::Vertex3> vertices, const std::span<uint32_t> indices)
     {
-    	BufferDesc* buffer = AcquireUnusedBuffer();
+    	if (vertices.empty() || indices.empty())
+    		return;
 
+    	BufferDesc* buffer = AcquireUnusedBuffer();
+		// It's possible that another update happens here and then this locks
     	std::scoped_lock lock(m_UpdateMutex);
+
+    	// Check if another update already got to this buffer
+    	if (buffer->vertexBuffer)
+    		return;
 
 	    const size_t vertexBufferSize = vertices.size() * sizeof(VertexTypes::Vertex3);
 	    const size_t indexBufferSize = indices.size() * sizeof(uint32_t);
@@ -59,11 +66,17 @@ namespace le
 
     size_t OccasionalUpdateBuffer::GetVertexCount()
     {
+    	if (!m_CurrentBuffer)
+    		return 0;
+
 	    return m_CurrentBuffer.load()->vertexCount;
     }
 
     size_t OccasionalUpdateBuffer::GetIndexCount()
     {
+    	if (!m_CurrentBuffer)
+    		return 0;
+
 	    return m_CurrentBuffer.load()->indexCount;
     }
 
@@ -73,7 +86,6 @@ namespace le
     	if (!currentBuffer)
     		return;
 
-		if (m_VertexStager.IsSignaled() && m_IndexStager.IsSignaled())
 		{
 			std::scoped_lock lock(m_UpdateMutex);
 
@@ -89,8 +101,6 @@ namespace le
 	    if (!m_HasUpdated)
 		    return;
 
-	    BufferDesc* other = currentBuffer == &m_Buffer1 ? &m_Buffer2 : &m_Buffer1;
-
     	// Check the fences to make sure no frames are using the other buffer
 	    for (const VkFence fence : fences)
 		    if (vkGetFenceStatus(m_Context.GetDevice(), fence) != VK_SUCCESS)
@@ -99,6 +109,10 @@ namespace le
     	// At this point, the new buffer has been created by Update (possibly
     	// on another thread) and the old one isn't in use by frames in flight,
     	// so it can be deleted.
+
+    	std::scoped_lock lock(m_UpdateMutex);
+
+    	BufferDesc* other = m_CurrentBuffer.load(std::memory_order_relaxed) == &m_Buffer1 ? &m_Buffer2 : &m_Buffer1;
 	    DestroyBuffer(*other);
 
     	// Signal that nothing has been updated again
@@ -156,12 +170,10 @@ namespace le
 		}
 	}
 
-	void OccasionalUpdateBuffer::DestroyBuffer(BufferDesc& buffer)
+	void OccasionalUpdateBuffer::DestroyBuffer(BufferDesc& buffer) const
 	{
     	if (!buffer.vertexBuffer)
     		return;
-
-    	std::scoped_lock lock(m_UpdateMutex);
 
     	// TODO: figure out why vulkan gets mad about this
     	m_VertexStager.Wait();

@@ -7,7 +7,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/OccasionalUpdateBuffer.hpp>
-#include <LegendEngine/Graphics/Vulkan/NeverUpdateBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/SingleUpdateBuffer.hpp>
 #include <LegendEngine/IO/Logger.hpp>
 
 namespace le
@@ -129,7 +129,7 @@ namespace le
         switch (updateFrequency)
         {
             case VertexBuffer::UpdateFrequency::UPDATES_ONCE:
-                return std::make_unique<NeverUpdateBuffer>(*this,
+                return std::make_unique<SingleUpdateBuffer>(*this,
                     initialVertexCount, initialIndexCount);
 
             case VertexBuffer::UpdateFrequency::UPDATES_OCCASIONALLY:
