@@ -190,6 +190,8 @@ public:
 		cube2(testScene.get()),
 		floor(testScene.get())
 	{
+		app.GetGraphicsContext().GetShaderManager().GetByID("textured")->SetCullMode(Shader::CullMode::NONE);
+
 		CreateMaterials();
 		CreateObjects();
 
