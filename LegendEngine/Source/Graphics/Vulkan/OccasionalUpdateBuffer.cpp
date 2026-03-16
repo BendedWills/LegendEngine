@@ -24,8 +24,9 @@ namespace le
 
     void OccasionalUpdateBuffer::Update(const std::span<VertexTypes::Vertex3> vertices, const std::span<uint32_t> indices)
     {
-	    std::scoped_lock lock(m_UpdateMutex);
-	    BufferDesc* buffer = AcquireUnusedBuffer();
+    	BufferDesc* buffer = AcquireUnusedBuffer();
+
+    	std::scoped_lock lock(m_UpdateMutex);
 
 	    const size_t vertexBufferSize = vertices.size() * sizeof(VertexTypes::Vertex3);
 	    const size_t indexBufferSize = indices.size() * sizeof(uint32_t);
@@ -155,10 +156,16 @@ namespace le
 		}
 	}
 
-	void OccasionalUpdateBuffer::DestroyBuffer(BufferDesc& buffer) const
+	void OccasionalUpdateBuffer::DestroyBuffer(BufferDesc& buffer)
 	{
     	if (!buffer.vertexBuffer)
     		return;
+
+    	std::scoped_lock lock(m_UpdateMutex);
+
+    	// TODO: figure out why vulkan gets mad about this
+    	m_VertexStager.Wait();
+    	m_IndexStager.Wait();
 
 		vmaDestroyBuffer(m_Context.GetAllocator(), buffer.vertexBuffer, buffer.vertexAllocation);
 		vmaDestroyBuffer(m_Context.GetAllocator(), buffer.indexBuffer, buffer.indexAllocation);

@@ -39,7 +39,7 @@ namespace le
 		[[nodiscard]] std::pair<VkBuffer, VmaAllocation> CreateBuffer(VkBufferUsageFlags flags, size_t size) const;
 		BufferDesc* AcquireUnusedBuffer();
 
-		void DestroyBuffer(BufferDesc& buffer) const;
+		void DestroyBuffer(BufferDesc& buffer);
 
 		BufferDesc m_Buffer1;
 		BufferDesc m_Buffer2;
