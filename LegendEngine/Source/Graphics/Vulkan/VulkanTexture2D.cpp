@@ -110,8 +110,8 @@ namespace le
     {
         VkSamplerCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        createInfo.minFilter = VK_FILTER_LINEAR;
-        createInfo.magFilter = VK_FILTER_LINEAR;
+        createInfo.minFilter = VK_FILTER_NEAREST;
+        createInfo.magFilter = VK_FILTER_NEAREST;
         createInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         createInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         createInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;

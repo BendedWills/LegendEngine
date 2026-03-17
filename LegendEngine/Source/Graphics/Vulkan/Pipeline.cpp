@@ -145,7 +145,7 @@ namespace le
 		// stages for one shader module. That means that you can have a VSMain and
 		// a PSMain in one shader module (aka a glsl file in this case).
 
-    	VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
+    	VkFormat colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
 
     	VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
     	renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
