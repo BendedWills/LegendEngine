@@ -16,9 +16,9 @@ namespace le
 		Material();
 		LEGENDENGINE_NO_COPY(Material);
 
-		void SetTexture(Texture2D* toSet);
+		void SetTexture(Texture* toSet);
 		void SetColor(const Color& toSet);
-		[[nodiscard]] Texture2D* GetTexture() const;
+		[[nodiscard]] Texture* GetTexture() const;
 	    [[nodiscard]] Shader* GetShader() const;
 		[[nodiscard]] Color GetColor() const;
 
@@ -30,7 +30,7 @@ namespace le
 	private:
 	    const ShaderManager& m_ShaderManager;
 
-		Texture2D* m_pTexture = nullptr;
+		Texture* m_pTexture = nullptr;
 	    Shader* m_pShader;
 		Color m_Color = Color(1.0f);
 

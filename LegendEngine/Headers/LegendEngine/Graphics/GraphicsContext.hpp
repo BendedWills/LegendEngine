@@ -8,6 +8,7 @@
 #include <LegendEngine/Graphics/VertexBuffer.hpp>
 #include <LegendEngine/Resources/Material.hpp>
 #include <LegendEngine/Resources/Shader.hpp>
+#include <LegendEngine/Resources/Texture2DArray.hpp>
 #include <Tether/Window.hpp>
 
 namespace le
@@ -30,6 +31,9 @@ namespace le
         virtual Scope<VertexBuffer> CreateVertexBuffer(size_t initialVertexCount,
             size_t initialIndexCount, VertexBuffer::UpdateFrequency frequency) = 0;
         virtual Scope<Texture2D> CreateTexture2D(const TextureData& loader) = 0;
+        virtual Scope<Texture2DArray> CreateTexture2DArray(size_t width,
+            size_t height, uint8_t channels,
+            const std::span<TextureData*>& textureData) = 0;
         virtual Scope<Shader> CreateShader(
             std::span<Shader::Stage> stages) = 0;
         virtual Scope<Material> CreateMaterial() = 0;

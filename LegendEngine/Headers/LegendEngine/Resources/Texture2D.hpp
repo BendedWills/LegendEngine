@@ -2,14 +2,14 @@
 
 #include <LegendEngine/Common/Defs.hpp>
 #include <LegendEngine/Common/Types.hpp>
-#include <LegendEngine/Resources/Resource.hpp>
 #include <LegendEngine/IO/TextureData.hpp>
 
 #include <memory>
+#include <LegendEngine/Resources/Texture.hpp>
 
 namespace le
 {
-	class Texture2D : public Resource
+	class Texture2D : public Texture
 	{
 	public:
 		explicit Texture2D(const TextureData& loader);

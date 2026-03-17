@@ -79,19 +79,9 @@ namespace le
         return imageInfo;
     }
 
-    VkFormat VulkanTexture2D::FindImageFormat(uint32_t channels) const
+    Texture::APIBridge* VulkanTexture2D::GetAPIBridge()
     {
-        VkFormat format;
-        switch (channels)
-        {
-            case 1: format = VK_FORMAT_R8_SRGB; break;
-            case 3: format = VK_FORMAT_R8G8B8_SRGB; break;
-            case 4: format = VK_FORMAT_R8G8B8A8_SRGB; break;
-
-            default: throw std::runtime_error("Unsupported image format");
-        }
-
-        return format;
+        return this;
     }
 
     void VulkanTexture2D::CreateImageView(const VkFormat format)

@@ -7,6 +7,7 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
 #include <LegendEngine/Graphics/Vulkan/OccasionalUpdateBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/SingleUpdateBuffer.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanTexture2DArray.hpp>
 #include <LegendEngine/IO/Logger.hpp>
 
 namespace le
@@ -142,6 +143,14 @@ namespace le
     Scope<Texture2D> VulkanGraphicsContext::CreateTexture2D(const TextureData& loader)
     {
         return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader, m_GraphicsQueueMutex);
+    }
+
+    Scope<Texture2DArray> VulkanGraphicsContext::CreateTexture2DArray(size_t width,
+            size_t height, uint8_t channels,
+            const std::span<TextureData*>& textureData)
+    {
+        return std::make_unique<VulkanTexture2DArray>(m_GraphicsContext,
+            width, height, channels, textureData, m_GraphicsQueueMutex);
     }
 
     Scope<Shader> VulkanGraphicsContext::CreateShader(std::span<Shader::Stage> stages)

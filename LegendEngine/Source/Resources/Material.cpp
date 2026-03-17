@@ -9,7 +9,7 @@ namespace le
         m_pShader(m_ShaderManager.GetByID("solid"))
     {}
 
-    void Material::SetTexture(Texture2D* toSet)
+    void Material::SetTexture(Texture* toSet)
     {
         m_pTexture = toSet;
 
@@ -29,7 +29,7 @@ namespace le
         m_Changed = true;
     }
 
-    Texture2D* Material::GetTexture() const
+    Texture* Material::GetTexture() const
     {
         return m_pTexture;
     }

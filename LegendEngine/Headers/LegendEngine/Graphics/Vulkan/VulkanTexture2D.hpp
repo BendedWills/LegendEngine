@@ -3,14 +3,13 @@
 #include <LegendEngine/Resources/Texture2D.hpp>
 
 #include <vk_mem_alloc.h>
-#include <Tether/Rendering/Vulkan/DescriptorSetWritable.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanTextureBridge.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 #include <vulkan/vulkan.h>
 
 namespace le
 {
-    class VulkanTexture2D final : public Texture2D,
-        public Tether::Rendering::Vulkan::DescriptorSetWritable
+    class VulkanTexture2D final : public Texture2D, VulkanTextureBridge
     {
     public:
         VulkanTexture2D(Tether::Rendering::Vulkan::GraphicsContext& context,
@@ -19,8 +18,9 @@ namespace le
 
         VkDescriptorType GetDescriptorType() override;
         VkDescriptorImageInfo GetImageInfo(uint32_t setIndex) override;
+
+        Texture::APIBridge* GetAPIBridge() override;
     private:
-        VkFormat FindImageFormat(uint32_t channels) const;
         void CreateImageView(VkFormat format);
         void CreateSampler();
 

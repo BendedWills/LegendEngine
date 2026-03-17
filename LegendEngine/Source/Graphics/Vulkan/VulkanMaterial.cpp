@@ -1,5 +1,6 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanMaterial.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanTextureBridge.hpp>
 
 namespace le
 {
@@ -23,7 +24,7 @@ namespace le
             *static_cast<Uniforms*>(m_Uniforms.GetMappedData(i)) = uniforms;
 
         m_Set.UpdateSets(&m_Uniforms, 0);
-        if (const auto pTexture = static_cast<VulkanTexture2D*>(GetTexture());
+        if (const auto pTexture = static_cast<VulkanTextureBridge*>(GetTexture()->GetAPIBridge());
             pTexture)
             m_Set.UpdateSets(pTexture, 1);
     }
