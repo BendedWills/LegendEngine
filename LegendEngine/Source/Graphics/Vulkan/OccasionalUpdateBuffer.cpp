@@ -150,7 +150,7 @@ namespace le
 
     void OccasionalUpdateBuffer::Use(uint32_t currentFrame)
     {
-    	m_FramesUsingBuffer |= m_HasUpdated << currentFrame;
+    	m_FramesUsingBuffer |= (!m_HasUpdated) << currentFrame;
     }
 
     VulkanVertexBuffer::BufferInfo OccasionalUpdateBuffer::GetBufferInfo() const
