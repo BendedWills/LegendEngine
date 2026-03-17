@@ -8,7 +8,7 @@ if (LE_BUILD_TESTS)
 	add_subdirectory(Tests)
 endif()
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 23)
 
 file(GLOB_RECURSE LE_SOURCES "Source/*.cpp" "Headers/*.hpp")
 list(FILTER LE_SOURCES EXCLUDE REGEX "Vulkan.")
@@ -54,9 +54,13 @@ PRIVATE
 	${VK_INCLUDES}
 )
 
+if (NOT MSVC)
+	set(EXTRA_LIBS stdc++exp)
+endif()
+
 target_link_libraries(${PROJECT_NAME} PUBLIC
 	tether
 	tetherRendering
 	${VK_LIBS}
-	stdc++exp
+	${EXTRA_LIBS}
 )

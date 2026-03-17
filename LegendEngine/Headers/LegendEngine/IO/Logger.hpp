@@ -5,6 +5,7 @@
 #include <format>
 #include <memory>
 #include <vector>
+#include <optional>
 
 #ifndef NDEBUG
 #define LE_INFO(...) le::Logger::GetGlobalLogger().Info(__VA_ARGS__)

@@ -2,6 +2,8 @@
 
 #include <LegendEngine/Common/Defs.hpp>
 
+#include <span>
+
 namespace le
 {
     namespace VertexTypes
