@@ -21,7 +21,7 @@ namespace le
 
 		vkFreeCommandBuffers(m_Device, m_CommandPool, 1,
 			&m_CommandBuffer);
-		vkDestroyFence(m_Device, m_CompletedFence, nullptr);
+		vkDestroyFence(m_Device, m_Fence, nullptr);
 	}
 
 	void VulkanBufferStager::CreateStagingBuffer(VkBuffer target, const size_t targetSize)
@@ -43,18 +43,30 @@ namespace le
 		RecordCommandBuffer(target, targetSize);
 	}
 
-	void VulkanBufferStager::Upload(const void* data, const size_t targetSize) const
+	void VulkanBufferStager::Upload(const void* data, const size_t targetSize,
+		VkSemaphore signalSemaphore, size_t semaphoreValue) const
 	{
 		memcpy(m_StagingInfo.pMappedData, data, targetSize);
 
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffer;
+		VkSemaphoreSubmitInfo signalInfo{};
+		signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalInfo.semaphore = signalSemaphore;
+		signalInfo.value = semaphoreValue;
 
-		vkResetFences(m_Device, 1, &m_CompletedFence);
+		VkCommandBufferSubmitInfo commandBufferInfo{};
+		commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+		commandBufferInfo.commandBuffer = m_CommandBuffer;
+
+		VkSubmitInfo2 submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.pSignalSemaphoreInfos = &signalInfo;
+		submitInfo.signalSemaphoreInfoCount = signalSemaphore ? 1 : 0;
+
+		vkResetFences(m_Device, 1, &m_Fence);
 		std::scoped_lock lock(m_TransferMutex);
-		vkQueueSubmit(m_Queue, 1, &submitInfo, m_CompletedFence);
+		vkQueueSubmit2(m_Queue, 1, &submitInfo, m_Fence);
 	}
 
 	void VulkanBufferStager::DeleteStagingBuffer()
@@ -77,12 +89,7 @@ namespace le
 
 	void VulkanBufferStager::Wait() const
 	{
-		vkWaitForFences(m_Device, 1, &m_CompletedFence, true, UINT64_MAX);
-	}
-
-	bool VulkanBufferStager::IsSignaled() const
-	{
-		return vkGetFenceStatus(m_Device, m_CompletedFence) == VK_SUCCESS;
+		vkWaitForFences(m_Device, 1, &m_Fence, true, UINT64_MAX);
 	}
 
 	void VulkanBufferStager::RecordCommandBuffer(const VkBuffer target, const size_t targetSize) const
@@ -109,6 +116,6 @@ namespace le
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		LE_CHECK_VK(vkCreateFence(m_Device, &fenceInfo, nullptr, &m_CompletedFence));
+		LE_CHECK_VK(vkCreateFence(m_Device, &fenceInfo, nullptr, &m_Fence));
 	}
 }

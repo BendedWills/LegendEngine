@@ -70,9 +70,13 @@ namespace le
 
         for (uint64_t i = 0; i < m_Context.GetFramesInFlight(); i++)
         {
-            vkDestroySemaphore(m_Device, m_RenderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
+        }
+
+        for (uint32_t i = 0; i < m_SwapchainImageCount; i++)
+        {
+            vkDestroySemaphore(m_Device, m_RenderFinishedSemaphores[i], nullptr);
         }
 
         LE_DEBUG("Destroyed renderer");
@@ -99,7 +103,18 @@ namespace le
 
         // If this frame is still in flight, wait for it to finish rendering before
         // rendering another frame.
-        vkQueueWaitIdle(m_Context.GetQueue());
+        vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], true, UINT64_MAX);
+
+        if (m_IsFrameWaiting && m_FrameWithStagerWaits == m_CurrentFrame)
+        {
+            // The fence for this frame has been waited on. This frame had the
+            // semaphores for the stager completion, so it's safe to delete it
+            // here.
+            m_WaitingForStagerDeletion->DeleteStager();
+            m_IsFrameWaiting = false;
+            m_ShouldWaitForStager = false;
+            m_WaitingForStagerDeletion = nullptr;
+        }
 
         // The swapchain has one more than the minimum images, so the index
         // might not be the same as m_CurrentFrame
@@ -203,6 +218,7 @@ namespace le
         m_Sets[1] = *m_SceneSet->GetSetAtIndex(m_CurrentFrame);
         m_Sets[2] = *m_DefaultMatSet.GetSetAtIndex(m_CurrentFrame);
         m_pCurrentShader = static_cast<VulkanShader*>(m_ShaderManager.GetByID("solid"));
+        m_HaveSetsChanged = true;
 
         vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             m_pCurrentShader->GetPipeline());
@@ -222,6 +238,8 @@ namespace le
         else
             m_Sets[2] = *m_DefaultMatSet.GetSetAtIndex(m_CurrentFrame);
 
+        m_HaveSetsChanged = true;
+
         if (pShader == m_pCurrentShader)
             return;
 
@@ -236,10 +254,21 @@ namespace le
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
         const Object& object = mesh.GetObject();
-        auto& vertexBuffer = static_cast<VulkanVertexBuffer&>(
-            mesh.GetVertexBuffer());
+        Ref<VulkanVertexBuffer> vertexBuffer =
+            std::static_pointer_cast<VulkanVertexBuffer>(mesh.GetVertexBuffer());
 
-        vertexBuffer.DeleteUnusedBuffers(m_InFlightFences, m_CurrentFrame);
+        VkBuffer vkVertexBuffer = vertexBuffer->GetVertexBuffer();
+        if (!vkVertexBuffer)
+            return;
+
+        vertexBuffer->DeleteUnusedBuffers(m_InFlightFences, m_CurrentFrame);
+
+        if (!m_ShouldWaitForStager && vertexBuffer->ShouldWait())
+        {
+            m_WaitingForStagerDeletion = vertexBuffer;
+            m_StagerSemaphoreValue = vertexBuffer->GetSemaphoreValue();
+            m_ShouldWaitForStager = true;
+        }
 
         Pipeline::ObjectTransform transform;
         transform.transform = object.GetTransformationMatrix();
@@ -248,28 +277,25 @@ namespace le
             VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform),
             &transform);
 
-        // The sets that have a chance of not being used should be at the end
-        // of m_Sets
-        const size_t setCount = std::size(m_Sets);
+        if (m_HaveSetsChanged)
+        {
+            vkCmdBindDescriptorSets(
+                buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                m_pCurrentShader->GetPipelineLayout(),
+                0, std::size(m_Sets),
+                m_Sets,
+                0, nullptr
+            );
+            m_HaveSetsChanged = false;
+        }
 
-        vkCmdBindDescriptorSets(
-            buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            m_pCurrentShader->GetPipelineLayout(),
-            0, setCount,
-            m_Sets,
-            0, nullptr
-        );
-
-        if (!vertexBuffer.GetVertexBuffer())
-            return;
-
-        const VkBuffer vBuffers[] = { vertexBuffer.GetVertexBuffer() };
+        const VkBuffer vBuffers[] = { vkVertexBuffer };
         constexpr VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(buffer, 0, 1, vBuffers, offsets);
 
         vkCmdBindIndexBuffer(
             buffer,
-            vertexBuffer.GetIndexBuffer(),
+            vertexBuffer->GetIndexBuffer(),
             0,
             VK_INDEX_TYPE_UINT32
         );
@@ -305,29 +331,51 @@ namespace le
 
         EndCommandBuffer();
 
-        VkResult result = vkEndCommandBuffer(buffer);
+        const VkResult result = vkEndCommandBuffer(buffer);
         LE_ASSERT(result == VK_SUCCESS, "Failed to end command buffer");
+
+        size_t waitSemaphoreCount = 1;
+
+        VkSemaphoreSubmitInfo submitInfos[2]{};
+        submitInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+        submitInfos[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+        submitInfos[0].semaphore = m_ImageAvailableSemaphores[m_CurrentFrame];
+
+        if (!m_IsFrameWaiting && m_ShouldWaitForStager)
+        {
+            waitSemaphoreCount++;
+            m_IsFrameWaiting = true;
+            m_FrameWithStagerWaits = m_CurrentFrame;
+
+            submitInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+            submitInfos[1].stageMask = VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT;
+            submitInfos[1].semaphore = m_WaitingForStagerDeletion->GetSemaphore();
+            submitInfos[1].value = m_StagerSemaphoreValue;
+        }
+
+        VkSemaphoreSubmitInfo signalInfo{};
+        signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+        signalInfo.semaphore = m_RenderFinishedSemaphores[m_CurrentImageIndex];
+
+        VkCommandBufferSubmitInfo commandBufferInfo{};
+        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+        commandBufferInfo.commandBuffer = m_CommandBuffers[m_CurrentFrame];
 
         // Wait for the image to be available before rendering the frame and
         // signal the render finished semaphore once rendering is complete.
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        const VkSemaphore waitSemaphores[] = { m_ImageAvailableSemaphores[m_CurrentFrame] };
-        const VkSemaphore signalSemaphores[] = { m_RenderFinishedSemaphores[m_CurrentFrame] };
-        constexpr VkPipelineStageFlags waitStages[] = {
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        VkSubmitInfo2 submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+        submitInfo.waitSemaphoreInfoCount = waitSemaphoreCount;
+        submitInfo.pWaitSemaphoreInfos = submitInfos;
+        submitInfo.commandBufferInfoCount = 1;
+        submitInfo.pCommandBufferInfos = &commandBufferInfo;
+        submitInfo.signalSemaphoreInfoCount = 1;
+        submitInfo.pSignalSemaphoreInfos = &signalInfo;
 
         // The in flight fence for this frame must be reset.
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
         m_GraphicsQueueMutex.lock();
-        LE_CHECK_VK(vkQueueSubmit(m_Context.GetQueue(), 1, &submitInfo,
+        LE_CHECK_VK(vkQueueSubmit2(m_Context.GetQueue(), 1, &submitInfo,
             m_InFlightFences[m_CurrentFrame]));
         m_GraphicsQueueMutex.unlock();
 
@@ -337,7 +385,7 @@ namespace le
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphores[m_CurrentImageIndex];
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &m_CurrentImageIndex;
@@ -370,6 +418,7 @@ namespace le
 
         m_SwapchainImages = m_Swapchain->GetImages();
         m_SwapchainImageViews = m_Swapchain->CreateImageViews();
+        m_SwapchainImageCount = m_Swapchain->GetImageCount();
     }
 
     void VulkanRenderer::CreateUniforms(VkDescriptorSetLayout cameraLayout,
@@ -477,8 +526,8 @@ namespace le
     void VulkanRenderer::CreateSyncObjects()
     {
         const uint32_t framesInFlight = m_Context.GetFramesInFlight();
+        m_RenderFinishedSemaphores.resize(m_SwapchainImageCount);
         m_ImageAvailableSemaphores.resize(framesInFlight);
-        m_RenderFinishedSemaphores.resize(framesInFlight);
         m_InFlightFences.resize(framesInFlight);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
@@ -490,15 +539,19 @@ namespace le
 
         for (uint32_t i = 0; i < framesInFlight; i++)
         {
-            if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
-                &m_ImageAvailableSemaphores[i]) != VK_SUCCESS)
-                throw std::runtime_error("Failed to create semaphore");
-            if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
-                &m_RenderFinishedSemaphores[i]) != VK_SUCCESS)
-                throw std::runtime_error("Failed to create semaphore");
             if (vkCreateFence(m_Device, &fenceInfo, nullptr,
                 &m_InFlightFences[i]) != VK_SUCCESS)
                 throw std::runtime_error("Failed to create fence");
+            if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
+                &m_ImageAvailableSemaphores[i]) != VK_SUCCESS)
+                throw std::runtime_error("Failed to create semaphore");
+        }
+
+        for (uint32_t i = 0; i < m_SwapchainImages.size(); i++)
+        {
+            if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
+                &m_RenderFinishedSemaphores[i]) != VK_SUCCESS)
+                throw std::runtime_error("Failed to create semaphore");
         }
     }
 

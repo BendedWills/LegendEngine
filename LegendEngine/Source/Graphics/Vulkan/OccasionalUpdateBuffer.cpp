@@ -14,12 +14,29 @@ namespace le
 	    m_TransferQueueMutex(context.GetTransferQueueMutex()),
 	    m_VertexStager(context),
 	    m_IndexStager(context)
-    {}
+    {
+    	CreateSemaphore();
+    }
 
     OccasionalUpdateBuffer::~OccasionalUpdateBuffer()
     {
 	    DestroyBuffer(m_Buffer1);
 	    DestroyBuffer(m_Buffer2);
+
+    	vkDestroySemaphore(m_Context.GetDevice(), m_Semaphore, nullptr);
+    }
+
+	void OccasionalUpdateBuffer::CreateSemaphore()
+    {
+    	VkSemaphoreTypeCreateInfo typeInfo{};
+    	typeInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+    	typeInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+
+    	VkSemaphoreCreateInfo semaphoreCreateInfo{};
+    	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    	semaphoreCreateInfo.pNext = &typeInfo;
+
+    	LE_CHECK_VK(vkCreateSemaphore(m_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &m_Semaphore));
     }
 
     void OccasionalUpdateBuffer::Update(const std::span<VertexTypes::Vertex3> vertices, const std::span<uint32_t> indices)
@@ -28,6 +45,7 @@ namespace le
     		return;
 
     	BufferDesc* buffer = AcquireUnusedBuffer();
+
 		// It's possible that another update happens here and then this locks
     	std::scoped_lock lock(m_UpdateMutex);
 
@@ -52,11 +70,24 @@ namespace le
 
 	    m_VertexStager.CreateStagingBuffer(buffer->vertexBuffer, vertexBufferSize);
 	    m_IndexStager.CreateStagingBuffer(buffer->indexBuffer, indexBufferSize);
-	    m_VertexStager.Upload(vertices.data(), vertexBufferSize);
-	    m_IndexStager.Upload(indices.data(), indexBufferSize);
 
-	    m_CurrentBuffer = buffer;
-	    m_HasUpdated = true;
+    	if (!m_HasStagerBeenDeleted)
+    	{
+			VkSemaphoreSignalInfo signalInfo{};
+    		signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO;
+    		signalInfo.semaphore = m_Semaphore;
+    		signalInfo.value = ++m_SemaphoreValue;
+
+    		vkSignalSemaphore(m_Context.GetDevice(), &signalInfo);
+    	}
+
+	    m_VertexStager.Upload(vertices.data(), vertexBufferSize, m_Semaphore, ++m_SemaphoreValue);
+	    m_IndexStager.Upload(indices.data(), indexBufferSize, m_Semaphore, ++m_SemaphoreValue);
+
+    	// Relaxed because of the update mutex lock
+	    m_CurrentBuffer.store(buffer, std::memory_order_relaxed);
+	    m_HasUpdated.store(true, std::memory_order_relaxed);
+	    m_HasStagerBeenDeleted.store(false, std::memory_order_relaxed);
     }
 
     void OccasionalUpdateBuffer::Resize(const size_t, const size_t)
@@ -86,17 +117,6 @@ namespace le
     	if (!currentBuffer)
     		return;
 
-		{
-			std::scoped_lock lock(m_UpdateMutex);
-
-			// It might have changed
-			if (m_VertexStager.IsSignaled() && m_IndexStager.IsSignaled())
-			{
-				m_VertexStager.DeleteStagingBuffer();
-				m_IndexStager.DeleteStagingBuffer();
-			}
-		}
-
     	// If no updates occurred, there's no point checking this next part
 	    if (!m_HasUpdated)
 		    return;
@@ -112,11 +132,16 @@ namespace le
 
     	std::scoped_lock lock(m_UpdateMutex);
 
+    	// Important to do m_CurrentBuffer.load() again here since the buffer
+    	// might have changed in the time it too to get here from the top of
+    	// the function. std::memory_order_relaxed is sufficient since the
+    	// above mutex emits at least an acquire barrier.
     	BufferDesc* other = m_CurrentBuffer.load(std::memory_order_relaxed) == &m_Buffer1 ? &m_Buffer2 : &m_Buffer1;
 	    DestroyBuffer(*other);
 
     	// Signal that nothing has been updated again
     	m_HasUpdated = false;
+    	m_HasStagerBeenDeleted = false;
     }
 
     VkBuffer OccasionalUpdateBuffer::GetVertexBuffer() const
@@ -135,7 +160,32 @@ namespace le
 	    return m_CurrentBuffer.load()->indexBuffer;
     }
 
-	std::pair<VkBuffer, VmaAllocation> OccasionalUpdateBuffer::CreateBuffer(VkBufferUsageFlags flags, const size_t size) const
+   	bool OccasionalUpdateBuffer::ShouldWait()
+    {
+	    return !m_HasStagerBeenDeleted;
+    }
+
+    void OccasionalUpdateBuffer::DeleteStager()
+    {
+    	std::scoped_lock lock(m_UpdateMutex);
+
+    	m_VertexStager.DeleteStagingBuffer();
+    	m_IndexStager.DeleteStagingBuffer();
+
+    	m_HasStagerBeenDeleted.store(true, std::memory_order_relaxed);
+    }
+
+    VkSemaphore OccasionalUpdateBuffer::GetSemaphore() const
+    {
+	    return m_Semaphore;
+    }
+
+    size_t OccasionalUpdateBuffer::GetSemaphoreValue() const
+    {
+	    return m_SemaphoreValue;
+    }
+
+    std::pair<VkBuffer, VmaAllocation> OccasionalUpdateBuffer::CreateBuffer(VkBufferUsageFlags flags, const size_t size) const
 	{
 		VkBuffer buffer = nullptr;
 		VmaAllocation allocation = nullptr;
@@ -174,10 +224,6 @@ namespace le
 	{
     	if (!buffer.vertexBuffer)
     		return;
-
-    	// TODO: figure out why vulkan gets mad about this
-    	m_VertexStager.Wait();
-    	m_IndexStager.Wait();
 
 		vmaDestroyBuffer(m_Context.GetAllocator(), buffer.vertexBuffer, buffer.vertexAllocation);
 		vmaDestroyBuffer(m_Context.GetAllocator(), buffer.indexBuffer, buffer.indexAllocation);

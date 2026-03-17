@@ -24,6 +24,12 @@ namespace le
 
 		[[nodiscard]] VkBuffer GetVertexBuffer() const override;
 		[[nodiscard]] VkBuffer GetIndexBuffer() const override;
+
+		bool ShouldWait() override;
+		void DeleteStager() override;
+
+		VkSemaphore GetSemaphore() const override;
+		size_t GetSemaphoreValue() const override;
 	private:
 		struct BufferDesc
 		{
@@ -36,6 +42,7 @@ namespace le
 			size_t indexCount = 0;
 		};
 
+		void CreateSemaphore();
 		[[nodiscard]] std::pair<VkBuffer, VmaAllocation> CreateBuffer(VkBufferUsageFlags flags, size_t size) const;
 		BufferDesc* AcquireUnusedBuffer();
 
@@ -46,10 +53,14 @@ namespace le
 
 		Tether::Rendering::Vulkan::GraphicsContext& m_Context;
 
+		VkSemaphore m_Semaphore = nullptr;
+		std::atomic_size_t m_SemaphoreValue = 0;
+
 		std::mutex& m_TransferQueueMutex;
 		std::mutex m_UpdateMutex;
 		std::atomic<BufferDesc*> m_CurrentBuffer = nullptr;
 		std::atomic_bool m_HasUpdated = false;
+		std::atomic_bool m_HasStagerBeenDeleted = false;
 
 		VulkanBufferStager m_VertexStager;
 		VulkanBufferStager m_IndexStager;

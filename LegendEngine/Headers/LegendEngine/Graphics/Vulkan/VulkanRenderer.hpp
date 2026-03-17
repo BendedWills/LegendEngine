@@ -3,6 +3,7 @@
 #include <LegendEngine/Components/LightComponent.hpp>
 #include <LegendEngine/Graphics/Renderer.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
+#include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 #include <Tether/Rendering/Vulkan/DescriptorSet.hpp>
 #include <Tether/Rendering/Vulkan/Surface.hpp>
 
@@ -89,6 +90,7 @@ namespace le
         std::vector<VmaAllocation> m_DepthAllocs;
         std::vector<VkImageView> m_DepthImageViews;
 
+        uint32_t m_SwapchainImageCount = 0;
         std::vector<VkImage> m_SwapchainImages;
         std::vector<VkImageView> m_SwapchainImageViews;
         std::vector<VkCommandBuffer> m_CommandBuffers;
@@ -97,6 +99,12 @@ namespace le
         std::vector<VkFence> m_InFlightFences;
 
         VkSurfaceFormatKHR m_SurfaceFormat;
+
+        Ref<VulkanVertexBuffer> m_WaitingForStagerDeletion = nullptr;
+        uint32_t m_FrameWithStagerWaits = 0;
+        size_t m_StagerSemaphoreValue = 0;
+        bool m_ShouldWaitForStager = false;
+        bool m_IsFrameWaiting = false;
 
         VkDevice m_Device;
         VkPhysicalDevice m_PhysicalDevice;
@@ -107,6 +115,7 @@ namespace le
         VkFormat m_DepthFormat;
 
         VkDescriptorSet m_Sets[3] = {};
+        bool m_HaveSetsChanged = true;
         VulkanShader* m_pCurrentShader = nullptr;
 
         std::mutex& m_GraphicsQueueMutex;

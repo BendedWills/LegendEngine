@@ -38,9 +38,9 @@ namespace le
         return m_pMaterial;
     }
 
-    VertexBuffer& MeshComponent::GetVertexBuffer() const
+    Ref<VertexBuffer> MeshComponent::GetVertexBuffer() const
     {
-        return *m_VertexBuffer;
+        return m_VertexBuffer;
     }
 
     uint32_t MeshComponent::GetIndexCount() const

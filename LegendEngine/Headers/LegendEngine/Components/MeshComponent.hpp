@@ -23,11 +23,11 @@ namespace le
 
         void SetMaterial(Material* pMaterial);
         Material* GetMaterial() const;
-        VertexBuffer& GetVertexBuffer() const;
+        Ref<VertexBuffer> GetVertexBuffer() const;
         uint32_t GetIndexCount() const;
     private:
         Material* m_pMaterial = nullptr;
-        Scope<VertexBuffer> m_VertexBuffer;
+        Ref<VertexBuffer> m_VertexBuffer;
         uint64_t m_IndexCount = 0;
     };
 }

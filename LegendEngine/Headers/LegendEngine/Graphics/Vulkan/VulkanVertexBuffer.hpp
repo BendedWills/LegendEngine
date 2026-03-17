@@ -15,5 +15,11 @@ namespace le
 
         virtual VkBuffer GetVertexBuffer() const = 0;
         virtual VkBuffer GetIndexBuffer() const = 0;
+
+        virtual bool ShouldWait() { return false; }
+        virtual void DeleteStager() {}
+        virtual size_t GetSemaphoreValue() const { return 0; }
+
+        virtual VkSemaphore GetSemaphore() const { return nullptr; }
     };
 }

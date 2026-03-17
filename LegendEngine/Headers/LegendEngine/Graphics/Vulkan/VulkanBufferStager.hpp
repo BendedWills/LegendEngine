@@ -12,12 +12,11 @@ namespace le
 		LEGENDENGINE_NO_COPY(VulkanBufferStager);
 
 		void CreateStagingBuffer(VkBuffer target, size_t targetSize);
-		void Upload(const void* data, size_t targetSize) const;
+		void Upload(const void* data, size_t targetSize,
+			VkSemaphore signalSemaphore = nullptr, size_t semaphoreValue = 0) const;
 		void DeleteStagingBuffer();
-
-		void Wait() const;
-		bool IsSignaled() const;
 	private:
+		void Wait() const;
 		void CreateCommandBuffer();
 		void RecordCommandBuffer(VkBuffer target, size_t targetSize) const;
 		void CreateFence();
@@ -32,6 +31,6 @@ namespace le
 		VkBuffer m_StagingBuffer = nullptr;
 		VmaAllocationInfo m_StagingInfo;
 		VmaAllocation m_StagingAllocation = nullptr;
-		VkFence m_CompletedFence = nullptr;
+		VkFence m_Fence = nullptr;
 	};
 }

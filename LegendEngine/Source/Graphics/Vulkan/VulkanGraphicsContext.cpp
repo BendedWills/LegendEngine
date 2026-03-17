@@ -5,7 +5,6 @@
 #include <LegendEngine/Graphics/Vulkan/VulkanRenderTarget.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanShader.hpp>
 #include <LegendEngine/Graphics/Vulkan/VulkanTexture2D.hpp>
-#include <LegendEngine/Graphics/Vulkan/VulkanVertexBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/OccasionalUpdateBuffer.hpp>
 #include <LegendEngine/Graphics/Vulkan/SingleUpdateBuffer.hpp>
 #include <LegendEngine/IO/Logger.hpp>
@@ -13,11 +12,10 @@
 namespace le
 {
     static const char* EXTENSIONS[] =
-        { VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
-    static constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR DYNAMIC_RENDERING
     {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
-        .dynamicRendering = true
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
+        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
     };
 
     VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName)
@@ -210,6 +208,26 @@ namespace le
     {
         return m_GraphicsContext;
     }
+
+    static VkPhysicalDeviceSynchronization2FeaturesKHR SYNCHRONIZATION_2
+    {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR,
+        .synchronization2 = true
+    };
+
+    static VkPhysicalDeviceTimelineSemaphoreFeaturesKHR TIMELINE_SEMAPHORE
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR,
+            .pNext = static_cast<void*>(&SYNCHRONIZATION_2),
+            .timelineSemaphore = true,
+        };
+
+    static constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR DYNAMIC_RENDERING
+    {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
+        .pNext = static_cast<void*>(&TIMELINE_SEMAPHORE),
+        .dynamicRendering = true,
+    };
 
     TetherVulkan::ContextCreator::Info VulkanGraphicsContext::GetContextInfo(std::string_view applicationName)
     {
