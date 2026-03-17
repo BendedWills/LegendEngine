@@ -216,11 +216,11 @@ namespace le
     };
 
     static VkPhysicalDeviceTimelineSemaphoreFeaturesKHR TIMELINE_SEMAPHORE
-        {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR,
-            .pNext = static_cast<void*>(&SYNCHRONIZATION_2),
-            .timelineSemaphore = true,
-        };
+    {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR,
+        .pNext = static_cast<void*>(&SYNCHRONIZATION_2),
+        .timelineSemaphore = true,
+    };
 
     static constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR DYNAMIC_RENDERING
     {

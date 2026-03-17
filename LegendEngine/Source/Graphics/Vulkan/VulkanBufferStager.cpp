@@ -12,7 +12,6 @@ namespace le
 		m_CommandPool(context.GetTransferPool())
 	{
 		CreateCommandBuffer();
-		CreateFence();
 	}
 
 	VulkanBufferStager::~VulkanBufferStager()
@@ -26,8 +25,11 @@ namespace le
 
 	void VulkanBufferStager::CreateStagingBuffer(VkBuffer target, const size_t targetSize)
 	{
+		if (!m_Fence)
+			CreateFence();
+
 		Wait();
-		DeleteStagingBuffer();
+		vmaDestroyBuffer(m_GraphicsContext.GetAllocator(), m_StagingBuffer, m_StagingAllocation);
 
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -72,8 +74,10 @@ namespace le
 	void VulkanBufferStager::DeleteStagingBuffer()
 	{
 		vmaDestroyBuffer(m_GraphicsContext.GetAllocator(), m_StagingBuffer, m_StagingAllocation);
+		vkDestroyFence(m_Device, m_Fence, nullptr);
 		m_StagingBuffer = nullptr;
 		m_StagingAllocation = nullptr;
+		m_Fence = nullptr;
 	}
 
 	void VulkanBufferStager::CreateCommandBuffer()

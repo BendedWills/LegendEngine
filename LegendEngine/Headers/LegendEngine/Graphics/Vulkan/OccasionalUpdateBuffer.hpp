@@ -53,14 +53,14 @@ namespace le
 
 		Tether::Rendering::Vulkan::GraphicsContext& m_Context;
 
-		VkSemaphore m_Semaphore = nullptr;
+		std::atomic<VkSemaphore> m_Semaphore = nullptr;
 		std::atomic_size_t m_SemaphoreValue = 0;
 
 		std::mutex& m_TransferQueueMutex;
 		std::mutex m_UpdateMutex;
 		std::atomic<BufferDesc*> m_CurrentBuffer = nullptr;
 		std::atomic_bool m_HasUpdated = false;
-		std::atomic_bool m_HasStagerBeenDeleted = false;
+		std::atomic_bool m_HasStagerBeenDeleted = true;
 		std::atomic_bool m_HasUpdatedSinceWaiting = false;
 		uint64_t m_FramesUsingBuffer = 0;
 

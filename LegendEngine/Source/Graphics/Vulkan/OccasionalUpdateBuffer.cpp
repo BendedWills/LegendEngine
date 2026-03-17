@@ -37,7 +37,11 @@ namespace le
     	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     	semaphoreCreateInfo.pNext = &typeInfo;
 
-    	LE_CHECK_VK(vkCreateSemaphore(m_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &m_Semaphore));
+    	VkSemaphore semaphore = nullptr;
+
+    	LE_CHECK_VK(vkCreateSemaphore(m_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &semaphore));
+
+    	m_Semaphore = semaphore;
     }
 
     void OccasionalUpdateBuffer::Update(const std::span<VertexTypes::Vertex3> vertices, const std::span<uint32_t> indices)
@@ -71,6 +75,9 @@ namespace le
 
 	    m_VertexStager.CreateStagingBuffer(buffer->vertexBuffer, vertexBufferSize);
 	    m_IndexStager.CreateStagingBuffer(buffer->indexBuffer, indexBufferSize);
+
+    	if (!m_Semaphore)
+    		CreateSemaphore();
 
     	if (!m_HasStagerBeenDeleted)
     	{
@@ -145,7 +152,6 @@ namespace le
 
     	// Signal that nothing has been updated again
     	m_HasUpdated = false;
-    	m_HasStagerBeenDeleted = false;
     }
 
     void OccasionalUpdateBuffer::Use(uint32_t currentFrame)
@@ -185,6 +191,10 @@ namespace le
 
     	m_VertexStager.DeleteStagingBuffer();
     	m_IndexStager.DeleteStagingBuffer();
+
+    	vkDestroySemaphore(m_Context.GetDevice(), m_Semaphore, nullptr);
+		m_SemaphoreValue = 0;
+    	m_Semaphore = nullptr;
 
     	m_HasStagerBeenDeleted.store(true, std::memory_order_relaxed);
     }
