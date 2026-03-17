@@ -65,14 +65,13 @@ namespace le
 		return m_IndexCount;
 	}
 
-	VkBuffer SingleUpdateBuffer::GetVertexBuffer() const
+	VulkanVertexBuffer::BufferInfo SingleUpdateBuffer::GetBufferInfo() const
 	{
-		return m_VertexBuffer;
-	}
-
-	VkBuffer SingleUpdateBuffer::GetIndexBuffer() const
-	{
-		return m_IndexBuffer;
+		return {
+			.vertex = m_VertexBuffer,
+			.index = m_IndexBuffer,
+			.indexCount = m_IndexCount,
+		};
 	}
 
 	std::pair<VkBuffer, VmaAllocation> SingleUpdateBuffer::CreateBuffer(VkBufferUsageFlags flags, const size_t size) const

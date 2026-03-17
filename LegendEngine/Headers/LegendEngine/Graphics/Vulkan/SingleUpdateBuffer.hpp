@@ -17,8 +17,7 @@ namespace le
 		size_t GetVertexCount() override;
 		size_t GetIndexCount() override;
 
-		[[nodiscard]] VkBuffer GetVertexBuffer() const override;
-		[[nodiscard]] VkBuffer GetIndexBuffer() const override;
+		[[nodiscard]] BufferInfo GetBufferInfo() const override;
 	private:
 		[[nodiscard]] std::pair<VkBuffer, VmaAllocation> CreateBuffer(VkBufferUsageFlags flags, size_t size) const;
 

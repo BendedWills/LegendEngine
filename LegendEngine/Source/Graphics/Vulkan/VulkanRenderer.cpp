@@ -257,11 +257,13 @@ namespace le
         Ref<VulkanVertexBuffer> vertexBuffer =
             std::static_pointer_cast<VulkanVertexBuffer>(mesh.GetVertexBuffer());
 
-        VkBuffer vkVertexBuffer = vertexBuffer->GetVertexBuffer();
-        if (!vkVertexBuffer)
+        vertexBuffer->DeleteUnusedBuffers(m_CurrentFrame);
+
+        const VulkanVertexBuffer::BufferInfo info = vertexBuffer->GetBufferInfo();
+        if (!info.vertex)
             return;
 
-        vertexBuffer->DeleteUnusedBuffers(m_InFlightFences, m_CurrentFrame);
+        vertexBuffer->Use(m_CurrentFrame);
 
         if (!m_ShouldWaitForStager && vertexBuffer->ShouldWait())
         {
@@ -289,18 +291,18 @@ namespace le
             m_HaveSetsChanged = false;
         }
 
-        const VkBuffer vBuffers[] = { vkVertexBuffer };
+        const VkBuffer vBuffers[] = { info.vertex };
         constexpr VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(buffer, 0, 1, vBuffers, offsets);
 
         vkCmdBindIndexBuffer(
             buffer,
-            vertexBuffer->GetIndexBuffer(),
+            info.index,
             0,
             VK_INDEX_TYPE_UINT32
         );
 
-        vkCmdDrawIndexed(buffer, mesh.GetIndexCount(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(buffer, info.indexCount, 1, 0, 0, 0);
     }
 
     void VulkanRenderer::EndCommandBuffer() const

@@ -15,6 +15,7 @@ namespace le
 	    m_VertexStager(context),
 	    m_IndexStager(context)
     {
+    	LE_ASSERT(m_Context.GetFramesInFlight() <= 64, "Frames in flight can't be greater than 64. Please ask yourself why on earth you are doing this anyways.");
     	CreateSemaphore();
     }
 
@@ -112,7 +113,7 @@ namespace le
 	    return m_CurrentBuffer.load()->indexCount;
     }
 
-    void OccasionalUpdateBuffer::DeleteUnusedBuffers(const std::vector<VkFence>& fences, const uint32_t currentFrame)
+    void OccasionalUpdateBuffer::DeleteUnusedBuffers(const uint32_t currentFrame)
     {
 	    const BufferDesc* currentBuffer = m_CurrentBuffer.load();
     	if (!currentBuffer)
@@ -123,9 +124,11 @@ namespace le
 		    return;
 
     	// Check the fences to make sure no frames are using the other buffer
-	    for (const VkFence fence : fences)
-		    if (vkGetFenceStatus(m_Context.GetDevice(), fence) != VK_SUCCESS)
-			    return;
+    	if (m_FramesUsingBuffer)
+    	{
+    		m_FramesUsingBuffer &= ~(1 << currentFrame);
+    		return;
+    	}
 
     	// At this point, the new buffer has been created by Update (possibly
     	// on another thread) and the old one isn't in use by frames in flight,
@@ -145,20 +148,22 @@ namespace le
     	m_HasStagerBeenDeleted = false;
     }
 
-    VkBuffer OccasionalUpdateBuffer::GetVertexBuffer() const
+    void OccasionalUpdateBuffer::Use(uint32_t currentFrame)
     {
-    	if (!m_CurrentBuffer)
-    		return nullptr;
-
-	    return m_CurrentBuffer.load()->vertexBuffer;
+    	m_FramesUsingBuffer |= m_HasUpdated << currentFrame;
     }
 
-    VkBuffer OccasionalUpdateBuffer::GetIndexBuffer() const
+    VulkanVertexBuffer::BufferInfo OccasionalUpdateBuffer::GetBufferInfo() const
     {
-    	if (!m_CurrentBuffer)
-    		return nullptr;
+    	const BufferDesc* pBuffer = m_CurrentBuffer.load();
+    	if (!pBuffer)
+    		return {};
 
-	    return m_CurrentBuffer.load()->indexBuffer;
+    	return {
+    		.vertex = pBuffer->vertexBuffer,
+    		.index = pBuffer->indexBuffer,
+    		.indexCount = pBuffer->indexCount
+    	};
     }
 
    	bool OccasionalUpdateBuffer::ShouldWait()
@@ -218,7 +223,7 @@ namespace le
 
 	OccasionalUpdateBuffer::BufferDesc* OccasionalUpdateBuffer::AcquireUnusedBuffer()
 	{
-		while (true)
+    	while (true)
 		{
 			BufferDesc* buffer = &m_Buffer1;
 			if (!buffer->vertexBuffer)

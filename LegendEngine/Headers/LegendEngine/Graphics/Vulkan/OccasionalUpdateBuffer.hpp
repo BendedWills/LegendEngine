@@ -20,10 +20,10 @@ namespace le
 		size_t GetIndexCount() override;
 
 		// Called on rendering, by the main thread
-		void DeleteUnusedBuffers(const std::vector<VkFence>& fences, uint32_t currentFrame) override;
+		void DeleteUnusedBuffers(uint32_t currentFrame) override;
+		void Use(uint32_t currentFrame) override;
 
-		[[nodiscard]] VkBuffer GetVertexBuffer() const override;
-		[[nodiscard]] VkBuffer GetIndexBuffer() const override;
+		[[nodiscard]] BufferInfo GetBufferInfo() const override;
 
 		bool ShouldWait() override;
 		void DeleteStager() override;
@@ -62,6 +62,7 @@ namespace le
 		std::atomic_bool m_HasUpdated = false;
 		std::atomic_bool m_HasStagerBeenDeleted = false;
 		std::atomic_bool m_HasUpdatedSinceWaiting = false;
+		uint64_t m_FramesUsingBuffer = 0;
 
 		VulkanBufferStager m_VertexStager;
 		VulkanBufferStager m_IndexStager;
