@@ -88,6 +88,7 @@ namespace le
 	    m_CurrentBuffer.store(buffer, std::memory_order_relaxed);
 	    m_HasUpdated.store(true, std::memory_order_relaxed);
 	    m_HasStagerBeenDeleted.store(false, std::memory_order_relaxed);
+    	m_HasUpdatedSinceWaiting.store(true, std::memory_order_relaxed);
     }
 
     void OccasionalUpdateBuffer::Resize(const size_t, const size_t)
@@ -169,6 +170,14 @@ namespace le
     {
     	std::scoped_lock lock(m_UpdateMutex);
 
+    	// Skip deletion if another thread got to Update in the time it took
+    	// to wait on deletion of the old stager it created
+    	if (m_HasUpdatedSinceWaiting.load(std::memory_order_relaxed))
+    	{
+    		m_HasUpdatedSinceWaiting.store(false, std::memory_order_relaxed);
+    		return;
+    	}
+
     	m_VertexStager.DeleteStagingBuffer();
     	m_IndexStager.DeleteStagingBuffer();
 
@@ -180,8 +189,9 @@ namespace le
 	    return m_Semaphore;
     }
 
-    size_t OccasionalUpdateBuffer::GetSemaphoreValue() const
+    size_t OccasionalUpdateBuffer::StartWait()
     {
+    	m_HasUpdatedSinceWaiting = false;
 	    return m_SemaphoreValue;
     }
 

@@ -29,7 +29,7 @@ namespace le
 		void DeleteStager() override;
 
 		VkSemaphore GetSemaphore() const override;
-		size_t GetSemaphoreValue() const override;
+		size_t StartWait() override;
 	private:
 		struct BufferDesc
 		{
@@ -61,6 +61,7 @@ namespace le
 		std::atomic<BufferDesc*> m_CurrentBuffer = nullptr;
 		std::atomic_bool m_HasUpdated = false;
 		std::atomic_bool m_HasStagerBeenDeleted = false;
+		std::atomic_bool m_HasUpdatedSinceWaiting = false;
 
 		VulkanBufferStager m_VertexStager;
 		VulkanBufferStager m_IndexStager;

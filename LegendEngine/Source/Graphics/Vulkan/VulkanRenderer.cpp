@@ -266,7 +266,7 @@ namespace le
         if (!m_ShouldWaitForStager && vertexBuffer->ShouldWait())
         {
             m_WaitingForStagerDeletion = vertexBuffer;
-            m_StagerSemaphoreValue = vertexBuffer->GetSemaphoreValue();
+            m_StagerSemaphoreValue = vertexBuffer->StartWait();
             m_ShouldWaitForStager = true;
         }
 
