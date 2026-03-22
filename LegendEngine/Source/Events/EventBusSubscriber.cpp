@@ -1,5 +1,5 @@
-#include <LegendEngine/Events/EventBus.hpp>
-#include <LegendEngine/Events/EventBusSubscriber.hpp>
+#include <LE/Events/EventBusSubscriber.hpp>
+#include <LE/Events/EventBus.hpp>
 
 namespace le
 {

@@ -1,4 +1,4 @@
-#include <LegendEngine/Events/UpdateEvent.hpp>
+#include <LE/Events/UpdateEvent.hpp>
 
 namespace le
 {

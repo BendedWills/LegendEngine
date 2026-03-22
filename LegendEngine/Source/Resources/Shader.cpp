@@ -1,8 +1,13 @@
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/Resources/Shader.hpp>
+#include <LE/Application.hpp>
+#include <LE/Resources/Shader.hpp>
 
 namespace le
 {
+    Shader::Shader(std::span<Stage> stages)
+    {
+        m_pipeline = Application::Get().GetGraphicsContext().CreatePipeline(stages);
+    }
+
     void Shader::SetCullMode(const CullMode cullMode)
     {
         m_CullMode = cullMode;
@@ -13,9 +18,8 @@ namespace le
         return m_CullMode;
     }
 
-    Scope<Shader> Shader::Create(const std::span<Stage> stages)
+    Pipeline& Shader::GetPipeline()
     {
-        LE_DEBUG("Shader created");
-        return Application::Get().GetGraphicsContext().CreateShader(stages);
+        return *m_pipeline;
     }
 }

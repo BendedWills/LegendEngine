@@ -1,5 +1,5 @@
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/Events/Event.hpp>
+#include <LE/Events/Event.hpp>
+#include <LE/IO/Logger.hpp>
 
 namespace le
 {

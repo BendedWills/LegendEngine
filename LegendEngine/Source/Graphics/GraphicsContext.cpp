@@ -1,24 +1,37 @@
-#include "LegendEngine/Graphics/GraphicsContext.hpp"
+#include <LE/Graphics/GraphicsContext.hpp>
+#include <LE/Common/Assert.hpp>
 
-#ifdef _VULKAN_API
-#include <LegendEngine/Graphics/Vulkan/VulkanGraphicsContext.hpp>
-#endif
+#define LE_GRAPHICS_CTX_CREATE_FUNC(name) \
+    __attribute__((weak)) \
+    Scope<GraphicsContext> Create##name##GraphicsContext(std::string_view) \
+    { \
+        LE_ASSERT(false, "Create"#name"GraphicsContext not overridden. Was the program linked with LE"#name"?"); \
+        return nullptr; \
+    }
 
 namespace le
 {
-    GraphicsContext::~GraphicsContext() {}
+    LE_GRAPHICS_CTX_CREATE_FUNC(Vulkan);
+    LE_GRAPHICS_CTX_CREATE_FUNC(OpenGL);
+    LE_GRAPHICS_CTX_CREATE_FUNC(D3D11);
+    LE_GRAPHICS_CTX_CREATE_FUNC(D3D12);
+    LE_GRAPHICS_CTX_CREATE_FUNC(WebGPU);
+
+    GraphicsContext::~GraphicsContext() = default;
 
     Scope<GraphicsContext> GraphicsContext::Create(const GraphicsAPI api,
-        std::string_view applicationName)
+        const std::string_view applicationName)
     {
         switch (api)
         {
-#ifdef _VULKAN_API
-            case GraphicsAPI::VULKAN: return std::make_unique<VulkanGraphicsContext>(
-                applicationName);
-#endif
+            case GraphicsAPI::VULKAN: return CreateVulkanGraphicsContext(applicationName);
+            case GraphicsAPI::OPENGL: return CreateOpenGLGraphicsContext(applicationName);
+            case GraphicsAPI::D3D11:  return CreateD3D11GraphicsContext(applicationName);
+            case GraphicsAPI::D3D12:  return CreateD3D12GraphicsContext(applicationName);
+            case GraphicsAPI::WEBGPU: return CreateWebGPUGraphicsContext(applicationName);
         }
 
-        throw std::runtime_error("Graphics API not implemented");
+        LE_ASSERT(false, "Unknown graphics API");
+        return nullptr;
     }
 }

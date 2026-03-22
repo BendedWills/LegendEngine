@@ -1,4 +1,4 @@
-#include <LegendEngine/IO/LoggerSinks.hpp>
+#include <LE/IO/LoggerSinks.hpp>
 
 #include <iostream>
 #include <print>

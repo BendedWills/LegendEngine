@@ -1,10 +1,15 @@
-#include "LegendEngine/Application.hpp"
+module;
 
 #include <ranges>
-#include <LegendEngine/Common/Stopwatch.hpp>
-#include <LegendEngine/Graphics/GraphicsContext.hpp>
-#include <LegendEngine/Events/RenderEvent.hpp>
-#include <LegendEngine/Events/UpdateEvent.hpp>
+#include "Common/Assert.hpp"
+#include "Common/Logger.hpp"
+
+module le.application;
+
+import le.common.stopwatch;
+import le.events.update_event;
+import le.events.render_event;
+import le.graphics.graphics_context;
 
 namespace le
 {
@@ -198,12 +203,19 @@ namespace le
         return *m_Instance;
     }
 
+    ResourceManager & Application::GetResourceManager()
+    {
+        return m_resourceManager;
+    }
+
     void Application::Update(const float delta, const bool updateWindow)
     {
 #ifndef LE_HEADLESS
         if (updateWindow)
             Tether::Application::Get().PollEvents();
 #endif
+
+        m_resourceManager.ProcessDeletedResources();
 
         RecalculateTransforms(m_GlobalScene);
         if (m_pActiveScene)

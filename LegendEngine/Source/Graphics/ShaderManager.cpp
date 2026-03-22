@@ -1,4 +1,4 @@
-#include <LegendEngine/Graphics/ShaderManager.hpp>
+module le.graphics.shader_manager;
 
 namespace le
 {

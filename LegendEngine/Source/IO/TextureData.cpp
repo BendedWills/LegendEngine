@@ -1,7 +1,6 @@
-#include <LegendEngine/IO/TextureData.hpp>
-
 #include <stb_image.h>
-#include <LegendEngine/Common/Assert.hpp>
+#include <LE/Common/Assert.hpp>
+#include <LE/IO/TextureData.hpp>
 
 namespace le
 {
@@ -51,11 +50,6 @@ namespace le
     uint8_t* TextureData::GetData() const
     {
         return m_Data;
-    }
-
-    bool TextureData::HasLoaded() const
-    {
-        return m_ShouldFree;
     }
 
     TextureData TextureData::FromData(const uint64_t width,

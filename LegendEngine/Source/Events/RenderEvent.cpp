@@ -1,4 +1,4 @@
-#include <LegendEngine/Events/RenderEvent.hpp>
+#include <LE/Events/RenderEvent.hpp>
 
 namespace le
 {

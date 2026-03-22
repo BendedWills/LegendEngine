@@ -1,4 +1,4 @@
-#include <LegendEngine/Components/Component.hpp>
+#include <LE/Components/Component.hpp>
 
 namespace le
 {

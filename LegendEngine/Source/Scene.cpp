@@ -1,6 +1,6 @@
 #include <ranges>
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/Scene.hpp>
+#include <LE/Application.hpp>
+#include <LE/Scene.hpp>
 
 namespace le
 {

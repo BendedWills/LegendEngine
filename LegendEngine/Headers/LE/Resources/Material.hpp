@@ -1,0 +1,45 @@
+#pragma once
+
+#include <LE/Resources/Resource.hpp>
+#include <LE/Resources/Texture.hpp>
+
+namespace le
+{
+	class GraphicsContext;
+	class Material final : public Resource
+	{
+	public:
+		Material();
+
+		void SetTexture(const ID<Texture>& toSet);
+		void SetColor(const Color& toSet);
+		[[nodiscard]] ID<Texture> GetTexture() const;
+	    [[nodiscard]] ID<Shader> GetShader() const;
+		[[nodiscard]] Color GetColor() const;
+
+		[[nodiscard]] bool HasChanged() const;
+
+		void UpdateUniforms(uint32_t currentFrame);
+
+		[[nodiscard]] DynamicUniforms& GetUniforms() const;
+
+		ID<Material> id = ID<Material>(m_uid);
+	private:
+		struct Uniforms
+		{
+			Color color = Color(1.0f);
+		};
+
+		GraphicsContext& m_context;
+	    const ShaderManager& m_ShaderManager;
+
+		ID<Shader> m_shaderId;
+		ID<Texture> m_textureId;
+		Uniforms m_uniformData;
+
+		Scope<Buffer> m_buffer;
+		Scope<DynamicUniforms> m_uniforms;
+
+		bool m_Changed = false;
+	};
+}

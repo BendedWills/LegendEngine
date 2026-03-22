@@ -1,6 +1,4 @@
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/IO/Logger.hpp>
-#include <LegendEngine/Resources/Resource.hpp>
+module le.resources.resource;
 
 namespace le
 {

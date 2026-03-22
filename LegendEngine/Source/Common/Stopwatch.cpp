@@ -1,4 +1,4 @@
-#include <LegendEngine/Common/Stopwatch.hpp>
+#include <LE/Common/Stopwatch.hpp>
 
 namespace le
 {

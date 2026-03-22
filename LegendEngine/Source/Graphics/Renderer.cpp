@@ -1,6 +1,9 @@
-#include <LegendEngine/Graphics/Renderer.hpp>
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/Components/MeshComponent.hpp>
+#include <LE/Camera.hpp>
+#include <LE/Scene.hpp>
+#include <LE/Components/Mesh.hpp>
+#include <LE/Graphics/Renderer.hpp>
+#include <LE/Graphics/RenderTarget.hpp>
+#include <LE/Math/Types.hpp>
 
 namespace le
 {
@@ -17,7 +20,7 @@ namespace le
             return;
 
         Camera* pCamera = m_RenderTarget.GetCamera();
-        if (!pCamera || !pCamera->IsEnabled())
+        if (!pCamera)
         {
             EndFrame();
             return;
@@ -34,7 +37,7 @@ namespace le
 
     void Renderer::RenderScene(Scene& scene)
     {
-        const std::type_index meshType = typeid(MeshComponent);
+        const std::type_index meshType = typeid(Mesh);
         const auto components = scene.GetObjectComponents();
         if (!components.contains(meshType))
             return;
@@ -46,7 +49,7 @@ namespace le
         const Material* lastMaterial = nullptr;
         for (Component* pComponent : *meshComponents)
         {
-            const MeshComponent& component = *static_cast<MeshComponent*>(pComponent);
+            const Mesh& component = *static_cast<Mesh*>(pComponent);
 
             if (!component.GetObject().IsEnabled())
                 continue;
@@ -55,10 +58,7 @@ namespace le
                 pMaterial != lastMaterial)
             {
                 if (pMaterial && pMaterial->HasChanged())
-                {
-                    pMaterial->UpdateMaterial();
-                    pMaterial->SetChanged(false);
-                }
+                    pMaterial->UpdateUniforms();
 
                 UseMaterial(pMaterial);
                 lastMaterial = pMaterial;
@@ -68,7 +68,7 @@ namespace le
         }
     }
 
-    void Renderer::SetClearColor(const Vector4f &color)
+    void Renderer::SetClearColor(const Vector4f& color)
     {
         m_ClearColor = color;
     }

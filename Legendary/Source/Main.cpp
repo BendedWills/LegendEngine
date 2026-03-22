@@ -33,16 +33,16 @@ public:
 				1, 2, 3
 			};
 
-			m_Mesh = &m_Object->AddComponent<MeshComponent>(
+			m_Mesh = &m_Object->AddComponent<Mesh>(
 				std::span<VertexTypes::Vertex3>(testVertices),
-				std::span<uint32_t>(indices), MeshComponent::UpdateFrequency::UPDATES_ONCE);
+				std::span<uint32_t>(indices), Mesh::UpdateFrequency::UPDATES_ONCE);
 		}
 
 		m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
 	}
 
 	Object* m_Object = nullptr;
-	MeshComponent* m_Mesh = nullptr;
+	Mesh* m_Mesh = nullptr;
 };
 
 class CameraManager final : public Input::InputListener
@@ -241,10 +241,6 @@ private:
 		floor.m_Object->SetScale(Vector3f(10));
 		floor.m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
 		floor.m_Mesh->SetMaterial(material2.get());
-
-		light = m_App.GetGlobalScene().CreateObject<Light>();
-	    LightComponent& lightComponent = light->GetLightComponent();
-	    lightComponent.SetColor(Color(1, 0, 0, 1));
 	}
 
 	Application& m_App;
@@ -258,7 +254,6 @@ private:
 	ObjectManager cube1;
 	ObjectManager cube2;
 	ObjectManager floor;
-    Light* light = nullptr;
 
 	Scope<Material> material;
 	Scope<Material> material2;
@@ -268,7 +263,7 @@ private:
 	size_t m_Frames = 0;
 };
 
-#include <LegendEngine/Common/Entrypoint.hpp>
+#include <../../LegendEngine/Modules/Common/Entrypoint.hpp>
 LEGENDENGINE_MAIN
 {
 	Application::Create(1280, 720, "Legendary", GraphicsAPI::VULKAN);

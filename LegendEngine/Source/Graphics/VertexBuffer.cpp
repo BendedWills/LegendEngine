@@ -1,4 +1,4 @@
-#include <LegendEngine/Graphics/VertexBuffer.hpp>
+#include <LE/Graphics/VertexBuffer.hpp>
 
 namespace le
 {

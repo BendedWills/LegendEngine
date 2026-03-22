@@ -1,10 +1,13 @@
-#include <LegendEngine/IO/Logger.hpp>
-#include <LegendEngine/IO/LoggerSinks.hpp>
+module;
 
-#include <ctime>
 #include <chrono>
+#include <ctime>
 #include <format>
-#include <LegendEngine/Application.hpp>
+
+module le.io.logger;
+
+import le.io.logger_sinks;
+import le.application;
 
 namespace le
 {

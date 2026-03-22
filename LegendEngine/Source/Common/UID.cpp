@@ -1,35 +1,40 @@
-#include <LegendEngine/Common/UID.hpp>
-
 #include <random>
+#include <LE/Common/UID.hpp>
 
 namespace le
 {
-	UID::UID()
-	{
-		std::random_device rd;
-		std::mt19937_64 gen(rd());
-		std::uniform_int_distribution<uint64_t> dist;
+    UID::UID()
+    {
+        std::random_device rd;
+        std::mt19937_64 gen(rd());
+        std::uniform_int_distribution<uint64_t> dist;
 
-		m_UID = dist(gen);
-	}
+        while (m_UID == 0)
+            m_UID = dist(gen);
+    }
 
-	UID::operator uint64_t() const
-	{
-		return Get();
-	}
+    UID::UID(const uint64_t id)
+        :
+        m_UID(id)
+    {}
 
-	bool UID::operator==(const UID& rhs) const
-	{
-		return m_UID == rhs.m_UID;
-	}
+    UID::operator uint64_t() const
+    {
+        return Get();
+    }
 
-	uint64_t UID::Get() const
-	{
-		return m_UID;
-	}
+    bool UID::operator==(const UID& rhs) const
+    {
+        return m_UID == rhs.m_UID;
+    }
+
+    uint64_t UID::Get() const
+    {
+        return m_UID;
+    }
 }
 
 size_t std::hash<le::UID>::operator()(const le::UID& uid) const noexcept
 {
-	return std::hash<size_t>{}(uid.Get());
+    return std::hash<size_t>{}(uid.Get());
 }

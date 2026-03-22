@@ -1,5 +1,5 @@
-#include <LegendEngine/Application.hpp>
-#include <LegendEngine/Graphics/RenderTarget.hpp>
+#include <LE/Camera.hpp>
+#include <LE/Graphics/RenderTarget.hpp>
 
 namespace le
 {
