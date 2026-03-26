@@ -19,19 +19,20 @@ namespace le
 
     void Application::ResizeHandler::OnWindowResize(const Tether::Events::WindowResizeEvent& event)
     {
-        if (m_Application.m_activeCameraID == 0)
-            return;
-
-        Scene* pSceneWithCamera = &m_Application.m_GlobalScene;
-        if (m_Application.m_pActiveScene && m_Application.m_pActiveScene->HasEntity(
-            m_Application.m_activeCameraID))
-            pSceneWithCamera = m_Application.m_pActiveScene;
-
         const auto width = static_cast<float>(event.GetNewWidth());
         const auto height = static_cast<float>(event.GetNewHeight());
         const float aspect = width / height;
 
-        pSceneWithCamera->QueryEntityComponents<Camera>(m_Application.m_activeCameraID,
+        m_Application.m_GlobalScene.QueryComponents<Camera>(
+        [aspect](Camera& camera)
+        {
+            camera.SetAspectRatio(aspect);
+        });
+
+        if (!m_Application.m_pActiveScene)
+            return;
+
+        m_Application.m_pActiveScene->QueryComponents<Camera>(
         [aspect](Camera& camera)
         {
             camera.SetAspectRatio(aspect);
@@ -54,12 +55,6 @@ namespace le
     Renderer& Application::GetRenderer() const
     {
         return m_Renderer;
-    }
-
-    void Application::SetActiveCameraID(UID cameraID)
-    {
-        m_activeCameraID = cameraID;
-        m_RenderTarget.SetCamera(cameraID);
     }
 
     RenderTarget& Application::GetRenderTarget() const
@@ -168,12 +163,7 @@ namespace le
     {
         return m_GlobalScene;
     }
-
-    UID Application::GetActiveCameraID() const
-    {
-        return m_activeCameraID;
-    }
-
+    
     Scene* Application::GetActiveScene() const
     {
         return m_pActiveScene;

@@ -11,14 +11,4 @@ namespace le
     {
         return 100;
     }
-
-    void RenderTarget::SetCamera(UID cameraID)
-    {
-        m_cameraUID = cameraID;
-    }
-
-    UID RenderTarget::GetCameraID() const
-    {
-        return m_cameraUID;
-    }
 }

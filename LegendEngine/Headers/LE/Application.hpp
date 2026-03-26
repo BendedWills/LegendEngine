@@ -46,9 +46,7 @@ namespace le
 
         LE_NO_COPY(Application);
 
-        void SetActiveCameraID(UID cameraID);
         void SetActiveScene(Scene& scene);
-
         void ClearActiveScene();
 
         GraphicsContext& GetGraphicsContext() const;
@@ -56,7 +54,6 @@ namespace le
         EventBus& GetEventBus();
         ResourceManager& GetResourceManager();
         Scene& GetGlobalScene();
-        UID GetActiveCameraID() const;
         Scene* GetActiveScene() const;
 
         void Update(float delta, bool updateWindow = true);
@@ -117,8 +114,6 @@ namespace le
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;
-
-        UID m_activeCameraID = 0;
 
         bool m_Headless = false;
 
