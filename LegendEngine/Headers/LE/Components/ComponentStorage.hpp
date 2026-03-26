@@ -3,6 +3,8 @@
 #include <cstring>
 #include <vector>
 
+#include <LE/Common/Assert.hpp>
+
 namespace le
 {
     struct Component;

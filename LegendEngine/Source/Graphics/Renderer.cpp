@@ -62,23 +62,23 @@ namespace le
     {
         ResourceManager& manager = Application::Get().GetResourceManager();
 
-        const Material* lastMaterial = nullptr;
+        Resource::ID<Material> lastMaterial = 0;
         scene.QueryComponents<Mesh, Transform>(
         [&](const Mesh& mesh, const Transform& transform)
         {
             if (!mesh.enabled)
                 return;
 
-            Ref<MeshData> resource = manager.GetResource<MeshData>(mesh.resource);
+            Ref<MeshData> resource = manager.GetResource<MeshData>(mesh.data);
 
-            if (Material* pMaterial = resource->GetMaterial();
-                pMaterial != lastMaterial)
+            if (mesh.material != lastMaterial)
             {
-                if (pMaterial && pMaterial->HasChanged())
-                    pMaterial->UpdateUniforms(m_currentFrame);
+                const Ref<Material> material = manager.GetResource<Material>(mesh.material);
+                if (material->HasChanged())
+                    material->UpdateUniforms(m_currentFrame);
 
-                UseMaterial(pMaterial);
-                lastMaterial = pMaterial;
+                UseMaterial(material.get());
+                lastMaterial = mesh.material;
             }
 
             DrawMesh(mesh, transform);

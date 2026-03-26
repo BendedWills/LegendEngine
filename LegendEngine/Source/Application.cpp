@@ -235,7 +235,7 @@ namespace le
     {
         scene.QueryComponents<Transform>([](Transform& transform)
         {
-            if (transform.IsDirty())
+            if (transform.dirty)
                 transform.CalculateTransformMatrix();
         });
     }

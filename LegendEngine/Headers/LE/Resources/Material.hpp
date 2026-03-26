@@ -1,6 +1,9 @@
 #pragma once
 
+#include <LE/Graphics/ShaderManager.hpp>
+#include <LE/Graphics/API/DynamicUniforms.hpp>
 #include <LE/Resources/Resource.hpp>
+#include <LE/Resources/Shader.hpp>
 #include <LE/Resources/Texture.hpp>
 
 namespace le

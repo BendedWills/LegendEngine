@@ -1,6 +1,7 @@
 #pragma once
 
 #include <span>
+#include <LE/Common/Types.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
 #include <LE/Resources/Resource.hpp>
 
@@ -18,7 +19,7 @@ namespace le
 
         struct Stage
         {
-            ShaderType type;
+            ShaderType type = ShaderType::VERTEX;
             const uint8_t* compiledShaderCode = nullptr;
             size_t compiledShaderSize = 0;
         };
@@ -28,7 +29,7 @@ namespace le
         void SetCullMode(CullMode cullMode);
         [[nodiscard]] CullMode GetCullMode() const;
 
-        Pipeline& GetPipeline() const;
+        [[nodiscard]] Pipeline& GetPipeline() const;
 
         ID<Shader> id = ID<Shader>(m_uid);
     protected:

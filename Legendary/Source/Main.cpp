@@ -1,13 +1,9 @@
-#include <iostream>
 #include <chrono>
 #include <thread>
 
-#include <LegendEngine/LegendEngine.hpp>
-#include <LegendEngine/IO/Logger.hpp>
-#include <LegendEngine/Events/UpdateEvent.hpp>
+#include <LE/LegendEngine.hpp>
 
 using namespace le;
-
 using namespace std::literals::chrono_literals;
 
 class ObjectManager
@@ -15,11 +11,11 @@ class ObjectManager
 public:
 	explicit ObjectManager(Scene* pScene)
 	{
-		m_Object = pScene->CreateObject<Object>();
+		m_Object = pScene->CreateEntity();
 
 		// Add the mesh component
 		{
-			VertexTypes::Vertex3 testVertices[] =
+			MeshData::Vertex3 testVertices[] =
 			{
 				{  0.5f,  0.5f, 0.0f,  1.0f, 1.0f },
 				{  0.5f, -0.5f, 0.0f,  1.0f, 0.0f },
@@ -34,8 +30,8 @@ public:
 			};
 
 			m_Mesh = &m_Object->AddComponent<Mesh>(
-				std::span<VertexTypes::Vertex3>(testVertices),
-				std::span<uint32_t>(indices), Mesh::UpdateFrequency::UPDATES_ONCE);
+				std::span<MeshData::Vertex3>(testVertices),
+				std::span<uint32_t>(indices), MeshData::UpdateFrequency::UPDATES_ONCE);
 		}
 
 		m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
@@ -106,16 +102,16 @@ public:
 		const bool pressed = info.IsPressed();
 		switch (info.GetKey())
 		{
-			case Utils::Keycodes::KEY_W: keys.w = pressed; break;
-			case Utils::Keycodes::KEY_A: keys.a = pressed; break;
-			case Utils::Keycodes::KEY_S: keys.s = pressed; break;
-			case Utils::Keycodes::KEY_D: keys.d = pressed; break;
+			case Keycodes::KEY_W: keys.w = pressed; break;
+			case Keycodes::KEY_A: keys.a = pressed; break;
+			case Keycodes::KEY_S: keys.s = pressed; break;
+			case Keycodes::KEY_D: keys.d = pressed; break;
 
-			case Utils::Keycodes::KEY_SPACE: keys.space = pressed; break;
-			case Utils::Keycodes::KEY_LEFT_SHIFT: keys.shift = pressed; break;
-			case Utils::Keycodes::KEY_LEFT_CONTROL: keys.ctrl = pressed; break;
+			case Keycodes::KEY_SPACE: keys.space = pressed; break;
+			case Keycodes::KEY_LEFT_SHIFT: keys.shift = pressed; break;
+			case Keycodes::KEY_LEFT_CONTROL: keys.ctrl = pressed; break;
 
-			case Utils::Keycodes::KEY_ESCAPE:
+			case Keycodes::KEY_ESCAPE:
 			{
 				m_Window.SetCursorMode(Tether::Window::CursorMode::NORMAL);
 				m_CaptureMouse = false;
@@ -184,7 +180,6 @@ public:
 		:
 		m_App(app),
 		m_Sub(m_App.GetEventBus()),
-		testScene(Scene::Create()),
 		camera(testScene.get()),
 		cube1(testScene.get()),
 		cube2(testScene.get()),
@@ -197,7 +192,7 @@ public:
 
 		m_App.SetActiveScene(*testScene);
 
-		Utils::Window& window = m_App.GetWindow();
+		Window& window = m_App.GetWindow();
 		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		window.SetRawInputEnabled(true);
 
@@ -248,7 +243,7 @@ private:
 
 	Stopwatch fpsTimer;
 
-	Scope<Scene> testScene;
+	Scene testScene;
 
 	CameraManager camera;
 	ObjectManager cube1;
@@ -263,7 +258,7 @@ private:
 	size_t m_Frames = 0;
 };
 
-#include <../../LegendEngine/Modules/Common/Entrypoint.hpp>
+#include <LE/Common/Entrypoint.hpp>
 LEGENDENGINE_MAIN
 {
 	Application::Create(1280, 720, "Legendary", GraphicsAPI::VULKAN);

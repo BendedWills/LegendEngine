@@ -5,7 +5,6 @@
 
 #include <LE/Common/Assert.hpp>
 #include <LE/Common/Defs.hpp>
-#include <LE/Common/Entrypoint.hpp>
 #include <LE/Common/Platform.hpp>
 #include <LE/Common/Stopwatch.hpp>
 #include <LE/Common/UID.hpp>

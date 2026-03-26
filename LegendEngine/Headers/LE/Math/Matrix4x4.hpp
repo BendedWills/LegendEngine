@@ -3,6 +3,8 @@
 #include <LE/Math/Quaternion.hpp>
 #include <LE/Math/Vector4.hpp>
 
+#include <cstdint>
+
 namespace le
 {
 	// Matrix4x4 must be of a numeric type
