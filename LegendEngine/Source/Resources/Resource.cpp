@@ -1,4 +1,6 @@
-module le.resources.resource;
+#include <LE/Resources/Resource.hpp>
+
+#include <LE/Application.hpp>
 
 namespace le
 {

@@ -2,7 +2,7 @@
 
 namespace le
 {
-    UpdateEvent::UpdateEvent(float deltaTime)
+    UpdateEvent::UpdateEvent(const float deltaTime)
         :
         Event(false),
         m_DeltaTime(deltaTime)

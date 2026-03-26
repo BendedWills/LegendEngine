@@ -1,4 +1,5 @@
 #include <LE/Events/EventBusSubscriber.hpp>
+
 #include <LE/Events/EventBus.hpp>
 
 namespace le

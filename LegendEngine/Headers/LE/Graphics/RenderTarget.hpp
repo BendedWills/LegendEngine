@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstdint>
-
-import le.camera;
+#include <LE/Common/UID.hpp>
 
 namespace le
 {
@@ -15,9 +14,9 @@ namespace le
         [[nodiscard]] virtual uint32_t GetWidth() const;
         [[nodiscard]] virtual uint32_t GetHeight() const;
 
-        void SetCamera(Camera* camera);
-        [[nodiscard]] Camera* GetCamera() const;
+        void SetCamera(UID camera);
+        [[nodiscard]] UID GetCameraID() const;
     protected:
-        Camera* m_pCamera = nullptr;
+        UID m_cameraUID = 0;
     };
 }

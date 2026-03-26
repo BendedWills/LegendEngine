@@ -2,8 +2,9 @@
 
 #include <cmath>
 
-import le.math.vector3;
-import le.math.funcs;
+#include <LE/Math/Constants.hpp>
+#include <LE/Math/Vector3.hpp>
+#include <LE/Math/Funcs/Vector3Funcs.hpp>
 
 namespace le
 {

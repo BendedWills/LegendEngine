@@ -1,8 +1,12 @@
 #pragma once
 
 #include <LE/Common/Defs.hpp>
+#include <LE/Components/Camera.hpp>
+#include <LE/Components/Mesh.hpp>
 #include <LE/Graphics/RenderTarget.hpp>
 #include <LE/Math/Types.hpp>
+#include <LE/Resources/Material.hpp>
+#include <LE/World/Scene.hpp>
 
 namespace le
 {
@@ -26,7 +30,7 @@ namespace le
     protected:
         virtual bool StartFrame() = 0;
         virtual void UseMaterial(Material* pMaterial) = 0;
-        virtual void DrawMesh(const Mesh& mesh) = 0;
+        virtual void DrawMesh(const Mesh& mesh, const Transform& transform) = 0;
         virtual void EndFrame() = 0;
 
         virtual void UpdateCameraUniforms(const Camera& camera) = 0;
@@ -35,8 +39,9 @@ namespace le
         Vector4f m_ClearColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
     private:
         void RenderScene(Scene& scene);
-        void UpdateCamera(Camera* pCamera);
+        void UpdateCamera(Scene& scene, UID cameraID);
 
         Scene* m_Scene = nullptr;
+        size_t m_currentFrame = 0;
     };
 }

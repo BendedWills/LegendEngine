@@ -17,14 +17,14 @@
 #define LE_ERROR_TRACE(...) le::Logger::GetGlobalLogger().ErrorTrace(std::source_location::current(), __VA_ARGS__)
 #define LE_DEBUG_TRACE(...) le::Logger::GetGlobalLogger().DebugTrace(std::source_location::current(), __VA_ARGS__)
 #else
-#define LE_INFO(...)
-#define LE_WARN(...)
-#define LE_ERROR(...)
-#define LE_DEBUG(...)
-#define LE_INFO_TRACE(...)
-#define LE_WARN_TRACE(...)
-#define LE_ERROR_TRACE(...)
-#define LE_DEBUG_TRACE(...)
+#define LE_INFO(...) ;
+#define LE_WARN(...) ;
+#define LE_ERROR(...) ;
+#define LE_DEBUG(...) ;
+#define LE_INFO_TRACE(...) ;
+#define LE_WARN_TRACE(...) ;
+#define LE_ERROR_TRACE(...) ;
+#define LE_DEBUG_TRACE(...) ;
 #endif
 
 namespace le

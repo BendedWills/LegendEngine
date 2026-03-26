@@ -1,4 +1,3 @@
-#include <LE/Camera.hpp>
 #include <LE/Graphics/RenderTarget.hpp>
 
 namespace le
@@ -13,13 +12,13 @@ namespace le
         return 100;
     }
 
-    void RenderTarget::SetCamera(Camera* camera)
+    void RenderTarget::SetCamera(UID cameraID)
     {
-        m_pCamera = camera;
+        m_cameraUID = cameraID;
     }
 
-    Camera* RenderTarget::GetCamera() const
+    UID RenderTarget::GetCameraID() const
     {
-        return m_pCamera;
+        return m_cameraUID;
     }
 }

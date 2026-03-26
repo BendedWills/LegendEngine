@@ -1,20 +1,19 @@
 #pragma once
 
 #include <memory>
-#include <Tether/Tether.hpp>
-#include <LE/Common/Defs.hpp>
+#include <LE/TetherBindings.hpp>
 #include <LE/Common/Assert.hpp>
-#include <LE/Common/Logger.hpp>
-
-import le.common.types;
-import le.graphics.renderer;
-import le.resources.resource_manager;
-import le.events.event_bus;
-import le.io.logger;
-import le.tether_bindings;
+#include <LE/Common/Defs.hpp>
+#include <LE/Events/EventBus.hpp>
+#include <LE/Graphics/GraphicsContext.hpp>
+#include <LE/Graphics/Renderer.hpp>
+#include <LE/IO/Logger.hpp>
+#include <LE/Resources/ResourceManager.hpp>
 
 namespace le
 {
+    enum class GraphicsAPI;
+
     class Application final
     {
     public:
@@ -47,7 +46,7 @@ namespace le
 
         LE_NO_COPY(Application);
 
-        void SetActiveCamera(Camera* pCamera);
+        void SetActiveCameraID(UID cameraID);
         void SetActiveScene(Scene& scene);
 
         void ClearActiveScene();
@@ -57,7 +56,7 @@ namespace le
         EventBus& GetEventBus();
         ResourceManager& GetResourceManager();
         Scene& GetGlobalScene();
-        Camera* GetActiveCamera() const;
+        UID GetActiveCameraID() const;
         Scene* GetActiveScene() const;
 
         void Update(float delta, bool updateWindow = true);
@@ -81,7 +80,7 @@ namespace le
         // Must be called on the main thread
         void RenderFrame(float delta = 1.0f);
 
-        static void RecalculateTransforms(const Scene& scene);
+        static void RecalculateTransforms(Scene& scene);
 
         EventBus m_EventBus;
         ResourceManager m_resourceManager;
@@ -90,7 +89,7 @@ namespace le
         class ResizeHandler : public Tether::Events::EventHandler
         {
         public:
-            ResizeHandler(Application& app);
+            explicit ResizeHandler(Application& app);
 
             void OnWindowResize(const Tether::Events::WindowResizeEvent& event) override;
 
@@ -119,7 +118,7 @@ namespace le
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;
 
-        Camera* m_pActiveCamera = nullptr;
+        UID m_activeCameraID = 0;
 
         bool m_Headless = false;
 

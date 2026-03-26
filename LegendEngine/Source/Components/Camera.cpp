@@ -1,10 +1,10 @@
-#include <LE/Camera.hpp>
+#include <LE/Components/Camera.hpp>
 
 namespace le
 {
     Camera::Camera()
     {
-        CalculateViewMatrix();
+        CalculateViewMatrix({});
         CalculateProjectionMatrix();
     }
 
@@ -57,18 +57,16 @@ namespace le
         return m_CameraDirty;
     }
 
-    void Camera::CalculateViewMatrix()
+    void Camera::CalculateViewMatrix(const Transform& transform)
     {
-        Quaternion q = GetRotation();
+        const Quaternion q = transform.GetRotation();
 
         m_ForwardVector = Math::Rotate(Math::Inverse(q), Vector3f(0, 0, -1.0f));
         m_RightVector = Math::Rotate(Math::Inverse(q), Vector3f(1.0f, 0, 0));
 
         auto rot = Matrix4x4f(q);
-        const Matrix4x4f pos = Math::Translate(Matrix4x4f::MakeIdentity(), -m_Position);
+        const Matrix4x4f pos = Math::Translate(Matrix4x4f::MakeIdentity(), -transform.GetPosition());
         m_View = rot * pos;
-
-        m_Dirty = false;
     }
 
     void Camera::CalculateProjectionMatrix()
@@ -78,10 +76,5 @@ namespace le
         m_Projection[1][1] *= -1;
 
         m_CameraDirty = false;
-    }
-
-    void Camera::TransformChanged()
-    {
-        CalculateViewMatrix();
     }
 }

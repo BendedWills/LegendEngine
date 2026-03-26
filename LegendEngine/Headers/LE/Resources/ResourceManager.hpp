@@ -35,36 +35,34 @@ namespace le
         }
 
         template<typename T>
-        bool HasResource(Resource::ID<T> id)
+        bool HasResource(const Resource::ID<T> id)
         {
             std::shared_lock lock(m_resourcesMutex);
-            return m_resources.contains(id.id) && !m_resources.at(id)->m_deleted;
+            return m_resources.contains(id.Get()) && !m_resources.at(id)->m_deleted;
         }
 
         template<typename T>
-        Ref<T> GetResource(Resource::ID<T> id)
+        Ref<T> GetResource(const Resource::ID<T> id)
         {
             std::shared_lock lock(m_resourcesMutex);
 
-            LE_ASSERT(HasResource<T>(id),
-                "Thread {} tried to access resource {} which doesn't exist",
-                std::this_thread::get_id(), id.id);
+            LE_ASSERT(HasResource<T>(id), "Tried to access resource (id = {}) which doesn't exist", id.Get());
 
-            Ref<T> resource = std::static_pointer_cast<T>(m_resources.at(id.id));
-            LE_ASSERT(!resource->m_deleted, "Tried to access deleted resource {}", id.id);
+            Ref<T> resource = std::static_pointer_cast<T>(m_resources.at(id.Get()));
+            LE_ASSERT(!resource->m_deleted, "Tried to access deleted resource {}", id.Get());
 
             return resource;
         }
 
         template<typename T>
-        void Delete(Resource::ID<T> id)
+        void Delete(const Resource::ID<T> id)
         {
-            LE_ASSERT(HasResource(id), "Tried to delete nonexistent resource {}",
-                id.id);
+            LE_ASSERT(HasResource<T>(id), "Tried to delete nonexistent resource {}",
+                id.Get());
 
             Ref<T> resource = GetResource<T>(id);
 
-            LE_ASSERT(!resource->m_deleted, "Resource {} was deleted twice", id.id);
+            LE_ASSERT(!resource->m_deleted, "Resource {} was deleted twice", id.Get());
 
             resource->m_deleted = true;
         }

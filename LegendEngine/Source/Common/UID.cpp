@@ -9,8 +9,7 @@ namespace le
         std::mt19937_64 gen(rd());
         std::uniform_int_distribution<uint64_t> dist;
 
-        while (m_UID == 0)
-            m_UID = dist(gen);
+        m_UID = dist(gen);
     }
 
     UID::UID(const uint64_t id)

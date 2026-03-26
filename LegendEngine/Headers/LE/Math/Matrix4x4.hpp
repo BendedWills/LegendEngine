@@ -1,4 +1,7 @@
-import le.math.quaternion;
+#pragma once
+
+#include <LE/Math/Quaternion.hpp>
+#include <LE/Math/Vector4.hpp>
 
 namespace le
 {

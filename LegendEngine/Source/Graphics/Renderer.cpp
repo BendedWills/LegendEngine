@@ -1,9 +1,13 @@
-#include <LE/Camera.hpp>
-#include <LE/Scene.hpp>
-#include <LE/Components/Mesh.hpp>
+#include <LE/Application.hpp>
 #include <LE/Graphics/Renderer.hpp>
+
+#include <LE/Components/ActiveCamera.hpp>
+#include <LE/Components/Mesh.hpp>
+#include <LE/Components/Transform.hpp>
 #include <LE/Graphics/RenderTarget.hpp>
+#include <LE/IO/Logger.hpp>
 #include <LE/Math/Types.hpp>
+#include <LE/World/Scene.hpp>
 
 namespace le
 {
@@ -19,53 +23,66 @@ namespace le
         if (!StartFrame())
             return;
 
-        Camera* pCamera = m_RenderTarget.GetCamera();
-        if (!pCamera)
+        Scene* sceneWithCamera = nullptr;
+        UID cameraID = 0;
+        ActiveCamera currentCamera;
+        currentCamera.priority = std::numeric_limits<float>::min();
+        for (Scene* scene : scenes)
         {
+            scene->QueryArchetypes<Camera, Transform, ActiveCamera>(
+            [&](const Archetype& archetype, const size_t row, Camera&, Transform&, const ActiveCamera& active)
+            {
+                if (active.priority >= currentCamera.priority)
+                {
+                    sceneWithCamera = scene;
+                    cameraID = archetype.entityIDs[row];
+                    currentCamera = active;
+                }
+            });
+        }
+
+        if (cameraID == 0)
+        {
+            LE_WARN("Camera was not set. Skipping frame.");
             EndFrame();
             return;
         }
 
-        UpdateCamera(pCamera);
+        UpdateCamera(*sceneWithCamera, cameraID);
 
         for (Scene* pScene : scenes)
             if (pScene)
                 RenderScene(*pScene);
 
         EndFrame();
+        m_currentFrame = (m_currentFrame + 1) % Application::FRAMES_IN_FLIGHT;
     }
 
     void Renderer::RenderScene(Scene& scene)
     {
-        const std::type_index meshType = typeid(Mesh);
-        const auto components = scene.GetObjectComponents();
-        if (!components.contains(meshType))
-            return;
-
-        // TODO: this has raw pointers to the component and its object.
-        // if the object is destroyed on another thread, this could cause a crash
-        const std::vector<Component*>* meshComponents = &components.at(meshType);
+        ResourceManager& manager = Application::Get().GetResourceManager();
 
         const Material* lastMaterial = nullptr;
-        for (Component* pComponent : *meshComponents)
+        scene.QueryComponents<Mesh, Transform>(
+        [&](const Mesh& mesh, const Transform& transform)
         {
-            const Mesh& component = *static_cast<Mesh*>(pComponent);
+            if (!mesh.enabled)
+                return;
 
-            if (!component.GetObject().IsEnabled())
-                continue;
+            Ref<MeshData> resource = manager.GetResource<MeshData>(mesh.resource);
 
-            if (Material* pMaterial = component.GetMaterial();
+            if (Material* pMaterial = resource->GetMaterial();
                 pMaterial != lastMaterial)
             {
                 if (pMaterial && pMaterial->HasChanged())
-                    pMaterial->UpdateUniforms();
+                    pMaterial->UpdateUniforms(m_currentFrame);
 
                 UseMaterial(pMaterial);
                 lastMaterial = pMaterial;
             }
 
-            DrawMesh(component);
-        }
+            DrawMesh(mesh, transform);
+        });
     }
 
     void Renderer::SetClearColor(const Vector4f& color)
@@ -78,18 +95,27 @@ namespace le
         return m_RenderTarget;
     }
 
-    void Renderer::UpdateCamera(Camera* pCamera)
+    void Renderer::UpdateCamera(Scene& scene, const UID cameraID)
     {
-        if (pCamera->IsDirty())
-        {
-            pCamera->CalculateViewMatrix();
-            UpdateCameraUniforms(*pCamera);
-        }
+        bool updated = false;
 
-        if (pCamera->IsCameraDirty())
+        scene.QueryEntityComponents<Camera, Transform>(cameraID, [&](Camera& camera, Transform& transform)
         {
-            pCamera->CalculateProjectionMatrix();
-            UpdateCameraUniforms(*pCamera);
-        }
+            if (camera.IsCameraDirty())
+            {
+                camera.CalculateProjectionMatrix();
+                updated = true;
+            }
+
+            if (transform.dirty)
+            {
+                camera.CalculateViewMatrix(transform);
+                transform.dirty = true;
+                updated = true;
+            }
+        });
+
+        if (updated)
+            UpdateCameraUniforms(scene.GetComponentData<Camera>(cameraID));
     }
 }

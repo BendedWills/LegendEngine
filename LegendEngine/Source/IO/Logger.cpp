@@ -1,13 +1,11 @@
-module;
+#include <LE/IO/Logger.hpp>
+
+#include <LE/IO/LoggerSinks.hpp>
+#include <LE/Application.hpp>
 
 #include <chrono>
 #include <ctime>
 #include <format>
-
-module le.io.logger;
-
-import le.io.logger_sinks;
-import le.application;
 
 namespace le
 {

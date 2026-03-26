@@ -38,3 +38,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	tetherRendering
 	${EXTRA_LIBS}
 )
+
+add_subdirectory(Platform)

@@ -7,16 +7,14 @@
 #include <LE/Graphics/RenderTarget.hpp>
 #include <LE/Graphics/ShaderManager.hpp>
 #include <LE/Graphics/VertexBuffer.hpp>
+#include <LE/Graphics/API/Buffer.hpp>
+#include <LE/Graphics/API/CommandBuffer.hpp>
 #include <LE/Graphics/API/DynamicUniforms.hpp>
 #include <LE/Graphics/API/Image.hpp>
 #include <LE/Graphics/API/ImageView.hpp>
-#include <LE/Graphics/API/Buffer.hpp>
-#include <LE/Graphics/API/CommandBuffer.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
 #include <LE/Graphics/API/Sampler.hpp>
 #include <LE/Resources/Shader.hpp>
-#include <LE/Resources/Texture2D.hpp>
-#include <LE/Resources/Texture2DArray.hpp>
 #include <Tether/Window.hpp>
 
 namespace le

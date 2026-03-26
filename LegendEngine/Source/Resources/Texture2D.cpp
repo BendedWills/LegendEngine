@@ -11,7 +11,7 @@ namespace le
         m_Channels(loader.GetChannels()),
         m_context(Application::Get().GetGraphicsContext())
     {
-        auto format = Image::Format::R8G8B8A8;
+        Image::Format format;
         switch (m_Channels)
         {
             case 1: format = Image::Format::R8; break;
@@ -23,9 +23,9 @@ namespace le
 
         const Image::Info imageInfo =
         {
-            .format = format,
             .width = m_Width,
             .height = m_Height,
+            .format = format,
         };
 
         m_image = m_context.CreateImage(imageInfo);
@@ -87,8 +87,8 @@ namespace le
             region.imageSubresource.layerCount = 1;
             region.imageExtent =
             {
-                m_Width,
-                m_Height,
+                static_cast<uint32_t>(m_Width),
+                static_cast<uint32_t>(m_Height),
                 1
             };
 

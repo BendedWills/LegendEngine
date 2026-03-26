@@ -1,15 +1,11 @@
-module;
+#include <LE/Application.hpp>
 
-#include <ranges>
-#include "Common/Assert.hpp"
-#include "Common/Logger.hpp"
-
-module le.application;
-
-import le.common.stopwatch;
-import le.events.update_event;
-import le.events.render_event;
-import le.graphics.graphics_context;
+#include <LE/Common/Stopwatch.hpp>
+#include <LE/Components/Camera.hpp>
+#include <LE/Components/Transform.hpp>
+#include <LE/Events/RenderEvent.hpp>
+#include <LE/Events/UpdateEvent.hpp>
+#include <LE/World/Scene.hpp>
 
 namespace le
 {
@@ -23,12 +19,23 @@ namespace le
 
     void Application::ResizeHandler::OnWindowResize(const Tether::Events::WindowResizeEvent& event)
     {
-        if (!m_Application.m_pActiveCamera)
+        if (m_Application.m_activeCameraID == 0)
             return;
+
+        Scene* pSceneWithCamera = &m_Application.m_GlobalScene;
+        if (m_Application.m_pActiveScene && m_Application.m_pActiveScene->HasEntity(
+            m_Application.m_activeCameraID))
+            pSceneWithCamera = m_Application.m_pActiveScene;
 
         const auto width = static_cast<float>(event.GetNewWidth());
         const auto height = static_cast<float>(event.GetNewHeight());
-        m_Application.m_pActiveCamera->SetAspectRatio(width / height);
+        const float aspect = width / height;
+
+        pSceneWithCamera->QueryEntityComponents<Camera>(m_Application.m_activeCameraID,
+        [aspect](Camera& camera)
+        {
+            camera.SetAspectRatio(aspect);
+        });
     }
 
     Application::Application(
@@ -49,10 +56,10 @@ namespace le
         return m_Renderer;
     }
 
-    void Application::SetActiveCamera(Camera* pCamera)
+    void Application::SetActiveCameraID(UID cameraID)
     {
-        m_pActiveCamera = pCamera;
-        m_RenderTarget.SetCamera(pCamera);
+        m_activeCameraID = cameraID;
+        m_RenderTarget.SetCamera(cameraID);
     }
 
     RenderTarget& Application::GetRenderTarget() const
@@ -162,9 +169,9 @@ namespace le
         return m_GlobalScene;
     }
 
-    Camera* Application::GetActiveCamera() const
+    UID Application::GetActiveCameraID() const
     {
-        return m_pActiveCamera;
+        return m_activeCameraID;
     }
 
     Scene* Application::GetActiveScene() const
@@ -224,11 +231,13 @@ namespace le
         m_EventBus.DispatchEvent<UpdateEvent>(UpdateEvent(delta));
     }
 
-    void Application::RecalculateTransforms(const Scene& scene)
+    void Application::RecalculateTransforms(Scene& scene)
     {
-        for (const auto& object : scene.GetObjects() | std::views::values)
-            if (object->IsDirty())
-                object->CalculateTransformMatrix();
+        scene.QueryComponents<Transform>([](Transform& transform)
+        {
+            if (transform.IsDirty())
+                transform.CalculateTransformMatrix();
+        });
     }
 
     void Application::Run()

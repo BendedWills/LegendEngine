@@ -1,8 +1,12 @@
-import le.math;
+#pragma once
+
+#include <LE/Components/Component.hpp>
+#include <LE/Components/Transform.hpp>
+#include <LE/Math/Math.hpp>
 
 namespace le
 {
-    class Camera final
+    class Camera final : public Component
     {
     public:
         struct CameraUniforms
@@ -27,7 +31,7 @@ namespace le
 
         [[nodiscard]] bool IsCameraDirty() const;
 
-        void CalculateViewMatrix();
+        void CalculateViewMatrix(const Transform& transform);
         void CalculateProjectionMatrix();
 
         const Vector3f UP = Vector3f(0, 1, 0);

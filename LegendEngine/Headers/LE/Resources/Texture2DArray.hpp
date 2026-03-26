@@ -14,6 +14,9 @@ namespace le
 		[[nodiscard]] size_t GetWidth() const;
 		[[nodiscard]] size_t GetHeight() const;
 		[[nodiscard]] uint8_t GetChannels() const;
+
+		Image& GetImage() override;
+		ImageView& GetImageView() override;
 	private:
 		void Upload(GraphicsContext& context, size_t size,
 			const std::span<TextureData*>& textureData) const;

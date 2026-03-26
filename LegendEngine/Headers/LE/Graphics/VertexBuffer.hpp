@@ -5,15 +5,6 @@
 
 namespace le
 {
-    namespace VertexTypes
-    {
-        struct Vertex3
-        {
-            float position[3];
-			float texcoord[3];
-		};
-    }
-
     class VertexBuffer
     {
     public:

@@ -1,4 +1,5 @@
 #include <LE/Graphics/GraphicsContext.hpp>
+
 #include <LE/Common/Assert.hpp>
 
 #define LE_GRAPHICS_CTX_CREATE_FUNC(name) \

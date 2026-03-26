@@ -1,6 +1,5 @@
 #pragma once
 
-#include <span>
 #include <LE/Graphics/API/Buffer.hpp>
 #include <LE/Graphics/API/Image.hpp>
 #include <LE/Graphics/API/Types.hpp>

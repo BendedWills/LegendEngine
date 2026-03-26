@@ -3,8 +3,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <LE/Common/Defs.hpp>
-
-import le.resources.shader;
+#include <LE/Resources/Shader.hpp>
 
 namespace le
 {
@@ -15,11 +14,11 @@ namespace le
         virtual ~ShaderManager() = 0;
         LE_NO_COPY(ShaderManager);
 
-        Shader* GetByID(std::string_view shaderID) const;
+        Resource::ID<Shader> GetByID(std::string_view shaderID) const;
     protected:
         // The shader object MUST exist for the life of the base class
-        void RegisterShader(std::string_view id, Shader& shader);
+        void RegisterShader(std::string_view id, Resource::ID<Shader> shader);
     private:
-        std::unordered_map<std::string, Shader*> m_Shaders;
+        std::unordered_map<std::string, Resource::ID<Shader>> m_shaders;
     };
 }

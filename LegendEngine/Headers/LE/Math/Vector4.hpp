@@ -2,8 +2,7 @@
 
 #include <stdexcept>
 
-import le.math.vector2;
-import le.math.vector3;
+#include <LE/Math/Vector3.hpp>
 
 namespace le
 {

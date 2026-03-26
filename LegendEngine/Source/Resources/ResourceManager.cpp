@@ -1,4 +1,5 @@
 #include <LE/Resources/ResourceManager.hpp>
+
 #include <ranges>
 #include <LE/Application.hpp>
 
@@ -8,7 +9,7 @@ namespace le
     {
         std::unique_lock lock(m_resourcesMutex);
 
-        for (const Ref resource : m_resources | std::views::values)
+        for (const Ref resource: m_resources | std::views::values)
         {
             if (!resource->m_deleted)
                 continue;

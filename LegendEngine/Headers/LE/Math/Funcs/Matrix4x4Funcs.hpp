@@ -2,8 +2,7 @@
 
 #include <cmath>
 
-import le.math.matrix4x4;
-import le.math.vector3;
+#include <LE/Math/Matrix4x4.hpp>
 
 namespace le::Math
 {

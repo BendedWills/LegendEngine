@@ -3,7 +3,7 @@
 
 namespace le
 {
-    Shader::Shader(std::span<Stage> stages)
+    Shader::Shader(const std::span<Stage> stages)
     {
         m_pipeline = Application::Get().GetGraphicsContext().CreatePipeline(stages);
     }
@@ -18,7 +18,7 @@ namespace le
         return m_CullMode;
     }
 
-    Pipeline& Shader::GetPipeline()
+    Pipeline& Shader::GetPipeline() const
     {
         return *m_pipeline;
     }

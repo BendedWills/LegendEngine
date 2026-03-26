@@ -1,8 +1,8 @@
 #pragma once
 
 #include <span>
-#include <LE/Resources/Resource.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
+#include <LE/Resources/Resource.hpp>
 
 namespace le
 {
@@ -28,7 +28,7 @@ namespace le
         void SetCullMode(CullMode cullMode);
         [[nodiscard]] CullMode GetCullMode() const;
 
-        Pipeline& GetPipeline();
+        Pipeline& GetPipeline() const;
 
         ID<Shader> id = ID<Shader>(m_uid);
     protected:

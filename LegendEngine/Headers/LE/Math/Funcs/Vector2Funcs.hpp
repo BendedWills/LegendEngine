@@ -1,4 +1,6 @@
-import le.math.vector2;
+#pragma once
+
+#include <LE/Math/Vector2.hpp>
 
 namespace le::Math
 {

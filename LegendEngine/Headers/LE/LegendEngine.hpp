@@ -1,44 +1,52 @@
-export import le.common.stopwatch;
-export import le.common.types;
-export import le.common.uid;
+#pragma once
 
-export import le.components.component;
-export import le.components.light;
-export import le.components.mesh;
-export import le.components.transform;
+#include <LE/Application.hpp>
+#include <LE/TetherBindings.hpp>
 
-export import le.events.event;
-export import le.events.event_bus;
-export import le.events.event_bus_subscriber;
-export import le.events.render_event;
-export import le.events.update_event;
+#include <LE/Common/Assert.hpp>
+#include <LE/Common/Defs.hpp>
+#include <LE/Common/Entrypoint.hpp>
+#include <LE/Common/Platform.hpp>
+#include <LE/Common/Stopwatch.hpp>
+#include <LE/Common/UID.hpp>
 
-export import le.graphics.api.buffer;
-export import le.graphics.api.dynamic_uniforms;
-export import le.graphics.api.image;
-export import le.graphics.api.sampler;
-export import le.graphics.api.uniform_buffer;
-export import le.graphics.graphics_context;
-export import le.graphics.renderer;
-export import le.graphics.render_target;
-export import le.graphics.shader_manager;
-export import le.graphics.vertex_buffer;
+#include <LE/Components/ComponentStorage.hpp>
+#include <LE/Components/Light.hpp>
+#include <LE/Components/Mesh.hpp>
+#include <LE/Components/Transform.hpp>
 
-export import le.io.logger;
-export import le.io.logger_sinks;
-export import le.io.texture_data;
+#include <LE/Events/EventBus.hpp>
+#include <LE/Events/EventBusSubscriber.hpp>
+#include <LE/Events/RenderEvent.hpp>
+#include <LE/Events/UpdateEvent.hpp>
 
-export import le.math;
+#include <LE/Graphics/GraphicsContext.hpp>
+#include <LE/Graphics/Renderer.hpp>
+#include <LE/Graphics/RenderTarget.hpp>
+#include <LE/Graphics/ShaderManager.hpp>
+#include <LE/Graphics/VertexBuffer.hpp>
+#include <LE/Graphics/API/Buffer.hpp>
+#include <LE/Graphics/API/CommandBuffer.hpp>
+#include <LE/Graphics/API/DynamicUniforms.hpp>
+#include <LE/Graphics/API/Image.hpp>
+#include <LE/Graphics/API/ImageView.hpp>
+#include <LE/Graphics/API/Pipeline.hpp>
+#include <LE/Graphics/API/Sampler.hpp>
+#include <LE/Graphics/API/Types.hpp>
 
-export import le.resources.resource;
-export import le.resources.resource_manager;
-export import le.resources.shader;
-export import le.resources.texture;
-export import le.resources.texture2d;
-export import le.resources.texture2d_array;
+#include <LE/IO/Logger.hpp>
+#include <LE/IO/LoggerSinks.hpp>
+#include <LE/IO/TextureData.hpp>
 
-export import le.application;
-export import le.camera;
-export import le.object;
-export import le.scene;
-export import le.tether_bindings;
+#include <LE/Math/Math.hpp>
+
+#include <LE/Resources/Material.hpp>
+#include <LE/Resources/ResourceManager.hpp>
+#include <LE/Resources/Shader.hpp>
+#include <LE/Resources/Texture2D.hpp>
+#include <LE/Resources/Texture2DArray.hpp>
+
+#include <LE/World/Archetype.hpp>
+#include <LE/World/ECS.hpp>
+#include <LE/World/Entity.hpp>
+#include <LE/World/Scene.hpp>

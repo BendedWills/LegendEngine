@@ -2,49 +2,15 @@
 
 #include <cmath>
 
-import le.math.quaternion;
+#include <LE/Math/Quaternion.hpp>
 
 namespace le::Math
 {
-	Quaternion Normalize(const Quaternion& q)
-	{
-		float length = Length(q);
-
-		// Check for divide by 0
-		if (length == 0)
-			return q;
-
-		return {
-			q.w / length,
-			q.x / length,
-			q.y / length,
-			q.z / length
-		};
-	}
-
-	float Dot(const Quaternion& q1, const Quaternion& q2)
-	{
-		float product = q1.w * q2.w;
-		product += q1.x * q2.x;
-		product += q1.y * q2.y;
-		product += q1.z * q2.z;
-		return product;
-	}
-
-	float Length(const Quaternion& q)
-	{
-		return std::sqrt(Dot(q, q));
-	}
-
-	Quaternion Conjugate(const Quaternion& q)
-	{
-		return { q.w, -q.x, -q.y, -q.z };
-	}
-
-	Quaternion Inverse(const Quaternion& q)
-	{
-		return Conjugate(q) / Dot(q, q);
-	}
+	Quaternion Normalize(const Quaternion& q);
+	float Dot(const Quaternion& q1, const Quaternion& q2);
+	float Length(const Quaternion& q);
+	Quaternion Conjugate(const Quaternion& q);
+	Quaternion Inverse(const Quaternion& q);
 
 	template<typename T>
 	Quaternion AngleAxis(T angle, Vector3<T> axis)

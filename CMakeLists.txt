@@ -17,4 +17,3 @@ set(TETHER_HEADLESS ${LE_HEADLESS})
 
 add_subdirectory(Legendary)
 add_subdirectory(LegendEngine)
-add_subdirectory(Platform)

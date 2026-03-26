@@ -14,7 +14,7 @@ namespace le
         :
         m_context(Application::Get().GetGraphicsContext()),
         m_ShaderManager(m_context.GetShaderManager()),
-        m_shaderId(m_ShaderManager.GetByID("solid")->id)
+        m_shaderId(m_ShaderManager.GetByID("solid"))
     {
         m_buffer = m_context.CreatePerFrameBuffer(Buffer::Usage::UNIFORM_BUFFER,
             sizeof(Uniforms));
@@ -43,7 +43,7 @@ namespace le
         const ShaderManager& manager =
             Application::Get().GetGraphicsContext().GetShaderManager();
         if (toSet != 0)
-            m_shaderId = manager.GetByID("textured")->id;
+            m_shaderId = manager.GetByID("textured");
         else
             m_shaderId = manager.GetByID("solid");
 

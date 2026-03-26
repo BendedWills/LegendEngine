@@ -1,4 +1,6 @@
-import le.math.constants;
+#pragma once
+
+#include <LE/Math/Constants.hpp>
 
 namespace le::Math
 {

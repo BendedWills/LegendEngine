@@ -1,5 +1,7 @@
 #include <LE/Events/EventBus.hpp>
 
+#include <ranges>
+
 namespace le
 {
     void EventBus::Subscribe(const std::type_index eventID, EventBusSubscriber& subscriber)

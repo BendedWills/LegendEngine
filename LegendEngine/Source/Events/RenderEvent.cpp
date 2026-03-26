@@ -2,7 +2,7 @@
 
 namespace le
 {
-    RenderEvent::RenderEvent(float deltaTime)
+    RenderEvent::RenderEvent(const float deltaTime)
         :
         Event(false),
         m_DeltaTime(deltaTime)

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LE/Graphics/API/Buffer.hpp>
 #include <cstdint>
+#include <LE/Graphics/API/Buffer.hpp>
 
 namespace le
 {

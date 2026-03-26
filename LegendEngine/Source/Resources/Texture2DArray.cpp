@@ -6,7 +6,7 @@
 
 namespace le
 {
-	Texture2DArray::Texture2DArray(size_t width, size_t height, uint8_t channels,
+	Texture2DArray::Texture2DArray(const size_t width, const size_t height, const uint8_t channels,
 		const std::span<TextureData*>& textureData)
 		:
 		m_Width(width),
@@ -15,7 +15,7 @@ namespace le
 	{
 		GraphicsContext& context = Application::Get().GetGraphicsContext();
 
-		auto format = Image::Format::R8G8B8A8;
+		Image::Format format;
 		switch (m_Channels)
 		{
 			case 1: format = Image::Format::R8; break;
@@ -30,7 +30,7 @@ namespace le
 			width, height, textureData.size(), format
 		};
 
-		m_image = context->CreateImage(imageInfo);
+		m_image = context.CreateImage(imageInfo);
 
 		const ImageView::Info& viewInfo =
 		{
@@ -38,7 +38,9 @@ namespace le
 			textureData.size()
 		};
 
-		m_imageView = context->CreateImageView(viewInfo);
+		m_imageView = context.CreateImageView(viewInfo);
+
+		Upload(context, m_Width * m_Height * m_Channels, textureData);
 	}
 
 	size_t Texture2DArray::GetWidth() const
@@ -56,7 +58,7 @@ namespace le
 		return m_Channels;
 	}
 
-	void Texture2DArray::Upload(GraphicsContext& context, size_t size, const std::span<TextureData*>& textureData) const
+	void Texture2DArray::Upload(GraphicsContext& context, const size_t size, const std::span<TextureData*>& textureData) const
 	{
 		const Scope<Buffer> buffer = context.CreateSimpleBuffer(
 			Buffer::Usage::TRANSFER_SRC, size, true);
@@ -64,7 +66,7 @@ namespace le
 		CopyImagesToBuffer(static_cast<uint8_t*>(buffer->GetMappedData()),
 			size, textureData);
 
-		Scope<CommandBuffer> c = context.CreateCommandBuffer(true);
+		const Scope<CommandBuffer> c = context.CreateCommandBuffer(true);
 		c->Begin(true);
 		{
 			CommandBuffer::ImageMemoryBarrier barrier{};
@@ -86,7 +88,11 @@ namespace le
 				copies[i].imageSubresource.baseArrayLayer = i;
 				copies[i].imageSubresource.layerCount = 1;
 				copies[i].imageOffset = { 0, 0, 0 };
-				copies[i].imageExtent = { m_Width, m_Height, 1 };
+				copies[i].imageExtent = {
+					static_cast<uint32_t>(m_Width),
+					static_cast<uint32_t>(m_Height),
+					1
+				};
 			}
 
 			c->CmdCopyBufferToImage(*buffer, *m_image,
@@ -105,7 +111,7 @@ namespace le
 		c->Submit(true);
 	}
 
-	void Texture2DArray::CopyImagesToBuffer(uint8_t* data, size_t size, const std::span<TextureData*>& textureData)
+	void Texture2DArray::CopyImagesToBuffer(uint8_t* data, const size_t size, const std::span<TextureData*>& textureData)
 	{
 		for (size_t i = 0; i < textureData.size(); i++)
 		{
@@ -117,5 +123,15 @@ namespace le
 
 			memcpy(data + i * size, texture->GetData(), size);
 		}
+	}
+
+	Image& Texture2DArray::GetImage()
+	{
+		return *m_image;
+	}
+
+	ImageView& Texture2DArray::GetImageView()
+	{
+		return *m_imageView;
 	}
 }

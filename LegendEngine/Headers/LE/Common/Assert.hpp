@@ -13,6 +13,6 @@
 
 #define LE_ASSERT(check, ...) do { if (!(check)) { LE_ERROR_TRACE(__VA_ARGS__); LE_DEBUGBREAK(); } } while(0)
 #else
-#define LE_DEBUGBREAK()
-#define LE_ASSERT(...)
+#define LE_DEBUGBREAK() ;
+#define LE_ASSERT(...) ;
 #endif

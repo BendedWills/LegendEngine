@@ -1,4 +1,6 @@
-import le.math.vector3;
+#pragma once
+
+#include <LE/Math/Vector3.hpp>
 
 namespace le::Math
 {
