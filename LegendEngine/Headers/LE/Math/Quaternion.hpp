@@ -12,7 +12,7 @@ namespace le
 	{
 	public:
 		Quaternion() = default;
-		Quaternion(float w, float x, float y, float z)
+		Quaternion(const float w, const float x, const float y, const float z)
 			:
 			w(w),
 			x(x),
@@ -47,7 +47,7 @@ namespace le
 			return v + ((uv * w) + uuv) * static_cast<T>(2);
 		}
 
-		Quaternion operator/(float v)
+		Quaternion operator/(const float v) const
 		{
 			return Quaternion(w / v, x / v, y / v, z / v);
 		}
@@ -73,7 +73,7 @@ namespace le
 		 * 
 		 * @returns The converted Euler angles.
 		 */
-		Vector3<float> GetEulerAngles()
+		Vector3<float> GetEulerAngles() const
 		{
 			Vector3<float> angles;
 
