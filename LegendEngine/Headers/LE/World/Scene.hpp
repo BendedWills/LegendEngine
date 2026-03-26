@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <LE/Common/Defs.hpp>
 #include <LE/Common/UID.hpp>
 #include <LE/World/Archetype.hpp>
 #include <LE/World/ECS.hpp>

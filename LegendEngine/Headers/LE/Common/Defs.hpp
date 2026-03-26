@@ -20,7 +20,7 @@
     typename(const typename&) = delete; \
     typename(typename&&) = delete; \
     typename& operator=(const typename&) = delete; \
-    typename& operator=(typename&&) = delete;
+    typename& operator=(typename&&) = delete
 
 #if defined(NDEBUG)
 #define LEGENDENGINE_RELEASE

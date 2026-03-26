@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <LegendEngine/Math/Math.hpp>
+#include <LE/Math/Math.hpp>
 
 using namespace le;
 using namespace Math;
