@@ -1,5 +1,6 @@
 #pragma once
 
+#include <LE/Common/Types.hpp>
 #include <LE/Graphics/API/Buffer.hpp>
 #include <LE/Resources/Resource.hpp>
 
@@ -22,9 +23,15 @@ namespace le
         };
 
         MeshData(std::span<Vertex3> vertices, std::span<uint32_t> indices,
-            UpdateFrequency updateFrequency);
+            UpdateFrequency frequency);
         MeshData(size_t initialVertexCount, size_t initialIndexCount,
             UpdateFrequency frequency);
+
+        void Update(std::span<Vertex3> vertices, std::span<uint32_t> indices);
+        void Resize(size_t vertexCount, size_t indexCount);
+
+        size_t GetVertexCount() const;
+        size_t GetIndexCount() const;
 
         ID<MeshData> id = ID<MeshData>(m_uid);
     private:

@@ -97,8 +97,8 @@ namespace le
         return *(m_ManagedGraphicsContext = GraphicsContext::Create(api, applicationName));
     }
 
-    RenderTarget& Application::CreateRenderTarget(int width, int height,
-                                                            std::string_view applicationName)
+    RenderTarget& Application::CreateRenderTarget(const int width, const int height,
+        const std::string_view applicationName)
     {
         std::wstring title(applicationName.size(), L' ');
         std::mbstowcs(title.data(), applicationName.data(),
@@ -163,7 +163,7 @@ namespace le
     {
         return m_GlobalScene;
     }
-    
+
     Scene* Application::GetActiveScene() const
     {
         return m_pActiveScene;
