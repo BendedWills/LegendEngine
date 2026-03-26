@@ -3,7 +3,7 @@
 #include <LE/Math/Quaternion.hpp>
 #include <LE/Math/Vector4.hpp>
 
-#include <cstdint>
+#include <cstring>
 
 namespace le
 {
@@ -17,11 +17,11 @@ namespace le
 		Matrix4x4() = default;
 		Matrix4x4(T value)
 		{
-			for (uint8_t i = 0; i < COL_COUNT; i++)
-				c[i] = Vector4<T>(value);
+			for (auto & i : c)
+				i = Vector4<T>(value);
 		}
 
-		Matrix4x4(Quaternion q)
+		Matrix4x4(const Quaternion& q)
 		{
 			// Construct a 4x4 matrix from a quaternion q
 
