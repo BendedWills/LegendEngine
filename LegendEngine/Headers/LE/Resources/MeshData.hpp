@@ -33,6 +33,9 @@ namespace le
         size_t GetVertexCount() const;
         size_t GetIndexCount() const;
 
+        Buffer& GetVertexBuffer() const;
+        Buffer& GetIndexBuffer() const;
+
         ID<MeshData> id = ID<MeshData>(m_uid);
     private:
         Scope<Buffer> m_vertexBuffer;

@@ -7,11 +7,11 @@
 
 namespace le
 {
-    class ShaderManager
+    class ShaderManager final
     {
     public:
         ShaderManager() = default;
-        virtual ~ShaderManager() = 0;
+        ~ShaderManager();
         LE_NO_COPY(ShaderManager);
 
         Resource::ID<Shader> GetByID(std::string_view shaderID) const;

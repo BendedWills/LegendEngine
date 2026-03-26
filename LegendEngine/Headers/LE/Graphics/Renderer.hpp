@@ -29,7 +29,7 @@ namespace le
         [[nodiscard]] RenderTarget& GetRenderTarget() const;
     protected:
         virtual bool StartFrame() = 0;
-        virtual void UseMaterial(Material* pMaterial) = 0;
+        virtual void UseMaterial(const Material& material) = 0;
         virtual void DrawMesh(const Mesh& mesh, const Transform& transform) = 0;
         virtual void EndFrame() = 0;
 

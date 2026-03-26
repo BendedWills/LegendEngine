@@ -1,7 +1,6 @@
 #pragma once
 
-#include <LE/Resources/Shader.hpp>
-#include <../Pipeline.hpp>
+#include "API/Pipeline.hpp"
 
 #include <vulkan/vulkan.h>
 

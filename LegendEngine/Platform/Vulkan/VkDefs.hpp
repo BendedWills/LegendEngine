@@ -1,6 +1,6 @@
 #pragma once
 
-#include <../../LegendEngine/Modules/Common/Assert.hpp>
+#include <LE/Common/Assert.hpp>
 #include <vulkan/vulkan.h>
 
 #ifdef NDEBUG

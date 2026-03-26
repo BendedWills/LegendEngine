@@ -23,11 +23,10 @@ namespace le
         void CalculateTransformMatrix();
 
         bool dirty = false;
+        Matrix4x4f transformMat;
     private:
-
         Vector3f m_position;
         Vector3f m_scale = Vector3f(1.0f);
         Quaternion m_rotation;
-        Matrix4x4f m_transformMat;
     };
 }

@@ -1,7 +1,8 @@
-#include <LE/Graphics/VertexBuffer.hpp>
-#include <Pipeline.hpp>
+#include "API/Pipeline.hpp"
 
-namespace le
+#include <LE/Resources/MeshData.hpp>
+
+namespace le::vk
 {
     Pipeline::Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context,
         const Info& info)
@@ -34,19 +35,19 @@ namespace le
 		{
 			VkVertexInputBindingDescription bindingDescription{};
 			bindingDescription.binding = 0;
-			bindingDescription.stride = sizeof(VertexTypes::Vertex3);
+			bindingDescription.stride = sizeof(MeshData::Vertex3);
 			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 			VkVertexInputAttributeDescription position;
 			position.location = 0;
 			position.binding = 0;
 			position.format = VK_FORMAT_R32G32B32_SFLOAT;
-			position.offset = offsetof(VertexTypes::Vertex3, position);
+			position.offset = offsetof(MeshData::Vertex3, position);
 			VkVertexInputAttributeDescription color;
 			color.location = 1;
 			color.binding = 0;
 			color.format = VK_FORMAT_R32G32B32_SFLOAT;
-			color.offset = offsetof(VertexTypes::Vertex3, texcoord);
+			color.offset = offsetof(MeshData::Vertex3, texcoord);
 
 			bindingDescs.push_back(bindingDescription);
 			attribDescs.push_back(position);
@@ -173,9 +174,9 @@ namespace le
 		if (info.pDynamicStates && info.dynamicStateCount > 0)
 			pipelineDesc.pDynamicState = &dynamicState;
 
-		if (vkCreateGraphicsPipelines(m_Context.GetDevice(), VK_NULL_HANDLE,
-			1, &pipelineDesc, nullptr, &m_Pipeline) != VK_SUCCESS)
-			throw std::runtime_error("Failed to create graphics pipeline");
+        if (vkCreateGraphicsPipelines(m_Context.GetDevice(), VK_NULL_HANDLE,
+                                      1, &pipelineDesc, nullptr, &m_Pipeline) != VK_SUCCESS)
+	        throw std::runtime_error("Failed to create graphics pipeline");
     }
 
     Pipeline::~Pipeline()

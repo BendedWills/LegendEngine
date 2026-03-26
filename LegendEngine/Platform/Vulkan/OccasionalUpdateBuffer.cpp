@@ -1,7 +1,7 @@
-#include <../../LegendEngine/Modules/Common/Assert.hpp>
 #include <OccasionalUpdateBuffer.hpp>
 #include <VkDefs.hpp>
 #include <VulkanGraphicsContext.hpp>
+#include <LE/Common/Assert.hpp>
 
 namespace le
 {

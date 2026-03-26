@@ -12,6 +12,11 @@ namespace le
 	class Material final : public Resource
 	{
 	public:
+		struct Uniforms
+		{
+			Color color = Color(1.0f);
+		};
+
 		Material();
 
 		void SetTexture(const ID<Texture>& toSet);
@@ -28,11 +33,6 @@ namespace le
 
 		ID<Material> id = ID<Material>(m_uid);
 	private:
-		struct Uniforms
-		{
-			Color color = Color(1.0f);
-		};
-
 		GraphicsContext& m_context;
 	    const ShaderManager& m_ShaderManager;
 

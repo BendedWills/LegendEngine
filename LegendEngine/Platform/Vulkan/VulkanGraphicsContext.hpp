@@ -1,14 +1,12 @@
 #pragma once
 
 #include <LE/Graphics/GraphicsContext.hpp>
-#include <../Done/VulkanShader.hpp>
-#include <VulkanShaderManager.hpp>
 #include <Tether/Rendering/Vulkan/ContextCreator.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 #include <Tether/Rendering/Vulkan/Instance.hpp>
 #include <Tether/Rendering/Vulkan/UniformBuffer.hpp>
 
-namespace le
+namespace le::vk
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
@@ -23,31 +21,26 @@ namespace le
 #ifndef LE_HEADLESS
         Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;
 #endif
+        Scope<Buffer> CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped);
+        Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage, size_t initialSize);
+        Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size);
+        Scope<CommandBuffer> CreateCommandBuffer(bool transfer);
+        Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos);
+        Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages);
+        Scope<Image> CreateImage(const Image::Info& info);
+        Scope<ImageView> CreateImageView(const ImageView::Info& info);
+        Scope<Sampler> CreateSampler(const Sampler::Info& info);
 
-        Scope<VertexBuffer> CreateVertexBuffer(size_t initialVertexCount,
-            size_t initialIndexCount, VertexBuffer::UpdateFrequency updateFrequency) override;
-        Scope<Texture2D> CreateTexture2D(const TextureData& loader) override;
-        Scope<Texture2DArray> CreateTexture2DArray(size_t width,
-            size_t height, uint8_t channels,
-            const std::span<TextureData*>& textureData) override;
-        Scope<Shader> CreateShader(
-            std::span<Shader::Stage> stages) override;
-        Scope<Material> CreateMaterial() override;
-
+        VkQueue GetTransferQueue() const;
+        VkCommandPool GetTransferPool() const;
         VkDescriptorSetLayout GetCameraLayout() const;
         VkDescriptorSetLayout GetMaterialLayout() const;
         VkDescriptorSetLayout GetSceneLayout() const;
-
         std::span<VkDescriptorSetLayout> GetSets();
-
-        const ShaderManager& GetShaderManager() const override;
-
         VkFormat GetDepthFormat() const;
 
         std::mutex& GetGraphicsQueueMutex();
         std::mutex& GetTransferQueueMutex() const;
-        VkQueue GetTransferQueue() const;
-        VkCommandPool GetTransferPool() const;
 
         TetherVulkan::GraphicsContext& GetTetherGraphicsContext();
     private:
@@ -60,10 +53,9 @@ namespace le
         void CreateCameraDescriptorSetLayout();
         void CreateSceneDescriptorSetLayout();
         void CreateMaterialDescriptorSetLayout();
-
+        void RegisterShaders();
         void CreateUniforms();
         void CreateTransferQueue();
-        void UpdateDefaultMaterialUniforms();
 
         class DebugCallback final : public TetherVulkan::DebugCallback
         {
@@ -99,8 +91,6 @@ namespace le
         std::optional<TetherVulkan::UniformBuffer> m_SceneUniforms;
 
         std::vector<VkDescriptorSetLayout> m_SetLayouts;
-
-        std::optional<VulkanShaderManager> m_ShaderManager;
 
         std::mutex m_GraphicsQueueMutex;
         std::mutex m_TransferQueueMutex;

@@ -1,12 +1,16 @@
+#include "VulkanRenderer.hpp"
+#include "VulkanGraphicsContext.hpp"
+
+#include <VkDefs.hpp>
+#include <VulkanVertexBuffer.hpp>
 #include <LE/Application.hpp>
 #include <LE/Components/Mesh.hpp>
-#include <VkDefs.hpp>
-#include <VulkanMaterial.hpp>
-#include <VulkanRenderer.hpp>
-#include <VulkanVertexBuffer.hpp>
 #include <Tether/Rendering/Vulkan/SingleUseCommandBuffer.hpp>
 
 #include <VulkanRenderTarget.hpp>
+#include <API/Buffer.hpp>
+#include <API/DynamicUniforms.hpp>
+#include <API/Pipeline.hpp>
 
 // #ifdef VMA_VULKAN_VERSION
 // #undef VMA_VULKAN_VERSION
@@ -16,45 +20,39 @@
 // #define VMA_IMPLEMENTATION
 // #include <vk_mem_alloc.h>
 
-namespace le
+namespace le::vk
 {
     VulkanRenderer::VulkanRenderer(
-            TetherVulkan::GraphicsContext& tetherCtx,
+            VulkanGraphicsContext& context,
             RenderTarget& renderTarget,
-            ShaderManager& shaderManager,
-            VkDescriptorSetLayout cameraLayout,
-            VkDescriptorSetLayout sceneLayout,
-            VkSurfaceFormatKHR surfaceFormat,
-            TetherVulkan::DescriptorSet& defaultMatSet,
-            VkFormat depthFormat,
-            std::mutex& graphicsQueueMutex
+            const VkSurfaceFormatKHR surfaceFormat
             )
         :
         Renderer(renderTarget),
-        m_Context(tetherCtx),
-        m_DeviceLoader(tetherCtx.GetDeviceLoader()),
-        m_DefaultMatSet(defaultMatSet),
-        m_ShaderManager(shaderManager),
+        m_resourceManager(Application::Get().GetResourceManager()),
+        m_context(context),
+        m_TetherCtx(context.GetTetherGraphicsContext()),
+        m_DeviceLoader(m_TetherCtx.GetDeviceLoader()),
         m_Surface(dynamic_cast<VulkanRenderTarget&>(renderTarget).GetSurface()),
         m_SurfaceFormat(surfaceFormat),
-        m_Device(m_Context.GetDevice()),
-        m_PhysicalDevice(m_Context.GetPhysicalDevice()),
-        m_DepthFormat(depthFormat),
-        m_GraphicsQueueMutex(graphicsQueueMutex)
+        m_Device(m_TetherCtx.GetDevice()),
+        m_PhysicalDevice(m_TetherCtx.GetPhysicalDevice()),
+        m_DepthFormat(context.GetDepthFormat()),
+        m_GraphicsQueueMutex(context.GetGraphicsQueueMutex())
     {
         LE_ASSERT(!dynamic_cast<VulkanRenderTarget&>(renderTarget).IsHeadless(),
             "Renderers can't be created with a headless surface");
 
         // Application::Get() doesn't work here
 
-        m_DepthImages.resize(m_Context.GetFramesInFlight());
-        m_DepthAllocs.resize(m_Context.GetFramesInFlight());
-        m_DepthImageViews.resize(m_Context.GetFramesInFlight());
+        m_DepthImages.resize(m_TetherCtx.GetFramesInFlight());
+        m_DepthAllocs.resize(m_TetherCtx.GetFramesInFlight());
+        m_DepthImageViews.resize(m_TetherCtx.GetFramesInFlight());
 
         const TetherVulkan::SwapchainDetails details = QuerySwapchainSupport();
 
         CreateSwapchain(details);
-        CreateUniforms(cameraLayout, sceneLayout);
+        CreateUniforms();
         CreateDepthImages();
         CreateCommandBuffers();
         CreateSyncObjects();
@@ -68,7 +66,7 @@ namespace le
 
         DestroySwapchain();
 
-        for (uint64_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        for (uint64_t i = 0; i < m_TetherCtx.GetFramesInFlight(); i++)
         {
             vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
@@ -104,17 +102,6 @@ namespace le
         // If this frame is still in flight, wait for it to finish rendering before
         // rendering another frame.
         vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], true, UINT64_MAX);
-
-        if (m_IsFrameWaiting && m_FrameWithStagerWaits == m_CurrentFrame)
-        {
-            // The fence for this frame has been waited on. This frame had the
-            // semaphores for the stager completion, so it's safe to delete it
-            // here.
-            m_WaitingForStagerDeletion->DeleteStager();
-            m_IsFrameWaiting = false;
-            m_ShouldWaitForStager = false;
-            m_WaitingForStagerDeletion = nullptr;
-        }
 
         // The swapchain has one more than the minimum images, so the index
         // might not be the same as m_CurrentFrame
@@ -215,75 +202,67 @@ namespace le
         vkCmdSetScissor(buffer, 0, 1, &scissor);
 
         m_Sets[0] = *m_CameraSet->GetSetAtIndex(m_CurrentFrame);
-        m_Sets[1] = *m_SceneSet->GetSetAtIndex(m_CurrentFrame);
-        m_Sets[2] = *m_DefaultMatSet.GetSetAtIndex(m_CurrentFrame);
-        m_pCurrentShader = static_cast<VulkanShader*>(m_ShaderManager.GetByID("solid"));
         m_HaveSetsChanged = true;
-
-        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            m_pCurrentShader->GetPipeline());
+        m_currentShaderID = 0;
     }
 
-    void VulkanRenderer::UseMaterial(Material* pMaterial)
+    void VulkanRenderer::UseMaterial(const Material& material)
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
+        const le::DynamicUniforms& dynamicUniforms = material.GetUniforms();
+        const auto& vkUniforms = static_cast<const DynamicUniforms&>(
+            dynamicUniforms);
 
-        auto pShader = static_cast<VulkanShader*>(m_ShaderManager.GetByID("solid"));
-
-        if (pMaterial)
-        {
-            m_Sets[2] = static_cast<VulkanMaterial*>(pMaterial)->GetSetAtIndex(m_CurrentFrame);
-            pShader = static_cast<VulkanShader*>(pMaterial->GetShader());
-        }
-        else
-            m_Sets[2] = *m_DefaultMatSet.GetSetAtIndex(m_CurrentFrame);
-
+        m_Sets[2] = vkUniforms.GetSetAtIndex(m_CurrentFrame);
         m_HaveSetsChanged = true;
 
-        if (pShader == m_pCurrentShader)
+        if (material.GetShader() == m_currentShaderID)
             return;
 
-        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pShader->GetPipeline());
-        vkCmdSetCullMode(buffer, pShader->GetVulkanCullMode());
+        const auto& shader = m_resourceManager.GetResource<Shader>(m_currentShaderID);
+        const le::Pipeline& pipeline = shader->GetPipeline();
+        const auto& vkPipeline = static_cast<const Pipeline&>(pipeline);
 
-        m_pCurrentShader = pShader;
-    }
-
-    void VulkanRenderer::DrawMesh(const Mesh& mesh)
-    {
-        const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
-        const Object& object = mesh.GetObject();
-        Ref<VulkanVertexBuffer> vertexBuffer =
-            std::static_pointer_cast<VulkanVertexBuffer>(mesh.GetVertexBuffer());
-
-        vertexBuffer->DeleteUnusedBuffers(m_CurrentFrame);
-
-        const VulkanVertexBuffer::BufferInfo info = vertexBuffer->GetBufferInfo();
-        if (!info.vertex)
-            return;
-
-        vertexBuffer->Use(m_CurrentFrame);
-
-        if (!m_ShouldWaitForStager && vertexBuffer->ShouldWait())
+        VkCullModeFlags cullMode;
+        switch (shader->GetCullMode())
         {
-            m_WaitingForStagerDeletion = vertexBuffer;
-            m_StagerSemaphoreValue = vertexBuffer->StartWait();
-            m_ShouldWaitForStager = true;
+            case Shader::CullMode::BACK: cullMode = VK_CULL_MODE_BACK_BIT; break;
+            case Shader::CullMode::FRONT: cullMode = VK_CULL_MODE_FRONT_BIT; break;
+            default: cullMode = VK_CULL_MODE_NONE;
         }
 
-        Pipeline::ObjectTransform transform;
-        transform.transform = object.GetTransformationMatrix();
+        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vkPipeline.Get());
+        vkCmdSetCullMode(buffer, cullMode);
 
-        vkCmdPushConstants(buffer, m_pCurrentShader->GetPipelineLayout(),
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform),
-            &transform);
+        m_currentPipelineLayout = vkPipeline.GetPipelineLayout();
+        m_currentShaderID = material.GetShader();
+    }
+
+    void VulkanRenderer::DrawMesh(const Mesh& mesh, const Transform& transform)
+    {
+        const Ref<MeshData> meshData =
+            m_resourceManager.GetResource<MeshData>(mesh.data);
+        const auto& vertexBuffer = static_cast<Buffer&>(meshData->GetVertexBuffer());
+        const auto& indexBuffer  = static_cast<Buffer&>(meshData->GetIndexBuffer());
+
+        if (!vertexBuffer.GetBuffer() || !indexBuffer.GetBuffer())
+            return;
+
+        const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
+
+        Pipeline::ObjectTransform objectTransform;
+        objectTransform.transform = transform.transformMat;
+
+        vkCmdPushConstants(buffer, m_currentPipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(objectTransform),
+            &objectTransform);
 
         if (m_HaveSetsChanged)
         {
             vkCmdBindDescriptorSets(
                 buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                m_pCurrentShader->GetPipelineLayout(),
+                m_currentPipelineLayout,
                 0, std::size(m_Sets),
                 m_Sets,
                 0, nullptr
@@ -291,18 +270,19 @@ namespace le
             m_HaveSetsChanged = false;
         }
 
-        const VkBuffer vBuffers[] = { info.vertex };
+        const VkBuffer vBuffers[] = { vertexBuffer.GetBuffer() };
         constexpr VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(buffer, 0, 1, vBuffers, offsets);
 
         vkCmdBindIndexBuffer(
             buffer,
-            info.index,
+            indexBuffer.GetBuffer(),
             0,
             VK_INDEX_TYPE_UINT32
         );
 
-        vkCmdDrawIndexed(buffer, info.indexCount, 1, 0, 0, 0);
+        vkCmdDrawIndexed(buffer, meshData->GetIndexCount(),
+            1, 0, 0, 0);
     }
 
     void VulkanRenderer::EndCommandBuffer() const
@@ -336,24 +316,10 @@ namespace le
         const VkResult result = vkEndCommandBuffer(buffer);
         LE_ASSERT(result == VK_SUCCESS, "Failed to end command buffer");
 
-        size_t waitSemaphoreCount = 1;
-
-        VkSemaphoreSubmitInfo submitInfos[2]{};
-        submitInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-        submitInfos[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-        submitInfos[0].semaphore = m_ImageAvailableSemaphores[m_CurrentFrame];
-
-        if (!m_IsFrameWaiting && m_ShouldWaitForStager)
-        {
-            waitSemaphoreCount++;
-            m_IsFrameWaiting = true;
-            m_FrameWithStagerWaits = m_CurrentFrame;
-
-            submitInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-            submitInfos[1].stageMask = VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT;
-            submitInfos[1].semaphore = m_WaitingForStagerDeletion->GetSemaphore();
-            submitInfos[1].value = m_StagerSemaphoreValue;
-        }
+        VkSemaphoreSubmitInfo semaphoreInfo;
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+        semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+        semaphoreInfo.semaphore = m_ImageAvailableSemaphores[m_CurrentFrame];
 
         VkSemaphoreSubmitInfo signalInfo{};
         signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
@@ -367,8 +333,8 @@ namespace le
         // signal the render finished semaphore once rendering is complete.
         VkSubmitInfo2 submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
-        submitInfo.waitSemaphoreInfoCount = waitSemaphoreCount;
-        submitInfo.pWaitSemaphoreInfos = submitInfos;
+        submitInfo.waitSemaphoreInfoCount = 1;
+        submitInfo.pWaitSemaphoreInfos = &semaphoreInfo;
         submitInfo.commandBufferInfoCount = 1;
         submitInfo.pCommandBufferInfos = &commandBufferInfo;
         submitInfo.signalSemaphoreInfoCount = 1;
@@ -377,7 +343,7 @@ namespace le
         // The in flight fence for this frame must be reset.
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
         m_GraphicsQueueMutex.lock();
-        LE_CHECK_VK(vkQueueSubmit2(m_Context.GetQueue(), 1, &submitInfo,
+        LE_CHECK_VK(vkQueueSubmit2(m_TetherCtx.GetQueue(), 1, &submitInfo,
             m_InFlightFences[m_CurrentFrame]));
         m_GraphicsQueueMutex.unlock();
 
@@ -393,10 +359,10 @@ namespace le
         presentInfo.pImageIndices = &m_CurrentImageIndex;
 
         m_GraphicsQueueMutex.lock();
-        vkQueuePresentKHR(m_Context.GetQueue(), &presentInfo);
+        vkQueuePresentKHR(m_TetherCtx.GetQueue(), &presentInfo);
         m_GraphicsQueueMutex.unlock();
 
-        m_CurrentFrame = (m_CurrentFrame + 1) % m_Context.GetFramesInFlight();
+        m_CurrentFrame = (m_CurrentFrame + 1) % m_TetherCtx.GetFramesInFlight();
     }
 
     void VulkanRenderer::UpdateCameraUniforms(const Camera& camera)
@@ -405,7 +371,7 @@ namespace le
         uniforms.projection = camera.GetProjectionMatrix();
         uniforms.view = camera.GetViewMatrix();
 
-        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        for (uint32_t i = 0; i < m_TetherCtx.GetFramesInFlight(); i++)
         {
             void* data = m_CameraUniforms->GetMappedData(i);
             *static_cast<Camera::CameraUniforms*>(data) = uniforms;
@@ -414,7 +380,7 @@ namespace le
 
     void VulkanRenderer::CreateSwapchain(const TetherVulkan::SwapchainDetails& details)
     {
-        m_Swapchain.emplace(m_Context, details, m_SurfaceFormat,
+        m_Swapchain.emplace(m_TetherCtx, details, m_SurfaceFormat,
             m_Surface, m_RenderTarget.GetWidth(), m_RenderTarget.GetHeight(),
             m_VSync);
 
@@ -423,10 +389,9 @@ namespace le
         m_SwapchainImageCount = m_Swapchain->GetImageCount();
     }
 
-    void VulkanRenderer::CreateUniforms(VkDescriptorSetLayout cameraLayout,
-        VkDescriptorSetLayout sceneLayout)
+    void VulkanRenderer::CreateUniforms()
     {
-        const uint32_t framesInFlight = m_Context.GetFramesInFlight();
+        const uint32_t framesInFlight = m_TetherCtx.GetFramesInFlight();
 
         VkDescriptorPoolSize uniformsSize{};
         uniformsSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -443,25 +408,22 @@ namespace le
         };
 
         // 3 for two uniforms and one sampler
-        m_StaticUniformPool.emplace(m_Context, framesInFlight * 3,
+        m_StaticUniformPool.emplace(m_TetherCtx, framesInFlight * 3,
             std::size(sizes), sizes);
 
-        m_CameraSet.emplace(*m_StaticUniformPool, cameraLayout, framesInFlight);
-        m_CameraUniforms.emplace(m_Context, sizeof(Camera::CameraUniforms), *m_CameraSet,
+        m_CameraSet.emplace(*m_StaticUniformPool, m_context.GetCameraLayout(), framesInFlight);
+        m_CameraUniforms.emplace(m_TetherCtx, sizeof(Camera::CameraUniforms), *m_CameraSet,
             0);
-
-        m_SceneSet.emplace(*m_StaticUniformPool, sceneLayout, framesInFlight);
-        m_SceneUniforms.emplace(m_Context, sizeof(SceneUniforms), *m_SceneSet, 0);
     }
 
     void VulkanRenderer::CreateDepthImages()
     {
         auto [width, height] = m_Swapchain->GetExtent();
 
-        TetherVulkan::SingleUseCommandBuffer cmdBuffer(m_Context);
+        TetherVulkan::SingleUseCommandBuffer cmdBuffer(m_TetherCtx);
         cmdBuffer.Begin();
 
-        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        for (uint32_t i = 0; i < m_TetherCtx.GetFramesInFlight(); i++)
         {
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -481,7 +443,7 @@ namespace le
             VmaAllocationCreateInfo allocInfo{};
             allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-            if (vmaCreateImage(m_Context.GetAllocator(), &imageInfo, &allocInfo,
+            if (vmaCreateImage(m_TetherCtx.GetAllocator(), &imageInfo, &allocInfo,
                 &m_DepthImages[i], &m_DepthAllocs[i], nullptr) != VK_SUCCESS)
                 throw std::runtime_error("Failed to create image");
 
@@ -512,12 +474,12 @@ namespace le
 
     void VulkanRenderer::CreateCommandBuffers()
     {
-        m_CommandBuffers.resize(m_Context.GetFramesInFlight());
+        m_CommandBuffers.resize(m_TetherCtx.GetFramesInFlight());
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = m_Context.GetCommandPool();
+        allocInfo.commandPool = m_TetherCtx.GetCommandPool();
         allocInfo.commandBufferCount = m_CommandBuffers.size();
 
         if (vkAllocateCommandBuffers(m_Device, &allocInfo,
@@ -527,7 +489,7 @@ namespace le
 
     void VulkanRenderer::CreateSyncObjects()
     {
-        const uint32_t framesInFlight = m_Context.GetFramesInFlight();
+        const uint32_t framesInFlight = m_TetherCtx.GetFramesInFlight();
         m_RenderFinishedSemaphores.resize(m_SwapchainImageCount);
         m_ImageAvailableSemaphores.resize(framesInFlight);
         m_InFlightFences.resize(framesInFlight);
@@ -653,15 +615,15 @@ namespace le
 
     void VulkanRenderer::DestroySwapchain()
     {
-        vkFreeCommandBuffers(m_Device, m_Context.GetCommandPool(),
+        vkFreeCommandBuffers(m_Device, m_TetherCtx.GetCommandPool(),
             static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
 
         for (const VkImageView imageView : m_SwapchainImageViews)
             vkDestroyImageView(m_Device, imageView, nullptr);
 
-        for (uint32_t i = 0; i < m_Context.GetFramesInFlight(); i++)
+        for (uint32_t i = 0; i < m_TetherCtx.GetFramesInFlight(); i++)
         {
-            vmaDestroyImage(m_Context.GetAllocator(), m_DepthImages[i], m_DepthAllocs[i]);
+            vmaDestroyImage(m_TetherCtx.GetAllocator(), m_DepthImages[i], m_DepthAllocs[i]);
             vkDestroyImageView(m_Device, m_DepthImageViews[i], nullptr);
         }
 

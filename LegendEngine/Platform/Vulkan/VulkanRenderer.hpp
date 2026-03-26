@@ -1,17 +1,19 @@
 #pragma once
 
+#include <VulkanGraphicsContext.hpp>
+
+#include "API/Pipeline.hpp"
+
 #include <LE/Components/Light.hpp>
 #include <LE/Graphics/Renderer.hpp>
-#include <../Done/VulkanShader.hpp>
-#include <VulkanVertexBuffer.hpp>
+#include <LE/Resources/ResourceManager.hpp>
 #include <Tether/Rendering/Vulkan/DescriptorSet.hpp>
-#include <Tether/Rendering/Vulkan/Surface.hpp>
 
 #include <Tether/Rendering/Vulkan/Swapchain.hpp>
 #include <Tether/Rendering/Vulkan/UniformBuffer.hpp>
 #include <Tether/Rendering/Vulkan/Resources/BufferedImage.hpp>
 
-namespace le
+namespace le::vk
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
@@ -19,15 +21,9 @@ namespace le
     {
     public:
         explicit VulkanRenderer(
-            TetherVulkan::GraphicsContext& tetherCtx,
+            VulkanGraphicsContext& context,
             RenderTarget& renderTarget,
-            ShaderManager& shaderManager,
-            VkDescriptorSetLayout cameraLayout,
-            VkDescriptorSetLayout sceneLayout,
-            VkSurfaceFormatKHR surfaceFormat,
-            TetherVulkan::DescriptorSet& defaultMatSet,
-            VkFormat depthFormat,
-            std::mutex& graphicsQueueMutex
+            VkSurfaceFormatKHR surfaceFormat
         );
         ~VulkanRenderer() override;
 
@@ -49,16 +45,15 @@ namespace le
 
         bool StartFrame() override;
         void BeginCommandBuffer();
-        void UseMaterial(Material* pMaterial) override;
-        void DrawMesh(const Mesh& mesh) override;
+        void UseMaterial(const Material& material) override;
+        void DrawMesh(const Mesh& mesh, const Transform& transform) override;
         void EndCommandBuffer() const;
         void EndFrame() override;
 
         void UpdateCameraUniforms(const Camera& camera) override;
 
         void CreateSwapchain(const TetherVulkan::SwapchainDetails& details);
-        void CreateUniforms(VkDescriptorSetLayout cameraLayout,
-            VkDescriptorSetLayout sceneLayout);
+        void CreateUniforms();
         void CreateDepthImages();
         void CreateCommandBuffers();
         void CreateSyncObjects();
@@ -73,18 +68,16 @@ namespace le
         bool m_VSync = false;
         bool m_ShouldRecreateSwapchain = false;
 
-        TetherVulkan::GraphicsContext& m_Context;
+        ResourceManager& m_resourceManager;
+        VulkanGraphicsContext& m_context;
+        TetherVulkan::GraphicsContext& m_TetherCtx;
         const TetherVulkan::DeviceLoader& m_DeviceLoader;
-        TetherVulkan::DescriptorSet& m_DefaultMatSet;
-        ShaderManager& m_ShaderManager;
         VkSurfaceKHR m_Surface;
 
         std::optional<TetherVulkan::Swapchain> m_Swapchain;
         std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
         std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
-        std::optional<TetherVulkan::DescriptorSet> m_SceneSet;
         std::optional<TetherVulkan::UniformBuffer> m_CameraUniforms;
-        std::optional<TetherVulkan::UniformBuffer> m_SceneUniforms;
 
         std::vector<VkImage> m_DepthImages;
         std::vector<VmaAllocation> m_DepthAllocs;
@@ -100,12 +93,6 @@ namespace le
 
         VkSurfaceFormatKHR m_SurfaceFormat;
 
-        Ref<VulkanVertexBuffer> m_WaitingForStagerDeletion = nullptr;
-        uint32_t m_FrameWithStagerWaits = 0;
-        size_t m_StagerSemaphoreValue = 0;
-        bool m_ShouldWaitForStager = false;
-        bool m_IsFrameWaiting = false;
-
         VkDevice m_Device;
         VkPhysicalDevice m_PhysicalDevice;
 
@@ -116,7 +103,8 @@ namespace le
 
         VkDescriptorSet m_Sets[3] = {};
         bool m_HaveSetsChanged = true;
-        VulkanShader* m_pCurrentShader = nullptr;
+        Resource::ID<Shader> m_currentShaderID = 0;
+        VkPipelineLayout m_currentPipelineLayout = nullptr;
 
         std::mutex& m_GraphicsQueueMutex;
     };

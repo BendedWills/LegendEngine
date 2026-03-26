@@ -77,7 +77,7 @@ namespace le
                 if (material->HasChanged())
                     material->UpdateUniforms(m_currentFrame);
 
-                UseMaterial(material.get());
+                UseMaterial(*material);
                 lastMaterial = mesh.material;
             }
 

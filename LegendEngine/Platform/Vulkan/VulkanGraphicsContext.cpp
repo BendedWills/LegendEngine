@@ -1,16 +1,12 @@
+#include <OccasionalUpdateBuffer.hpp>
 #include <VkDefs.hpp>
 #include <VulkanGraphicsContext.hpp>
 #include <VulkanRenderer.hpp>
 #include <VulkanRenderTarget.hpp>
-#include <../Done/VulkanShader.hpp>
-#include <../Done/VulkanTexture2D.hpp>
-#include <OccasionalUpdateBuffer.hpp>
-#include <SingleUpdateBuffer.hpp>
-#include <../Done/VulkanTexture2DArray.hpp>
 #include <LE/Common/Assert.hpp>
 #include <LE/IO/Logger.hpp>
 
-namespace le
+namespace le::vk
 {
     static const char* EXTENSIONS[] =
     {
@@ -67,7 +63,6 @@ namespace le
         CreateTransferQueue();
 
         m_DepthFormat = FindDepthFormat();
-        m_ShaderManager.emplace(m_GraphicsContext, m_SetLayouts, m_DepthFormat);
 
         VkFenceCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -77,8 +72,6 @@ namespace le
     VulkanGraphicsContext::~VulkanGraphicsContext()
     {
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
-
-        m_ShaderManager.reset();
 
         vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_CameraLayout, nullptr);
         vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_MaterialLayout, nullptr);
@@ -94,9 +87,7 @@ namespace le
         };
 
         return std::make_unique<VulkanRenderer>(
-            m_GraphicsContext, renderTarget, *m_ShaderManager,
-            m_CameraLayout, m_SceneLayout, surfaceFormat, *m_DefaultMatSet,
-            m_DepthFormat, m_GraphicsQueueMutex
+            *this, renderTarget, surfaceFormat
         );
     }
 
@@ -147,42 +138,6 @@ namespace le
     }
 #endif
 
-    Scope<VertexBuffer> VulkanGraphicsContext::CreateVertexBuffer(
-        size_t initialVertexCount, size_t initialIndexCount, VertexBuffer::UpdateFrequency updateFrequency)
-    {
-        switch (updateFrequency)
-        {
-            case VertexBuffer::UpdateFrequency::UPDATES_ONCE:
-                return std::make_unique<SingleUpdateBuffer>(*this,
-                    initialVertexCount, initialIndexCount);
-
-            case VertexBuffer::UpdateFrequency::UPDATES_OCCASIONALLY:
-                return std::make_unique<OccasionalUpdateBuffer>(*this);
-
-            default: LE_ASSERT(false, "Unsupported update frequency");
-        }
-
-        return nullptr;
-    }
-
-    Scope<Texture2D> VulkanGraphicsContext::CreateTexture2D(const TextureData& loader)
-    {
-        return std::make_unique<VulkanTexture2D>(m_GraphicsContext, loader, m_GraphicsQueueMutex);
-    }
-
-    Scope<Texture2DArray> VulkanGraphicsContext::CreateTexture2DArray(size_t width,
-            size_t height, uint8_t channels,
-            const std::span<TextureData*>& textureData)
-    {
-        return std::make_unique<VulkanTexture2DArray>(m_GraphicsContext,
-            width, height, channels, textureData, m_GraphicsQueueMutex);
-    }
-
-    Scope<Shader> VulkanGraphicsContext::CreateShader(std::span<Shader::Stage> stages)
-    {
-        return std::make_unique<VulkanShader>(m_GraphicsContext, stages, m_SetLayouts, m_DepthFormat);
-    }
-
     VkDescriptorSetLayout VulkanGraphicsContext::GetCameraLayout() const
     {
         return m_CameraLayout;
@@ -201,11 +156,6 @@ namespace le
     std::span<VkDescriptorSetLayout> VulkanGraphicsContext::GetSets()
     {
         return m_SetLayouts;
-    }
-
-    const ShaderManager& VulkanGraphicsContext::GetShaderManager() const
-    {
-        return *m_ShaderManager;
     }
 
     VkFormat VulkanGraphicsContext::GetDepthFormat() const
@@ -377,11 +327,9 @@ namespace le
                                  0);
 
         m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
-        m_DefaultMatUniforms.emplace(m_GraphicsContext, sizeof(VulkanMaterial::Uniforms), *m_DefaultMatSet, 0);
+        m_DefaultMatUniforms.emplace(m_GraphicsContext, sizeof(Material::Uniforms), *m_DefaultMatSet, 0);
 
         m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
-
-        UpdateDefaultMaterialUniforms();
     }
 
     void VulkanGraphicsContext::CreateTransferQueue()
@@ -402,15 +350,5 @@ namespace le
         info.queueFamilyIndex = indices.transferFamilyIndex;
 
         LE_CHECK_VK(vkCreateCommandPool(m_ContextCreator.GetDevice(), &info, nullptr, &m_TransferPool));
-    }
-
-    void VulkanGraphicsContext::UpdateDefaultMaterialUniforms()
-    {
-        for (uint32_t i = 0; i < m_GraphicsContext.GetFramesInFlight(); i++)
-        {
-            VulkanMaterial::Uniforms uniforms;
-            void* data = m_DefaultMatUniforms->GetMappedData(i);
-            *static_cast<VulkanMaterial::Uniforms*>(data) = uniforms;
-        }
     }
 }

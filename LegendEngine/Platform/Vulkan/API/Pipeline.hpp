@@ -1,14 +1,15 @@
 #pragma once
 
 #include <LE/Common/Defs.hpp>
+#include <LE/Graphics/API/Pipeline.hpp>
 #include <LE/Math/Types.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 
 #include <vulkan/vulkan.h>
 
-namespace le
+namespace le::vk
 {
-    class Pipeline final
+    class Pipeline final : public le::Pipeline
     {
     public:
         struct Info
@@ -30,7 +31,7 @@ namespace le
 
         Pipeline(Tether::Rendering::Vulkan::GraphicsContext& context,
             const Info& info);
-        ~Pipeline();
+        ~Pipeline() override;
         LE_NO_COPY(Pipeline);
 
         [[nodiscard]] VkPipeline Get() const;

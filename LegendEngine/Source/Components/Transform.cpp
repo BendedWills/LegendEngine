@@ -55,10 +55,10 @@ namespace le
 
     void Transform::CalculateTransformMatrix()
     {
-        m_transformMat = Matrix4x4f::MakeIdentity();
-        m_transformMat = Math::Translate(m_transformMat, m_position);
-        m_transformMat = Math::Scale(m_transformMat, m_scale);
-        m_transformMat *= Matrix4x4f(m_rotation);
+        transformMat = Matrix4x4f::MakeIdentity();
+        transformMat = Math::Translate(transformMat, m_position);
+        transformMat = Math::Scale(transformMat, m_scale);
+        transformMat *= Matrix4x4f(m_rotation);
 
         dirty = false;
     }
