@@ -23,7 +23,7 @@ namespace le::vk
 {
     Renderer::Renderer(
             GraphicsContext& context,
-            RenderTarget& renderTarget,
+            le::RenderTarget& renderTarget,
             const VkSurfaceFormatKHR surfaceFormat
             )
         :
@@ -94,6 +94,8 @@ namespace le::vk
     {
         if (m_ShouldRecreateSwapchain)
             RecreateSwapchain();
+
+        m_CurrentFrame = Application::Get().GetCurrentFrame();
 
         // in flight frame = a frame that is being rendered while still rendering
         // more frames
@@ -243,8 +245,8 @@ namespace le::vk
     {
         const Ref<MeshData> meshData =
             m_resourceManager.GetResource<MeshData>(mesh.data);
-        const auto& vertexBuffer = static_cast<Buffer&>(meshData->GetVertexBuffer());
-        const auto& indexBuffer  = static_cast<Buffer&>(meshData->GetIndexBuffer());
+        auto& vertexBuffer = static_cast<Buffer&>(meshData->GetVertexBuffer());
+        auto& indexBuffer  = static_cast<Buffer&>(meshData->GetIndexBuffer());
 
         if (!vertexBuffer.GetBuffer() || !indexBuffer.GetBuffer())
             return;
@@ -361,8 +363,6 @@ namespace le::vk
         m_GraphicsQueueMutex.lock();
         vkQueuePresentKHR(m_TetherCtx.GetQueue(), &presentInfo);
         m_GraphicsQueueMutex.unlock();
-
-        m_CurrentFrame = (m_CurrentFrame + 1) % m_TetherCtx.GetFramesInFlight();
     }
 
     void Renderer::UpdateCameraUniforms(const Camera& camera)

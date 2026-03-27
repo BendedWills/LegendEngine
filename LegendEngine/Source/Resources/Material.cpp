@@ -53,7 +53,6 @@ namespace le
     void Material::SetColor(const Color& toSet)
     {
         m_uniformData.color = toSet;
-        m_Changed = true;
     }
 
     Resource::ID<Texture> Material::GetTexture() const
@@ -76,19 +75,19 @@ namespace le
         return m_Changed;
     }
 
-    void Material::UpdateUniforms(const uint32_t currentFrame)
+    void Material::UpdateUniforms()
     {
-        m_uniforms->m_currentFrame = currentFrame;
-
-        for (uint32_t i = 0; i < Application::FRAMES_IN_FLIGHT; i++)
-            *static_cast<Uniforms*>(m_buffer->GetMappedDataForFrame(i)) = m_uniformData;
-
         m_uniforms->UpdateBuffer(*m_buffer, 0);
 
         if (m_textureId != 0)
             m_uniforms->UpdateCombinedImageSampler(1);
 
         m_Changed = false;
+    }
+
+    void Material::CopyUniformData()
+    {
+        m_buffer->Update(sizeof(m_uniformData), &m_uniformData);
     }
 
     DynamicUniforms& Material::GetUniforms() const

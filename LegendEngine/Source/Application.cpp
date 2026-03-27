@@ -68,6 +68,8 @@ namespace le
         m_Renderer.RenderFrame(scenes);
 
         m_EventBus.DispatchEvent<RenderEvent>(RenderEvent(delta));
+
+        m_currentFrame = (m_currentFrame + 1) % FRAMES_IN_FLIGHT;
     }
 
     void Application::RunInstance()
@@ -235,5 +237,10 @@ namespace le
         LE_ASSERT(m_Instance, "Run was called before Application::Create");
 
         m_Instance->RunInstance();
+    }
+
+    size_t Application::GetCurrentFrame() const
+    {
+        return m_currentFrame;
     }
 }

@@ -55,7 +55,6 @@ namespace le
                 RenderScene(*pScene);
 
         EndFrame();
-        m_currentFrame = (m_currentFrame + 1) % Application::FRAMES_IN_FLIGHT;
     }
 
     void Renderer::RenderScene(Scene& scene)
@@ -75,7 +74,9 @@ namespace le
             {
                 const Ref<Material> material = manager.GetResource<Material>(mesh.material);
                 if (material->HasChanged())
-                    material->UpdateUniforms(m_currentFrame);
+                    material->UpdateUniforms();
+
+                material->CopyUniformData();
 
                 UseMaterial(*material);
                 lastMaterial = mesh.material;

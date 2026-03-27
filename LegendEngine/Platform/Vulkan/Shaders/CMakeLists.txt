@@ -44,7 +44,7 @@ function(ConvertToCpp)
 	add_dependencies(spv2cpp bin2cpp compile_vulkan_shaders)
 
 	file(MAKE_DIRECTORY ${SHADER_HEADER_DIR})
-	
+
 	get_property(spvFiles DIRECTORY PROPERTY SPV_FILES)
 	foreach(source IN LISTS spvFiles)
 		# Get the name of the file without path (with extension)

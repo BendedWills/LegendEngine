@@ -37,7 +37,6 @@ namespace le
 
         RenderTarget& m_RenderTarget;
         Vector4f m_ClearColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
-        size_t m_currentFrame = 0;
     private:
         void RenderScene(Scene& scene);
         void UpdateCamera(Scene& scene, UID cameraID);

@@ -55,9 +55,10 @@ namespace le
         ResourceManager& GetResourceManager();
         Scene& GetGlobalScene();
         Scene* GetActiveScene() const;
+        size_t GetCurrentFrame() const;
 
-        void Update(float delta, bool updateWindow = true);
-        void Render(float delta);
+        // Must be called on the main thread
+        void RenderFrame(float delta = 1.0f);
 
         template<typename... Args>
         static void Create(Args&&... args)
@@ -74,8 +75,8 @@ namespace le
     private:
         void RunInstance();
 
-        // Must be called on the main thread
-        void RenderFrame(float delta = 1.0f);
+        void Update(float delta, bool updateWindow = true);
+        void Render(float delta);
 
         static void RecalculateTransforms(Scene& scene);
 
@@ -116,6 +117,8 @@ namespace le
         Scene* m_pActiveScene = nullptr;
 
         bool m_Headless = false;
+
+        size_t m_currentFrame = 0;
 
         static Scope<Application> m_Instance;
     };

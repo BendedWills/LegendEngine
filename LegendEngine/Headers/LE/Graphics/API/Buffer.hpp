@@ -16,7 +16,10 @@ namespace le
         };
 
         virtual ~Buffer() = default;
-        virtual void* GetMappedData() = 0;
-        virtual void* GetMappedDataForFrame(size_t currentFrame) = 0;
+
+        virtual void Update(size_t size, const void* data) = 0;
+        virtual void UpdateForAllFrames(size_t size, void* data) = 0;
+
+        virtual void* GetMappedData() { return nullptr; };
     };
 }

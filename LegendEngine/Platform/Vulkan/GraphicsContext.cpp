@@ -14,9 +14,12 @@
 #include "textured.vert.spv.h"
 
 #include <Renderer.hpp>
+#include <RenderTarget.hpp>
 #include <ShaderModule.hpp>
 #include <VkDefs.hpp>
-#include <RenderTarget.hpp>
+#include <API/PerFrameBuffer.hpp>
+#include <API/SimpleBuffer.hpp>
+#include <API/SmartBuffer.hpp>
 #include <LE/Application.hpp>
 #include <LE/Common/Assert.hpp>
 #include <LE/IO/Logger.hpp>
@@ -68,6 +71,8 @@ namespace le::vk
             !loader.vkCmdBeginRenderingKHR || !loader.vkCmdEndRenderingKHR)
             throw std::runtime_error("Couldn't load dynamic rendering funcs");
 
+        RegisterShaders();
+
         // This order matters, because the sets get added to m_SetLayouts when
         // they are created, and Vulkan cares about the order in vkCmdBindDescriptorSets
         CreateCameraDescriptorSetLayout();
@@ -93,7 +98,7 @@ namespace le::vk
         vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_SceneLayout, nullptr);
     }
 
-    Scope<le::Renderer> GraphicsContext::CreateRenderer(RenderTarget& renderTarget)
+    Scope<le::Renderer> GraphicsContext::CreateRenderer(le::RenderTarget& renderTarget)
     {
         constexpr VkSurfaceFormatKHR surfaceFormat =
         {
@@ -106,7 +111,7 @@ namespace le::vk
         );
     }
 
-    Scope<RenderTarget> GraphicsContext::CreateHeadlessRenderTarget()
+    Scope<le::RenderTarget> GraphicsContext::CreateHeadlessRenderTarget()
     {
         return std::make_unique<RenderTarget>(m_GraphicsContext);
     }
@@ -147,7 +152,7 @@ namespace le::vk
     }
 
 #ifndef LE_HEADLESS
-    Scope<RenderTarget> GraphicsContext::CreateWindowRenderTarget(Tether::Window& window)
+    Scope<le::RenderTarget> GraphicsContext::CreateWindowRenderTarget(Tether::Window& window)
     {
         return std::make_unique<RenderTarget>(m_GraphicsContext, window);
     }
@@ -369,17 +374,17 @@ namespace le::vk
 
     Scope<le::Buffer> GraphicsContext::CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped)
     {
-
+        return std::make_unique<SimpleBuffer>(*this, usage, size, createMapped);
     }
 
     Scope<le::Buffer> GraphicsContext::CreateSmartBuffer(Buffer::Usage usage, size_t initialSize)
     {
-
+        return std::make_unique<SmartBuffer>(usage, initialSize);
     }
 
     Scope<le::Buffer> GraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)
     {
-
+        return std::make_unique<PerFrameBuffer>(usage, size);
     }
 
     Scope<le::CommandBuffer> GraphicsContext::CreateCommandBuffer(const bool transfer)

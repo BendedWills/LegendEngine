@@ -72,7 +72,7 @@ namespace le
         const Scope<Buffer> stagingBuffer = m_context.CreateSimpleBuffer(
             Buffer::Usage::TRANSFER_SRC, size, true);
 
-        memcpy(stagingBuffer->GetMappedData(), data, size);
+        stagingBuffer->Update(size, data);
 
         const Scope<CommandBuffer> cmdBuffer = m_context.CreateCommandBuffer(true);
 

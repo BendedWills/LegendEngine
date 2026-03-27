@@ -27,7 +27,8 @@ namespace le
 
 		[[nodiscard]] bool HasChanged() const;
 
-		void UpdateUniforms(uint32_t currentFrame);
+		void UpdateUniforms();
+		void CopyUniformData();
 
 		[[nodiscard]] DynamicUniforms& GetUniforms() const;
 
