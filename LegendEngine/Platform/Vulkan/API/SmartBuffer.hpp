@@ -29,12 +29,9 @@ namespace le::vk
         };
 
         VkBuffer CreateBuffer(BufferDesc* target, size_t size) const;
-
-        BufferDesc* AcquireUnusedBuffer();
         void DestroyBuffer(BufferDesc& buffer) const;
 
         void DeleteUnusedBuffers();
-        void DeleteStager();
 
         TetherVulkan::GraphicsContext& m_context;
 

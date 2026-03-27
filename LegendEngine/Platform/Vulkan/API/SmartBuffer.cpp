@@ -104,21 +104,6 @@ namespace le::vk
         return buffer;
     }
 
-    SmartBuffer::BufferDesc* SmartBuffer::AcquireUnusedBuffer()
-    {
-        // Essentially a spinlock waiting for a buffer to become available
-        while (true)
-        {
-            BufferDesc* buffer = &m_buffer1;
-            if (!buffer->buffer)
-                return buffer;
-
-            buffer = &m_buffer2;
-            if (!buffer->buffer)
-                return buffer;
-        }
-    }
-
     void SmartBuffer::DestroyBuffer(BufferDesc& buffer) const
     {
         if (!buffer.buffer)
@@ -141,7 +126,7 @@ namespace le::vk
 
         std::scoped_lock lock(m_updateMutex);
 
-        // If the staging buffer exists, an update has occurred and it could
+        // If the staging buffer exists, an update has occurred, and it could
         // be still uploading or not. There should never be a case where the
         // staging buffer exists but no update happened.
         if (!m_stager.HasStagingBuffer() || !m_stager.IsFenceSignaled())
