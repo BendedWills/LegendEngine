@@ -32,8 +32,8 @@ namespace le
         virtual ~CommandBuffer() = default;
 
         // Helper functions
-        virtual void TransitionImageLayout(Image& image, Image::Format format,
-            Image::Layout oldLayout, Image::Layout newLayout) = 0;
+        virtual void TransitionImageLayout(Image& image,
+            Image::Layout oldLayout, Image::Layout newLayout, Image::Aspect aspect) = 0;
 
         virtual void Begin(bool oneTimeSubmit) = 0;
         virtual void End() = 0;

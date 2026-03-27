@@ -13,6 +13,12 @@ namespace le::vk
     public:
         explicit Image(GraphicsContext& context, const Info& info);
         ~Image() override;
+
+        VkImage GetImage() const;
+
+        static VkImageLayout GetImageLayout(Layout layout);
+        static VkImageAspectFlags GetImageAspectFlags(Aspect aspect);
+        static VkFormat GetFormat(Format format);
     private:
         TetherVulkan::GraphicsContext& m_context;
 

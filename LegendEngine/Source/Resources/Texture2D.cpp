@@ -65,9 +65,10 @@ namespace le
 
         cmdBuffer->Begin(true);
         {
-            cmdBuffer->TransitionImageLayout(*m_image, format,
+            cmdBuffer->TransitionImageLayout(*m_image,
                 Image::Layout::UNDEFINED,
-                Image::Layout::TRANSFER_DST_OPTIMAL);
+                Image::Layout::TRANSFER_DST_OPTIMAL,
+                Image::Aspect::COLOR);
 
             CommandBuffer::BufferImageCopy region{};
             region.imageSubresource.aspect = Image::Aspect::COLOR;
@@ -82,9 +83,10 @@ namespace le
             cmdBuffer->CmdCopyBufferToImage(*stagingBuffer, *m_image,
                 Image::Layout::TRANSFER_DST_OPTIMAL, 1, &region);
 
-            cmdBuffer->TransitionImageLayout(*m_image, format,
+            cmdBuffer->TransitionImageLayout(*m_image,
                 Image::Layout::TRANSFER_DST_OPTIMAL,
-                Image::Layout::SHADER_READ_ONLY_OPTIMAL);
+                Image::Layout::SHADER_READ_ONLY_OPTIMAL,
+                Image::Aspect::COLOR);
         }
         cmdBuffer->End();
         cmdBuffer->Submit(true);

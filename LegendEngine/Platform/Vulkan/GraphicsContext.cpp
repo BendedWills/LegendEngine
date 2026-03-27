@@ -390,9 +390,9 @@ namespace le::vk
     Scope<le::CommandBuffer> GraphicsContext::CreateCommandBuffer(const bool transfer)
     {
         if (transfer)
-            return std::make_unique<CommandBuffer>(m_TransferQueue, m_TransferQueueMutex);
+            return std::make_unique<CommandBuffer>(*this, m_TransferPool, m_TransferQueue, m_TransferQueueMutex);
 
-        return std::make_unique<CommandBuffer>(m_GraphicsContext.GetQueue(), m_GraphicsQueueMutex);
+        return std::make_unique<CommandBuffer>(*this, m_GraphicsContext.GetCommandPool(), m_GraphicsContext.GetQueue(), m_GraphicsQueueMutex);
     }
 
     Scope<le::DynamicUniforms> GraphicsContext::CreateDynamicUniforms(

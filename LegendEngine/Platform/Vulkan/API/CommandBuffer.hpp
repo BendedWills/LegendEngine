@@ -4,21 +4,24 @@
 #include <LE/Graphics/API/CommandBuffer.hpp>
 #include <vulkan/vulkan.h>
 
+#include "GraphicsContext.hpp"
+
 namespace le::vk
 {
     class CommandBuffer final : public le::CommandBuffer
     {
     public:
-        CommandBuffer(VkQueue queue, std::mutex& mutex);
+        CommandBuffer(GraphicsContext& context, VkCommandPool pool, VkQueue queue, std::mutex& mutex);
 
-        void TransitionImageLayout(Image& image, Image::Format format, Image::Layout oldLayout,
-            Image::Layout newLayout) override;
+        void TransitionImageLayout(Image& leImage, Image::Layout oldImageLayout,
+            Image::Layout newImageLayout, Image::Aspect aspect) override;
 
         void Begin(bool oneTimeSubmit) override;
 
         void End() override;
 
         void Submit(bool wait) override;
+        void Wait() const;
 
         void CmdCopyBufferToImage(le::Buffer& buffer, le::Image& image, Image::Layout layout, size_t count,
             BufferImageCopy* regions) override;
@@ -26,6 +29,14 @@ namespace le::vk
         void CmdPipelineBarrier(PipelineStage srcStage, PipelineStage dstStage, size_t imageMemoryBarrierCount,
             ImageMemoryBarrier* imageMemoryBarriers) override;
     private:
+        static VkPipelineStageFlags GetPipelineStageFlags(PipelineStage stage);
+
+        TetherVulkan::GraphicsContext& m_context;
+        std::mutex& m_mutex;
+
+        VkCommandPool m_pool = nullptr;
+        VkQueue m_queue = nullptr;
         VkCommandBuffer m_commandBuffer = nullptr;
+        VkFence m_fence = nullptr;
     };
 }

@@ -9,16 +9,7 @@ namespace le::vk
         :
         m_context(context.GetTetherGraphicsContext())
     {
-        VkFormat format = VK_FORMAT_R8G8B8_SRGB;
-        switch (info.format)
-        {
-            case Format::R8: format = VK_FORMAT_R8_SRGB; break;
-            case Format::R8G8: format = VK_FORMAT_R8G8_SRGB; break;
-            case Format::R8G8B8: format = VK_FORMAT_R8G8B8_SRGB; break;
-            case Format::R8G8B8A8: format = VK_FORMAT_R8G8B8A8_SRGB; break;
-
-            default: LE_ASSERT(false, "Unknown image format"); break;
-        }
+        VkFormat format = GetFormat(info.format);
 
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -72,5 +63,55 @@ namespace le::vk
     {
         vmaDestroyImage(m_context.GetAllocator(), m_image, m_allocation);
         vkDestroyImageView(m_context.GetDevice(), m_view, nullptr);
+    }
+
+    VkImage Image::GetImage() const
+    {
+        return m_image;
+    }
+
+    VkImageLayout Image::GetImageLayout(const Layout layout)
+    {
+        switch (layout)
+        {
+            case Layout::UNDEFINED: return VK_IMAGE_LAYOUT_UNDEFINED;
+            case Layout::GENERAL: return VK_IMAGE_LAYOUT_GENERAL;
+            case Layout::COLOR_ATTACHMENT_OPTIMAL: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            case Layout::SHADER_READ_ONLY_OPTIMAL: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            case Layout::TRANSFER_SRC_OPTIMAL: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            case Layout::TRANSFER_DST_OPTIMAL: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            case Layout::READ_ONLY_OPTIMAL: return VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL;
+            case Layout::PRESENT_SRC: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        }
+
+        LE_ASSERT(false, "Unknown image layout");
+        return VK_IMAGE_LAYOUT_UNDEFINED;
+    }
+
+    VkImageAspectFlags Image::GetImageAspectFlags(const Aspect aspect)
+    {
+        switch (aspect)
+        {
+            case Aspect::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
+            case Aspect::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
+            case Aspect::STENCIL: return VK_IMAGE_ASPECT_STENCIL_BIT;
+        }
+
+        LE_ASSERT(false, "Unknown image aspect");
+        return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+
+    VkFormat Image::GetFormat(const Format format)
+    {
+        switch (format)
+        {
+            case Format::R8: return VK_FORMAT_R8_SRGB;
+            case Format::R8G8: return VK_FORMAT_R8G8_SRGB;
+            case Format::R8G8B8: return VK_FORMAT_R8G8B8_SRGB;
+            case Format::R8G8B8A8: return VK_FORMAT_R8G8B8A8_SRGB;
+        }
+
+        LE_ASSERT(false, "Unknown image format");
+        return VK_FORMAT_UNDEFINED;
     }
 }
