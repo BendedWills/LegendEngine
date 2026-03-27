@@ -34,11 +34,6 @@ namespace le::vk
         memcpy(m_allocationInfo.pMappedData, data, size);
     }
 
-    void SimpleBuffer::UpdateForAllFrames(const size_t size, void* data)
-    {
-        Update(size, data);
-    }
-
     VkBuffer SimpleBuffer::GetBuffer()
     {
         return m_buffer;

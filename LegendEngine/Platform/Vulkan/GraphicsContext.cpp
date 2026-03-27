@@ -380,7 +380,7 @@ namespace le::vk
 
     Scope<le::Buffer> GraphicsContext::CreateSmartBuffer(Buffer::Usage usage, size_t initialSize)
     {
-        return std::make_unique<SmartBuffer>(usage, initialSize);
+        return std::make_unique<SmartBuffer>(*this, usage, initialSize);
     }
 
     Scope<le::Buffer> GraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)

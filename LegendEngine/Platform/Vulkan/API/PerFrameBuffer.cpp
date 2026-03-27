@@ -37,15 +37,6 @@ namespace le::vk
         memcpy(pMappedData, data, size);
     }
 
-    void PerFrameBuffer::UpdateForAllFrames(const size_t size, void* data)
-    {
-        LE_ASSERT(m_allocationInfos[0].pMappedData != nullptr, "Buffer was updated but not mapped");
-        LE_ASSERT(size <= m_allocationInfos[0].size, "Tried to copy too much data into buffer");
-
-        for (size_t i = 0; i < Application::FRAMES_IN_FLIGHT; i++)
-            memcpy(m_allocationInfos[i].pMappedData, data, size);
-    }
-
     VkBuffer PerFrameBuffer::GetBuffer()
     {
         return m_buffers[Application::Get().GetCurrentFrame()];

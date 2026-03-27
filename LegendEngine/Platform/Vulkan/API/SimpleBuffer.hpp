@@ -14,8 +14,7 @@ namespace le::vk
         ~SimpleBuffer() override;
 
         void Update(size_t size, const void* data) override;
-
-        void UpdateForAllFrames(size_t size, void* data) override;
+        void Resize(size_t newSize) override;
 
         void* GetMappedData() override;
 

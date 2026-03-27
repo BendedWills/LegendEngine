@@ -15,8 +15,7 @@ namespace le::vk
         ~PerFrameBuffer() override;
 
         void Update(size_t size, const void* data) override;
-
-        void UpdateForAllFrames(size_t size, void* data) override;
+        void Resize(size_t newSize) override;
 
         VkBuffer GetBuffer() override;
     private:

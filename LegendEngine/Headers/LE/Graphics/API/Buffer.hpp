@@ -18,8 +18,8 @@ namespace le
         virtual ~Buffer() = default;
 
         virtual void Update(size_t size, const void* data) = 0;
-        virtual void UpdateForAllFrames(size_t size, void* data) = 0;
+        virtual void Resize(size_t newSize) = 0;
 
-        virtual void* GetMappedData() { return nullptr; };
+        virtual void* GetMappedData() { return nullptr; }
     };
 }
