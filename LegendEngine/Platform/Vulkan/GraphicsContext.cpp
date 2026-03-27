@@ -217,6 +217,7 @@ namespace le::vk
         info.devicePNext = &DYNAMIC_RENDERING;
         info.deviceExtensions = EXTENSIONS;
         info.createTransferQueue = true;
+        info.framesInFlight = Application::FRAMES_IN_FLIGHT;
 
         return info;
     }
@@ -384,7 +385,7 @@ namespace le::vk
 
     Scope<le::Buffer> GraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)
     {
-        return std::make_unique<PerFrameBuffer>(usage, size);
+        return std::make_unique<PerFrameBuffer>(*this, usage, size);
     }
 
     Scope<le::CommandBuffer> GraphicsContext::CreateCommandBuffer(const bool transfer)

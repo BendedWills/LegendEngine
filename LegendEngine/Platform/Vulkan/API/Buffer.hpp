@@ -1,7 +1,8 @@
 #pragma once
 
 #include <LE/Graphics/API/Buffer.hpp>
-#include <vulkan/vulkan.h>
+
+#include <vk_mem_alloc.h>
 
 namespace le::vk
 {
@@ -9,5 +10,8 @@ namespace le::vk
     {
     public:
         virtual VkBuffer GetBuffer() = 0;
+    protected:
+        static VkBufferUsageFlags ToVulkanUsageFlags(Usage usage);
+        static VmaAllocationCreateFlags ToVmaAllocationCreateFlags(Usage usage, bool mapped);
     };
 }

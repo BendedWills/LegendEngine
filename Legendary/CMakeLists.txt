@@ -10,7 +10,6 @@ file(GLOB_RECURSE SOURCES
     "Headers/*.hpp" "Headers/*.h"
 )
 
-add_definitions(-DVULKAN_API -DOPENGL_API -DWINDOW_MANAGEMENT)
 if (WIN32 AND ("${CMAKE_BUILD_TYPE}" MATCHES "Release"))
     add_executable(
         ${PROJECT_NAME} 
