@@ -34,12 +34,19 @@ namespace le
             STENCIL,
         };
 
+        enum class Type
+        {
+            TYPE_2D,
+            TYPE_2D_ARRAY,
+        };
+
         struct Info
         {
             size_t width = 0;
             size_t height = 0;
             size_t arrayLayers = 1;
             Format format = Format::R8G8B8A8;
+            Type type = Type::TYPE_2D;
         };
 
         struct Subresource

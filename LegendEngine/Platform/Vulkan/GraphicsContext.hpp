@@ -28,7 +28,6 @@ namespace le::vk
         Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos) override;
         Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) override;
         Scope<Image> CreateImage(const Image::Info& info) override;
-        Scope<ImageView> CreateImageView(const ImageView::Info& info) override;
         Scope<Sampler> CreateSampler(const Sampler::Info& info) override;
 
         VkQueue GetTransferQueue() const;

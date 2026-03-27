@@ -26,18 +26,10 @@ namespace le
             .width = m_Width,
             .height = m_Height,
             .format = format,
+            .type = Image::Type::TYPE_2D,
         };
 
         m_image = m_context.CreateImage(imageInfo);
-
-        const ImageView::Info viewInfo =
-        {
-            .image = m_image.get(),
-            .format = format,
-            .type = ImageView::Type::TYPE_2D,
-        };
-
-        m_imageView = m_context.CreateImageView(viewInfo);
 
         Upload(loader.GetData(), m_Width * m_Height * m_Channels, format);
     }
@@ -60,11 +52,6 @@ namespace le
     Image& Texture2D::GetImage()
     {
         return *m_image;
-    }
-
-    ImageView& Texture2D::GetImageView()
-    {
-        return *m_imageView;
     }
 
     void Texture2D::Upload(const void* data, const size_t size, const Image::Format format) const

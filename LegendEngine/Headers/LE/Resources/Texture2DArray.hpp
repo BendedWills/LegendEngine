@@ -16,7 +16,6 @@ namespace le
 		[[nodiscard]] uint8_t GetChannels() const;
 
 		Image& GetImage() override;
-		ImageView& GetImageView() override;
 	private:
 		void Upload(GraphicsContext& context, size_t size,
 			const std::span<TextureData*>& textureData) const;
@@ -28,6 +27,5 @@ namespace le
 		uint8_t m_Channels;
 
 		Scope<Image> m_image;
-		Scope<ImageView> m_imageView;
 	};
 }

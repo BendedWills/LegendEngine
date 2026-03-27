@@ -1,6 +1,6 @@
 #include <LE/Application.hpp>
 #include <LE/Graphics/GraphicsContext.hpp>
-#include <LE/Graphics/API/ImageView.hpp>
+#include <LE/Graphics/API/Image.hpp>
 #include <LE/IO/TextureData.hpp>
 #include <LE/Resources/Texture2DArray.hpp>
 
@@ -25,20 +25,15 @@ namespace le
 			default: format = Image::Format::R8; break;
 		}
 
-		const Image::Info& imageInfo =
-		{
-			width, height, textureData.size(), format
+		const Image::Info& imageInfo = {
+			.width = width,
+			.height = height,
+			.arrayLayers = textureData.size(),
+			.format = format,
+			.type = Image::Type::TYPE_2D_ARRAY,
 		};
 
 		m_image = context.CreateImage(imageInfo);
-
-		const ImageView::Info& viewInfo =
-		{
-			m_image.get(), format, ImageView::Type::TYPE_2D_ARRAY,
-			textureData.size()
-		};
-
-		m_imageView = context.CreateImageView(viewInfo);
 
 		Upload(context, m_Width * m_Height * m_Channels, textureData);
 	}
@@ -128,10 +123,5 @@ namespace le
 	Image& Texture2DArray::GetImage()
 	{
 		return *m_image;
-	}
-
-	ImageView& Texture2DArray::GetImageView()
-	{
-		return *m_imageView;
 	}
 }

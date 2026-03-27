@@ -20,7 +20,6 @@ namespace le
 		[[nodiscard]] uint8_t GetChannels() const;
 
 		Image& GetImage() override;
-		ImageView& GetImageView() override;
 	private:
 		void Upload(const void* data, size_t size, Image::Format format) const;
 
@@ -31,6 +30,5 @@ namespace le
 		GraphicsContext& m_context;
 
 		Scope<Image> m_image;
-		Scope<ImageView> m_imageView;
 	};
 }

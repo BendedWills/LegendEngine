@@ -10,7 +10,6 @@
 #include <LE/Graphics/API/CommandBuffer.hpp>
 #include <LE/Graphics/API/DynamicUniforms.hpp>
 #include <LE/Graphics/API/Image.hpp>
-#include <LE/Graphics/API/ImageView.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
 #include <LE/Graphics/API/Sampler.hpp>
 #include <LE/Resources/Shader.hpp>
@@ -43,7 +42,6 @@ namespace le
             std::span<DynamicUniforms::DescriptorInfo> infos) = 0;
         virtual Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) = 0;
         virtual Scope<Image> CreateImage(const Image::Info& info) = 0;
-        virtual Scope<ImageView> CreateImageView(const ImageView::Info& info) = 0;
         virtual Scope<Sampler> CreateSampler(const Sampler::Info& info) = 0;
 
         [[nodiscard]] const ShaderManager& GetShaderManager() const;

@@ -4,7 +4,6 @@
 #include "API/CommandBuffer.hpp"
 #include "API/DynamicUniforms.hpp"
 #include "API/Image.hpp"
-#include "API/ImageView.hpp"
 #include "API/Pipeline.hpp"
 #include "API/Sampler.hpp"
 
@@ -451,12 +450,7 @@ namespace le::vk
 
     Scope<le::Image> GraphicsContext::CreateImage(const Image::Info& info)
     {
-        return std::make_unique<Image>();
-    }
-
-    Scope<le::ImageView> GraphicsContext::CreateImageView(const ImageView::Info& info)
-    {
-        return std::make_unique<ImageView>();
+        return std::make_unique<Image>(*this, info);
     }
 
     Scope<le::Sampler> GraphicsContext::CreateSampler(const Sampler::Info& info)
