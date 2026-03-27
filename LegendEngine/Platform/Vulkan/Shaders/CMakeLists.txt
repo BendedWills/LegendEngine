@@ -44,9 +44,7 @@ function(ConvertToCpp)
 	add_dependencies(spv2cpp bin2cpp compile_vulkan_shaders)
 
 	file(MAKE_DIRECTORY ${SHADER_HEADER_DIR})
-
-	get_target_property(BIN2CPP_DIR bin2cpp RUNTIME_OUTPUT_DIRECTORY)
-
+	
 	get_property(spvFiles DIRECTORY PROPERTY SPV_FILES)
 	foreach(source IN LISTS spvFiles)
 		# Get the name of the file without path (with extension)
@@ -58,7 +56,7 @@ function(ConvertToCpp)
 			TARGET spv2cpp
 			PRE_BUILD
 			COMMAND
-				${BIN2CPP_DIR}/bin2cpp
+				bin2cpp
 				-s ${source}
 				-o \"${SHADER_HEADER_DIR}/${FILENAME}.h\"
 				-n le::vk
