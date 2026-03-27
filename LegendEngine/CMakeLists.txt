@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.10)
 project ("LegendEngine")
 
 add_subdirectory(Vendor)
-add_subdirectory(Assets)
 
 if (LE_BUILD_TESTS)
 	add_subdirectory(Tests)
@@ -10,8 +9,6 @@ endif()
 
 file(GLOB_RECURSE LE_SOURCES "Source/*.cpp" "Headers/LE/*.hpp")
 add_library(${PROJECT_NAME} STATIC ${LE_SOURCES})
-
-add_dependencies(${PROJECT_NAME} compileLegendEngineAssets)
 
 if (MSVC)
 	target_compile_options(${PROJECT_NAME} 

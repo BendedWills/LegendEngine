@@ -8,10 +8,16 @@
 #include "API/Pipeline.hpp"
 #include "API/Sampler.hpp"
 
+#include "solid.frag.spv.h"
+#include "solid.vert.spv.h"
+#include "textured.frag.spv.h"
+#include "textured.vert.spv.h"
+
 #include <Renderer.hpp>
 #include <ShaderModule.hpp>
 #include <VkDefs.hpp>
 #include <VulkanRenderTarget.hpp>
+#include <LE/Application.hpp>
 #include <LE/Common/Assert.hpp>
 #include <LE/IO/Logger.hpp>
 
@@ -437,8 +443,37 @@ namespace le::vk
         return std::make_unique<Pipeline>(m_GraphicsContext, pipelineInfo);
     }
 
-    Scope<le::Image> VulkanGraphicsContext::CreateImage(const Image::Info& info) {}
-    Scope<le::ImageView> VulkanGraphicsContext::CreateImageView(const ImageView::Info& info) {}
-    Scope<le::Sampler> VulkanGraphicsContext::CreateSampler(const Sampler::Info& info) {}
-    void VulkanGraphicsContext::RegisterShaders() {}
+    Scope<le::Image> VulkanGraphicsContext::CreateImage(const Image::Info& info)
+    {
+        return std::make_unique<Image>();
+    }
+
+    Scope<le::ImageView> VulkanGraphicsContext::CreateImageView(const ImageView::Info& info)
+    {
+        return std::make_unique<ImageView>();
+    }
+
+    Scope<le::Sampler> VulkanGraphicsContext::CreateSampler(const Sampler::Info& info)
+    {
+        return std::make_unique<Sampler>();
+    }
+
+#define STAGES(id) \
+    static Shader::Stage STAGES_##id[] = { \
+        { ShaderType::VERTEX, _binary_##id##_vert_spv, \
+            sizeof(_binary_##id##_vert_spv) }, \
+        { ShaderType::FRAG, _binary_##id##_frag_spv, \
+            sizeof(_binary_##id##_frag_spv) } \
+    }
+
+    STAGES(solid);
+    STAGES(textured);
+
+    void VulkanGraphicsContext::RegisterShaders()
+    {
+        ResourceManager& manager = Application::Get().GetResourceManager();
+
+        m_shaderManager.RegisterShader("solid", manager.CreateResource<Shader>(std::span(STAGES_solid))->id);
+        m_shaderManager.RegisterShader("textured", manager.CreateResource<Shader>(std::span(STAGES_textured))->id);
+    }
 }

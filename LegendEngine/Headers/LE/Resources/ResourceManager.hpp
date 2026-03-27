@@ -30,7 +30,7 @@ namespace le
                 m_resources[resource->m_uid] = resource;
             }
 
-            LE_DEBUG("Resource created (type = {}, id = {})", typeid(T).name(), resource->m_uid);
+            LE_DEBUG("Resource created (type = {}, id = {})", typeid(T).name(), resource->m_uid.Get());
 
             return resource;
         }
