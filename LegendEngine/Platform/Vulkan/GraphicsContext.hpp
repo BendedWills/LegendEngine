@@ -22,7 +22,7 @@ namespace le::vk
         Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;
 #endif
         Scope<Buffer> CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped) override;
-        Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage, size_t initialSize) override;
+        Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage) override;
         Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size) override;
         Scope<CommandBuffer> CreateCommandBuffer(bool transfer) override;
         Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos) override;

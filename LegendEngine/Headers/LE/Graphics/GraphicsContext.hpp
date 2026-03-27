@@ -35,7 +35,7 @@ namespace le
         virtual Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) = 0;
 #endif
         virtual Scope<Buffer> CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped) = 0;
-        virtual Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage, size_t initialSize) = 0;
+        virtual Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage) = 0;
         virtual Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size) = 0;
         virtual Scope<CommandBuffer> CreateCommandBuffer(bool transfer) = 0;
         virtual Scope<DynamicUniforms> CreateDynamicUniforms(

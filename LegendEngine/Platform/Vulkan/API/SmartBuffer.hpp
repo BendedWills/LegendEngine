@@ -12,7 +12,7 @@ namespace le::vk
     class SmartBuffer final : public Buffer
     {
     public:
-        SmartBuffer(GraphicsContext& context, Usage usage, size_t initialSize);
+        SmartBuffer(GraphicsContext& context, Usage usage);
         ~SmartBuffer() override;
 
         void Update(size_t size, const void* data) override;

@@ -6,7 +6,7 @@
 
 namespace le::vk
 {
-    SmartBuffer::SmartBuffer(GraphicsContext& context, const Usage usage, const size_t initialSize)
+    SmartBuffer::SmartBuffer(GraphicsContext& context, const Usage usage)
         :
         m_context(context.GetTetherGraphicsContext()),
         m_stager(context),

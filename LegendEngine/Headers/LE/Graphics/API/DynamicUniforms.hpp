@@ -30,7 +30,11 @@ namespace le
         virtual ~DynamicUniforms() = default;
 
         virtual void UpdateBuffer(Buffer& buffer, uint32_t binding) = 0;
+        virtual void UpdateSampledImage(uint32_t binding) = 0;
+        virtual void UpdateSampler(uint32_t binding) = 0;
         virtual void UpdateCombinedImageSampler(uint32_t binding) = 0;
+
+        virtual void Invalidate() = 0;
 
         uint32_t m_currentFrame = 0;
     };

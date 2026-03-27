@@ -377,9 +377,9 @@ namespace le::vk
         return std::make_unique<SimpleBuffer>(*this, usage, size, createMapped);
     }
 
-    Scope<le::Buffer> GraphicsContext::CreateSmartBuffer(Buffer::Usage usage, size_t initialSize)
+    Scope<le::Buffer> GraphicsContext::CreateSmartBuffer(Buffer::Usage usage)
     {
-        return std::make_unique<SmartBuffer>(*this, usage, initialSize);
+        return std::make_unique<SmartBuffer>(*this, usage);
     }
 
     Scope<le::Buffer> GraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)
@@ -398,7 +398,7 @@ namespace le::vk
     Scope<le::DynamicUniforms> GraphicsContext::CreateDynamicUniforms(
         std::span<DynamicUniforms::DescriptorInfo> infos)
     {
-        return std::make_unique<DynamicUniforms>();
+        return std::make_unique<DynamicUniforms>(*this, infos);
     }
 
     Scope<le::Pipeline> GraphicsContext::CreatePipeline(std::span<Shader::Stage> stages)
