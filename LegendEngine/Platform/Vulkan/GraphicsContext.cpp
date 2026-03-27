@@ -455,7 +455,7 @@ namespace le::vk
 
     Scope<le::Sampler> GraphicsContext::CreateSampler(const Sampler::Info& info)
     {
-        return std::make_unique<Sampler>();
+        return std::make_unique<Sampler>(*this, info);
     }
 
 #define STAGES(id) \
