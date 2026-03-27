@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <BufferStager.hpp>
-#include <utility>
 #include <LE/Events/EventBusSubscriber.hpp>
 
 #include "GraphicsContext.hpp"
