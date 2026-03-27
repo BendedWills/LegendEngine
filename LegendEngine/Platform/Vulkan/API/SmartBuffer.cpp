@@ -39,7 +39,6 @@ namespace le::vk
         std::scoped_lock lock(m_updateMutex);
 
         VkBuffer vkBuffer = nullptr;
-        bool createNewBuffer = false;
         if (buffer) // An update is in progress
         {
             // Even though the other wait exists, a wait must be here too,
@@ -53,7 +52,7 @@ namespace le::vk
             if (buffer->size != size)
             {
                 DestroyBuffer(*buffer);
-                createNewBuffer = true;
+                vkBuffer = CreateBuffer(buffer, size);
             }
         }
         else // No update is in progress, so create a new buffer as normal
@@ -63,18 +62,7 @@ namespace le::vk
 
             // Relaxed because of the update mutex lock
             m_updatedBuffer.store(buffer, std::memory_order_relaxed);
-            createNewBuffer = true;
-        }
-
-        if (createNewBuffer)
-        {
-            const auto [newBuffer, newAlloc] = CreateBuffer(m_usage, size);
-
-            vkBuffer = newBuffer;
-
-            buffer->buffer = newBuffer;
-            buffer->allocation = newAlloc;
-            buffer->size = size;
+            vkBuffer = CreateBuffer(buffer, size);
         }
 
         m_stager.CreateStagingBuffer(vkBuffer, size);
@@ -91,7 +79,7 @@ namespace le::vk
         return m_currentBuffer.load()->buffer;
     }
 
-    std::pair<VkBuffer, VmaAllocation> SmartBuffer::CreateBuffer(const VkBufferUsageFlags flags, const size_t size) const
+    VkBuffer SmartBuffer::CreateBuffer(BufferDesc* target, const size_t size) const
     {
         VkBuffer buffer = nullptr;
         VmaAllocation allocation = nullptr;
@@ -99,7 +87,7 @@ namespace le::vk
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
-        bufferInfo.usage = flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        bufferInfo.usage = m_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo allocInfo{};
@@ -109,7 +97,11 @@ namespace le::vk
 
         LE_CHECK_VK(vmaCreateBuffer(m_context.GetAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr));
 
-        return std::make_pair(buffer, allocation);
+        target->buffer = buffer;
+        target->allocation = allocation;
+        target->size = size;
+
+        return buffer;
     }
 
     SmartBuffer::BufferDesc* SmartBuffer::AcquireUnusedBuffer()

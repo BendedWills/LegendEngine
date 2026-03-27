@@ -28,7 +28,8 @@ namespace le::vk
             std::atomic<size_t> size = 0;
         };
 
-        [[nodiscard]] std::pair<VkBuffer, VmaAllocation> CreateBuffer(VkBufferUsageFlags flags, size_t size) const;
+        VkBuffer CreateBuffer(BufferDesc* target, size_t size) const;
+
         BufferDesc* AcquireUnusedBuffer();
         void DestroyBuffer(BufferDesc& buffer) const;
 
