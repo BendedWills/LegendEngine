@@ -3,7 +3,7 @@
 
 namespace le
 {
-	VulkanBufferStager::VulkanBufferStager(VulkanGraphicsContext& context)
+	VulkanBufferStager::VulkanBufferStager(vk::VulkanGraphicsContext& context)
 		:
 		m_GraphicsContext(context.GetTetherGraphicsContext()),
 		m_TransferMutex(context.GetTransferQueueMutex()),

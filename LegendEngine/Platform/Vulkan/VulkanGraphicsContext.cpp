@@ -1,7 +1,16 @@
-#include <OccasionalUpdateBuffer.hpp>
+#include "VulkanGraphicsContext.hpp"
+
+#include "API/Buffer.hpp"
+#include "API/CommandBuffer.hpp"
+#include "API/DynamicUniforms.hpp"
+#include "API/Image.hpp"
+#include "API/ImageView.hpp"
+#include "API/Pipeline.hpp"
+#include "API/Sampler.hpp"
+
+#include <Renderer.hpp>
+#include <ShaderModule.hpp>
 #include <VkDefs.hpp>
-#include <VulkanGraphicsContext.hpp>
-#include <VulkanRenderer.hpp>
 #include <VulkanRenderTarget.hpp>
 #include <LE/Common/Assert.hpp>
 #include <LE/IO/Logger.hpp>
@@ -78,7 +87,7 @@ namespace le::vk
         vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_SceneLayout, nullptr);
     }
 
-    Scope<Renderer> VulkanGraphicsContext::CreateRenderer(RenderTarget& renderTarget)
+    Scope<le::Renderer> VulkanGraphicsContext::CreateRenderer(RenderTarget& renderTarget)
     {
         constexpr VkSurfaceFormatKHR surfaceFormat =
         {
@@ -86,7 +95,7 @@ namespace le::vk
             .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
         };
 
-        return std::make_unique<VulkanRenderer>(
+        return std::make_unique<Renderer>(
             *this, renderTarget, surfaceFormat
         );
     }
@@ -351,4 +360,85 @@ namespace le::vk
 
         LE_CHECK_VK(vkCreateCommandPool(m_ContextCreator.GetDevice(), &info, nullptr, &m_TransferPool));
     }
+
+    Scope<le::Buffer> VulkanGraphicsContext::CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped)
+    {
+
+    }
+
+    Scope<le::Buffer> VulkanGraphicsContext::CreateSmartBuffer(Buffer::Usage usage, size_t initialSize)
+    {
+
+    }
+
+    Scope<le::Buffer> VulkanGraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)
+    {
+
+    }
+
+    Scope<le::CommandBuffer> VulkanGraphicsContext::CreateCommandBuffer(const bool transfer)
+    {
+        if (transfer)
+            return std::make_unique<CommandBuffer>(m_TransferQueue, m_TransferQueueMutex);
+
+        return std::make_unique<CommandBuffer>(m_GraphicsContext.GetQueue(), m_GraphicsQueueMutex);
+    }
+
+    Scope<le::DynamicUniforms> VulkanGraphicsContext::CreateDynamicUniforms(
+        std::span<DynamicUniforms::DescriptorInfo> infos)
+    {
+        return std::make_unique<DynamicUniforms>();
+    }
+
+    Scope<le::Pipeline> VulkanGraphicsContext::CreatePipeline(std::span<Shader::Stage> stages)
+    {
+        std::vector<VkPipelineShaderStageCreateInfo> vkStages;
+        std::vector<ShaderModule> shaderModules;
+        vkStages.reserve(stages.size());
+        shaderModules.reserve(stages.size());
+
+        for (Shader::Stage stage : stages)
+        {
+            shaderModules.emplace_back(m_GraphicsContext, stage);
+
+            VkPipelineShaderStageCreateInfo vkStage{};
+            vkStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            vkStage.module = shaderModules.back().Get();
+            vkStage.pName = "main";
+
+            switch (stage.type)
+            {
+                case ShaderType::VERTEX: vkStage.stage = VK_SHADER_STAGE_VERTEX_BIT; break;
+                case ShaderType::FRAG:  vkStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT; break;
+                case ShaderType::COMPUTE: vkStage.stage = VK_SHADER_STAGE_COMPUTE_BIT; break;
+                case ShaderType::GEOM:  vkStage.stage = VK_SHADER_STAGE_GEOMETRY_BIT; break;
+            }
+
+            vkStages.push_back(vkStage);
+        }
+
+        VkDynamicState dynamicStates[] =
+        {
+            VK_DYNAMIC_STATE_VIEWPORT,
+            VK_DYNAMIC_STATE_SCISSOR,
+            VK_DYNAMIC_STATE_CULL_MODE
+        };
+
+        Pipeline::Info pipelineInfo{};
+        pipelineInfo.stageCount = vkStages.size();
+        pipelineInfo.pStages = vkStages.data();
+        pipelineInfo.pDynamicStates = dynamicStates;
+        pipelineInfo.dynamicStateCount = std::size(dynamicStates);
+        pipelineInfo.pDynamicStates = dynamicStates;
+        pipelineInfo.setCount = m_SetLayouts.size();
+        pipelineInfo.pSetLayouts = m_SetLayouts.data();
+        pipelineInfo.depthFormat = m_DepthFormat;
+
+        return std::make_unique<Pipeline>(m_GraphicsContext, pipelineInfo);
+    }
+
+    Scope<le::Image> VulkanGraphicsContext::CreateImage(const Image::Info& info) {}
+    Scope<le::ImageView> VulkanGraphicsContext::CreateImageView(const ImageView::Info& info) {}
+    Scope<le::Sampler> VulkanGraphicsContext::CreateSampler(const Sampler::Info& info) {}
+    void VulkanGraphicsContext::RegisterShaders() {}
 }

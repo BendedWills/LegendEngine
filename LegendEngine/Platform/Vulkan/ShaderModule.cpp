@@ -1,6 +1,6 @@
 #include <ShaderModule.hpp>
 
-namespace le
+namespace le::vk
 {
     using namespace Tether::Rendering::Vulkan;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <LE/Common/Defs.hpp>
 #include <LE/Graphics/RenderTarget.hpp>
 #include <Tether/Window.hpp>
 #include <Tether/Rendering/Vulkan/Surface.hpp>
@@ -13,7 +14,7 @@ namespace le
     class VulkanRenderTarget final : public RenderTarget
     {
     public:
-        VulkanRenderTarget(TetherVulkan::GraphicsContext& context); // Headless
+        explicit VulkanRenderTarget(TetherVulkan::GraphicsContext& context); // Headless
         VulkanRenderTarget(TetherVulkan::GraphicsContext& context, Tether::Window& window);
         LE_NO_COPY(VulkanRenderTarget);
 

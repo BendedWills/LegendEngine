@@ -1,8 +1,7 @@
-#include "VulkanRenderer.hpp"
+#include "Renderer.hpp"
 #include "VulkanGraphicsContext.hpp"
 
 #include <VkDefs.hpp>
-#include <VulkanVertexBuffer.hpp>
 #include <LE/Application.hpp>
 #include <LE/Components/Mesh.hpp>
 #include <Tether/Rendering/Vulkan/SingleUseCommandBuffer.hpp>
@@ -22,13 +21,13 @@
 
 namespace le::vk
 {
-    VulkanRenderer::VulkanRenderer(
+    Renderer::Renderer(
             VulkanGraphicsContext& context,
             RenderTarget& renderTarget,
             const VkSurfaceFormatKHR surfaceFormat
             )
         :
-        Renderer(renderTarget),
+        le::Renderer(renderTarget),
         m_resourceManager(Application::Get().GetResourceManager()),
         m_context(context),
         m_TetherCtx(context.GetTetherGraphicsContext()),
@@ -58,7 +57,7 @@ namespace le::vk
         CreateSyncObjects();
     }
 
-    VulkanRenderer::~VulkanRenderer()
+    Renderer::~Renderer()
     {
         LE_DEBUG("Destroying renderer");
 
@@ -80,18 +79,18 @@ namespace le::vk
         LE_DEBUG("Destroyed renderer");
     }
 
-    void VulkanRenderer::SetVSyncEnabled(const bool vsync)
+    void Renderer::SetVSyncEnabled(const bool vsync)
     {
         m_VSync = vsync;
         RecreateSwapchain();
     }
 
-    void VulkanRenderer::NotifyWindowResized()
+    void Renderer::NotifyWindowResized()
     {
         m_ShouldRecreateSwapchain = true;
     }
 
-    bool VulkanRenderer::StartFrame()
+    bool Renderer::StartFrame()
     {
         if (m_ShouldRecreateSwapchain)
             RecreateSwapchain();
@@ -123,7 +122,7 @@ namespace le::vk
         return true;
     }
 
-    void VulkanRenderer::BeginCommandBuffer()
+    void Renderer::BeginCommandBuffer()
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
         const VkExtent2D swapchainExtent = m_Swapchain->GetExtent();
@@ -206,14 +205,15 @@ namespace le::vk
         m_currentShaderID = 0;
     }
 
-    void VulkanRenderer::UseMaterial(const Material& material)
+    void Renderer::UseMaterial(const Material& material)
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
         const le::DynamicUniforms& dynamicUniforms = material.GetUniforms();
         const auto& vkUniforms = static_cast<const DynamicUniforms&>(
             dynamicUniforms);
 
-        m_Sets[2] = vkUniforms.GetSetAtIndex(m_CurrentFrame);
+        // TODO:
+        // m_Sets[2] = vkUniforms.GetSetAtIndex(m_CurrentFrame);
         m_HaveSetsChanged = true;
 
         if (material.GetShader() == m_currentShaderID)
@@ -239,7 +239,7 @@ namespace le::vk
         m_currentShaderID = material.GetShader();
     }
 
-    void VulkanRenderer::DrawMesh(const Mesh& mesh, const Transform& transform)
+    void Renderer::DrawMesh(const Mesh& mesh, const Transform& transform)
     {
         const Ref<MeshData> meshData =
             m_resourceManager.GetResource<MeshData>(mesh.data);
@@ -285,7 +285,7 @@ namespace le::vk
             1, 0, 0, 0);
     }
 
-    void VulkanRenderer::EndCommandBuffer() const
+    void Renderer::EndCommandBuffer() const
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
 
@@ -307,7 +307,7 @@ namespace le::vk
             nullptr, 1, &barrier);
     }
 
-    void VulkanRenderer::EndFrame()
+    void Renderer::EndFrame()
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
 
@@ -365,7 +365,7 @@ namespace le::vk
         m_CurrentFrame = (m_CurrentFrame + 1) % m_TetherCtx.GetFramesInFlight();
     }
 
-    void VulkanRenderer::UpdateCameraUniforms(const Camera& camera)
+    void Renderer::UpdateCameraUniforms(const Camera& camera)
     {
         Camera::CameraUniforms uniforms;
         uniforms.projection = camera.GetProjectionMatrix();
@@ -378,7 +378,7 @@ namespace le::vk
         }
     }
 
-    void VulkanRenderer::CreateSwapchain(const TetherVulkan::SwapchainDetails& details)
+    void Renderer::CreateSwapchain(const TetherVulkan::SwapchainDetails& details)
     {
         m_Swapchain.emplace(m_TetherCtx, details, m_SurfaceFormat,
             m_Surface, m_RenderTarget.GetWidth(), m_RenderTarget.GetHeight(),
@@ -389,7 +389,7 @@ namespace le::vk
         m_SwapchainImageCount = m_Swapchain->GetImageCount();
     }
 
-    void VulkanRenderer::CreateUniforms()
+    void Renderer::CreateUniforms()
     {
         const uint32_t framesInFlight = m_TetherCtx.GetFramesInFlight();
 
@@ -416,7 +416,7 @@ namespace le::vk
             0);
     }
 
-    void VulkanRenderer::CreateDepthImages()
+    void Renderer::CreateDepthImages()
     {
         auto [width, height] = m_Swapchain->GetExtent();
 
@@ -472,7 +472,7 @@ namespace le::vk
         cmdBuffer.Submit();
     }
 
-    void VulkanRenderer::CreateCommandBuffers()
+    void Renderer::CreateCommandBuffers()
     {
         m_CommandBuffers.resize(m_TetherCtx.GetFramesInFlight());
 
@@ -487,7 +487,7 @@ namespace le::vk
             throw std::runtime_error("Failed to allocate command buffers");
     }
 
-    void VulkanRenderer::CreateSyncObjects()
+    void Renderer::CreateSyncObjects()
     {
         const uint32_t framesInFlight = m_TetherCtx.GetFramesInFlight();
         m_RenderFinishedSemaphores.resize(m_SwapchainImageCount);
@@ -519,7 +519,7 @@ namespace le::vk
         }
     }
 
-    TetherVulkan::SwapchainDetails VulkanRenderer::QuerySwapchainSupport() const
+    TetherVulkan::SwapchainDetails Renderer::QuerySwapchainSupport() const
     {
         TetherVulkan::SwapchainDetails details;
 
@@ -570,7 +570,7 @@ namespace le::vk
         return details;
     }
 
-    VkFormat VulkanRenderer::FindSupportedFormat(const std::vector<VkFormat>& candidates,
+    VkFormat Renderer::FindSupportedFormat(const std::vector<VkFormat>& candidates,
         const VkImageTiling tiling, const VkFormatFeatureFlags features) const
     {
         for (const VkFormat format : candidates)
@@ -589,7 +589,7 @@ namespace le::vk
         return candidates[0];
     }
 
-    void VulkanRenderer::RecreateSwapchain()
+    void Renderer::RecreateSwapchain()
     {
         // The m_Device might still have work. Wait for it to finish before
         // recreating the m_Swapchain->
@@ -613,7 +613,7 @@ namespace le::vk
         m_ShouldRecreateSwapchain = false;
     }
 
-    void VulkanRenderer::DestroySwapchain()
+    void Renderer::DestroySwapchain()
     {
         vkFreeCommandBuffers(m_Device, m_TetherCtx.GetCommandPool(),
             static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());

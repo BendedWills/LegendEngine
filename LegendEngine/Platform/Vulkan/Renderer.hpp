@@ -17,15 +17,15 @@ namespace le::vk
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
-    class VulkanRenderer final : public Renderer
+    class Renderer final : public le::Renderer
     {
     public:
-        explicit VulkanRenderer(
+        explicit Renderer(
             VulkanGraphicsContext& context,
             RenderTarget& renderTarget,
             VkSurfaceFormatKHR surfaceFormat
         );
-        ~VulkanRenderer() override;
+        ~Renderer() override;
 
         void SetVSyncEnabled(bool vsync) override;
         void NotifyWindowResized() override;

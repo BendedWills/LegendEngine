@@ -1,10 +1,10 @@
 #pragma once
 
-#include <VulkanVertexBuffer.hpp>
+#include <../Vulkan/VulkanVertexBuffer.hpp>
 #include <Tether/Rendering/Vulkan/BufferStager.hpp>
 
 #include <span>
-#include <VulkanBufferStager.hpp>
+#include <../Vulkan/VulkanBufferStager.hpp>
 
 namespace le
 {

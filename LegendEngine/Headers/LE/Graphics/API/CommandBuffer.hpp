@@ -42,6 +42,6 @@ namespace le
         virtual void CmdCopyBufferToImage(Buffer& buffer, Image& image,
             Image::Layout layout, size_t count, BufferImageCopy* regions) = 0;
         virtual void CmdPipelineBarrier(PipelineStage srcStage, PipelineStage dstStage,
-            size_t imageMemoryBarrierCount, ImageMemoryBarrier* imageMemoryBarriers);
+            size_t imageMemoryBarrierCount, ImageMemoryBarrier* imageMemoryBarriers) = 0;
     };
 }

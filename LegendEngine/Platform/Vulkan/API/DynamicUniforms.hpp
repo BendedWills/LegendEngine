@@ -7,9 +7,11 @@ namespace le::vk
     class DynamicUniforms final : public le::DynamicUniforms
     {
     public:
-        void UpdateBuffer(Buffer& buffer, uint32_t binding) override;
+        void UpdateBuffer(le::Buffer& buffer, uint32_t binding) override;
 
         void UpdateCombinedImageSampler(uint32_t binding) override;
+
+
     private:
     };
 }

@@ -3,7 +3,7 @@
 #include <LE/Resources/Shader.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 
-namespace le
+namespace le::vk
 {
     class ShaderModule final
     {

@@ -21,9 +21,9 @@ namespace le::vk
 #ifndef LE_HEADLESS
         Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;
 #endif
-        Scope<Buffer> CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped);
-        Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage, size_t initialSize);
-        Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size);
+        Scope<le::Buffer> CreateSimpleBuffer(le::Buffer::Usage usage, size_t size, bool createMapped);
+        Scope<le::Buffer> CreateSmartBuffer(le::Buffer::Usage usage, size_t initialSize);
+        Scope<le::Buffer> CreatePerFrameBuffer(le::Buffer::Usage usage, size_t size);
         Scope<CommandBuffer> CreateCommandBuffer(bool transfer);
         Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos);
         Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages);

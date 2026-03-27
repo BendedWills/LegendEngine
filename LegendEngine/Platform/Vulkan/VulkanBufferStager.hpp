@@ -7,7 +7,7 @@ namespace le
 	class VulkanBufferStager final
 	{
 	public:
-		explicit VulkanBufferStager(VulkanGraphicsContext& context);
+		explicit VulkanBufferStager(vk::VulkanGraphicsContext& context);
 		~VulkanBufferStager();
 		LE_NO_COPY(VulkanBufferStager);
 
@@ -21,7 +21,7 @@ namespace le
 		void RecordCommandBuffer(VkBuffer target, size_t targetSize) const;
 		void CreateFence();
 
-		TetherVulkan::GraphicsContext& m_GraphicsContext;
+		Tether::Rendering::Vulkan::GraphicsContext& m_GraphicsContext;
 		std::mutex& m_TransferMutex;
 		VkDevice m_Device = nullptr;
 		VkQueue m_Queue = nullptr;

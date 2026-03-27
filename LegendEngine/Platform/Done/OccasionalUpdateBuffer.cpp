@@ -1,6 +1,6 @@
 #include <OccasionalUpdateBuffer.hpp>
-#include <VkDefs.hpp>
-#include <VulkanGraphicsContext.hpp>
+#include <../Vulkan/VkDefs.hpp>
+#include <../Vulkan/VulkanGraphicsContext.hpp>
 #include <LE/Common/Assert.hpp>
 
 namespace le

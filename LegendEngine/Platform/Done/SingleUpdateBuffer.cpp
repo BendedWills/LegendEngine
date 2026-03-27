@@ -1,5 +1,5 @@
-#include <SingleUpdateBuffer.hpp>
-#include <VkDefs.hpp>
+#include <../Vulkan/SingleUpdateBuffer.hpp>
+#include <../Vulkan/VkDefs.hpp>
 #include <LE/IO/Logger.hpp>
 
 namespace le
