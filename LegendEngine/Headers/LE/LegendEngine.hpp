@@ -23,7 +23,6 @@
 #include <LE/Graphics/Renderer.hpp>
 #include <LE/Graphics/RenderTarget.hpp>
 #include <LE/Graphics/ShaderManager.hpp>
-#include <LE/Graphics/VertexBuffer.hpp>
 #include <LE/Graphics/API/Buffer.hpp>
 #include <LE/Graphics/API/CommandBuffer.hpp>
 #include <LE/Graphics/API/DynamicUniforms.hpp>
