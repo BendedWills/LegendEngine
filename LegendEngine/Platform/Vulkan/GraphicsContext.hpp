@@ -10,26 +10,26 @@ namespace le::vk
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
-    class VulkanGraphicsContext final : public GraphicsContext
+    class GraphicsContext final : public le::GraphicsContext
     {
     public:
-        explicit VulkanGraphicsContext(std::string_view applicationName);
-        ~VulkanGraphicsContext() override;
+        explicit GraphicsContext(std::string_view applicationName);
+        ~GraphicsContext() override;
 
         Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) override;
         Scope<RenderTarget> CreateHeadlessRenderTarget() override;
 #ifndef LE_HEADLESS
         Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;
 #endif
-        Scope<le::Buffer> CreateSimpleBuffer(le::Buffer::Usage usage, size_t size, bool createMapped);
-        Scope<le::Buffer> CreateSmartBuffer(le::Buffer::Usage usage, size_t initialSize);
-        Scope<le::Buffer> CreatePerFrameBuffer(le::Buffer::Usage usage, size_t size);
-        Scope<CommandBuffer> CreateCommandBuffer(bool transfer);
-        Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos);
-        Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages);
-        Scope<Image> CreateImage(const Image::Info& info);
-        Scope<ImageView> CreateImageView(const ImageView::Info& info);
-        Scope<Sampler> CreateSampler(const Sampler::Info& info);
+        Scope<Buffer> CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped) override;
+        Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage, size_t initialSize) override;
+        Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size) override;
+        Scope<CommandBuffer> CreateCommandBuffer(bool transfer) override;
+        Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos) override;
+        Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) override;
+        Scope<Image> CreateImage(const Image::Info& info) override;
+        Scope<ImageView> CreateImageView(const ImageView::Info& info) override;
+        Scope<Sampler> CreateSampler(const Sampler::Info& info) override;
 
         VkQueue GetTransferQueue() const;
         VkCommandPool GetTransferPool() const;
@@ -60,7 +60,7 @@ namespace le::vk
         class DebugCallback final : public TetherVulkan::DebugCallback
         {
         public:
-            explicit DebugCallback(VulkanGraphicsContext& context);
+            explicit DebugCallback(GraphicsContext& context);
 
             void OnDebugLog(
                 VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -68,7 +68,7 @@ namespace le::vk
                 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
             ) override;
         private:
-            VulkanGraphicsContext& m_Context;
+            GraphicsContext& m_Context;
         };
 
         TetherVulkan::ContextCreator m_ContextCreator;

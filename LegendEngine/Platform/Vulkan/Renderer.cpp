@@ -1,12 +1,12 @@
 #include "Renderer.hpp"
-#include "VulkanGraphicsContext.hpp"
+#include "GraphicsContext.hpp"
 
 #include <VkDefs.hpp>
 #include <LE/Application.hpp>
 #include <LE/Components/Mesh.hpp>
 #include <Tether/Rendering/Vulkan/SingleUseCommandBuffer.hpp>
 
-#include <VulkanRenderTarget.hpp>
+#include <RenderTarget.hpp>
 #include <API/Buffer.hpp>
 #include <API/DynamicUniforms.hpp>
 #include <API/Pipeline.hpp>
@@ -22,7 +22,7 @@
 namespace le::vk
 {
     Renderer::Renderer(
-            VulkanGraphicsContext& context,
+            GraphicsContext& context,
             RenderTarget& renderTarget,
             const VkSurfaceFormatKHR surfaceFormat
             )
@@ -32,14 +32,14 @@ namespace le::vk
         m_context(context),
         m_TetherCtx(context.GetTetherGraphicsContext()),
         m_DeviceLoader(m_TetherCtx.GetDeviceLoader()),
-        m_Surface(dynamic_cast<VulkanRenderTarget&>(renderTarget).GetSurface()),
+        m_Surface(dynamic_cast<RenderTarget&>(renderTarget).GetSurface()),
         m_SurfaceFormat(surfaceFormat),
         m_Device(m_TetherCtx.GetDevice()),
         m_PhysicalDevice(m_TetherCtx.GetPhysicalDevice()),
         m_DepthFormat(context.GetDepthFormat()),
         m_GraphicsQueueMutex(context.GetGraphicsQueueMutex())
     {
-        LE_ASSERT(!dynamic_cast<VulkanRenderTarget&>(renderTarget).IsHeadless(),
+        LE_ASSERT(!dynamic_cast<RenderTarget&>(renderTarget).IsHeadless(),
             "Renderers can't be created with a headless surface");
 
         // Application::Get() doesn't work here

@@ -7,16 +7,16 @@
 
 #include <vulkan/vulkan.h>
 
-namespace le
+namespace le::vk
 {
     namespace TetherVulkan = Tether::Rendering::Vulkan;
 
-    class VulkanRenderTarget final : public RenderTarget
+    class RenderTarget final : public le::RenderTarget
     {
     public:
-        explicit VulkanRenderTarget(TetherVulkan::GraphicsContext& context); // Headless
-        VulkanRenderTarget(TetherVulkan::GraphicsContext& context, Tether::Window& window);
-        LE_NO_COPY(VulkanRenderTarget);
+        explicit RenderTarget(const TetherVulkan::GraphicsContext& context); // Headless
+        RenderTarget(const TetherVulkan::GraphicsContext& context, Tether::Window& window);
+        LE_NO_COPY(RenderTarget);
 
         VkSurfaceKHR GetSurface();
         [[nodiscard]] bool IsHeadless() const;

@@ -2,8 +2,8 @@
 
 #ifndef NDEBUG
 
-#include <cstdio>
 #include <cstdarg>
+#include <cstdio>
 
 static void VmaLog(const std::string_view format, ...)
 {

@@ -1,4 +1,4 @@
-#include "VulkanGraphicsContext.hpp"
+#include "GraphicsContext.hpp"
 
 #include "API/Buffer.hpp"
 #include "API/CommandBuffer.hpp"
@@ -16,7 +16,7 @@
 #include <Renderer.hpp>
 #include <ShaderModule.hpp>
 #include <VkDefs.hpp>
-#include <VulkanRenderTarget.hpp>
+#include <RenderTarget.hpp>
 #include <LE/Application.hpp>
 #include <LE/Common/Assert.hpp>
 #include <LE/IO/Logger.hpp>
@@ -52,10 +52,10 @@ namespace le::vk
 
     Scope<GraphicsContext> CreateVulkanGraphicsContext(std::string_view applicationName)
     {
-        return std::make_unique<VulkanGraphicsContext>(applicationName);
+        return std::make_unique<GraphicsContext>(applicationName);
     }
 
-    VulkanGraphicsContext::VulkanGraphicsContext(const std::string_view applicationName)
+    GraphicsContext::GraphicsContext(const std::string_view applicationName)
         :
         m_ContextCreator(GetContextInfo(applicationName)),
         m_GraphicsContext(m_ContextCreator),
@@ -84,7 +84,7 @@ namespace le::vk
         info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     }
 
-    VulkanGraphicsContext::~VulkanGraphicsContext()
+    GraphicsContext::~GraphicsContext()
     {
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
 
@@ -93,7 +93,7 @@ namespace le::vk
         vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_SceneLayout, nullptr);
     }
 
-    Scope<le::Renderer> VulkanGraphicsContext::CreateRenderer(RenderTarget& renderTarget)
+    Scope<le::Renderer> GraphicsContext::CreateRenderer(RenderTarget& renderTarget)
     {
         constexpr VkSurfaceFormatKHR surfaceFormat =
         {
@@ -106,17 +106,17 @@ namespace le::vk
         );
     }
 
-    Scope<RenderTarget> VulkanGraphicsContext::CreateHeadlessRenderTarget()
+    Scope<RenderTarget> GraphicsContext::CreateHeadlessRenderTarget()
     {
-        return std::make_unique<VulkanRenderTarget>(m_GraphicsContext);
+        return std::make_unique<RenderTarget>(m_GraphicsContext);
     }
 
-    VulkanGraphicsContext::DebugCallback::DebugCallback(VulkanGraphicsContext& context)
+    GraphicsContext::DebugCallback::DebugCallback(GraphicsContext& context)
         :
         m_Context(context)
     {}
 
-    void VulkanGraphicsContext::DebugCallback::OnDebugLog(
+    void GraphicsContext::DebugCallback::OnDebugLog(
         const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData
@@ -147,63 +147,63 @@ namespace le::vk
     }
 
 #ifndef LE_HEADLESS
-    Scope<RenderTarget> VulkanGraphicsContext::CreateWindowRenderTarget(Tether::Window& window)
+    Scope<RenderTarget> GraphicsContext::CreateWindowRenderTarget(Tether::Window& window)
     {
-        return std::make_unique<VulkanRenderTarget>(m_GraphicsContext, window);
+        return std::make_unique<RenderTarget>(m_GraphicsContext, window);
     }
 #endif
 
-    VkDescriptorSetLayout VulkanGraphicsContext::GetCameraLayout() const
+    VkDescriptorSetLayout GraphicsContext::GetCameraLayout() const
     {
         return m_CameraLayout;
     }
 
-    VkDescriptorSetLayout VulkanGraphicsContext::GetMaterialLayout() const
+    VkDescriptorSetLayout GraphicsContext::GetMaterialLayout() const
     {
         return m_MaterialLayout;
     }
 
-    VkDescriptorSetLayout VulkanGraphicsContext::GetSceneLayout() const
+    VkDescriptorSetLayout GraphicsContext::GetSceneLayout() const
     {
         return m_SceneLayout;
     }
 
-    std::span<VkDescriptorSetLayout> VulkanGraphicsContext::GetSets()
+    std::span<VkDescriptorSetLayout> GraphicsContext::GetSets()
     {
         return m_SetLayouts;
     }
 
-    VkFormat VulkanGraphicsContext::GetDepthFormat() const
+    VkFormat GraphicsContext::GetDepthFormat() const
     {
         return m_DepthFormat;
     }
 
-    std::mutex& VulkanGraphicsContext::GetGraphicsQueueMutex()
+    std::mutex& GraphicsContext::GetGraphicsQueueMutex()
     {
         return m_GraphicsQueueMutex;
     }
 
-    std::mutex& VulkanGraphicsContext::GetTransferQueueMutex() const
+    std::mutex& GraphicsContext::GetTransferQueueMutex() const
     {
         return m_ActualTransferMutex;
     }
 
-    VkQueue VulkanGraphicsContext::GetTransferQueue() const
+    VkQueue GraphicsContext::GetTransferQueue() const
     {
         return m_TransferQueue;
     }
 
-    VkCommandPool VulkanGraphicsContext::GetTransferPool() const
+    VkCommandPool GraphicsContext::GetTransferPool() const
     {
         return m_TransferPool;
     }
 
-    TetherVulkan::GraphicsContext& VulkanGraphicsContext::GetTetherGraphicsContext()
+    TetherVulkan::GraphicsContext& GraphicsContext::GetTetherGraphicsContext()
     {
         return m_GraphicsContext;
     }
 
-    TetherVulkan::ContextCreator::Info VulkanGraphicsContext::GetContextInfo(std::string_view applicationName)
+    TetherVulkan::ContextCreator::Info GraphicsContext::GetContextInfo(std::string_view applicationName)
     {
         TetherVulkan::ContextCreator::Info info;
         info.deviceExtensions = EXTENSIONS;
@@ -216,7 +216,7 @@ namespace le::vk
         return info;
     }
 
-    VkFormat VulkanGraphicsContext::FindDepthFormat() const
+    VkFormat GraphicsContext::FindDepthFormat() const
     {
         constexpr VkFormat candidates[] = {
             VK_FORMAT_D32_SFLOAT,
@@ -238,13 +238,13 @@ namespace le::vk
         return candidates[0];
     }
 
-    std::mutex& VulkanGraphicsContext::FindTransferMutex()
+    std::mutex& GraphicsContext::FindTransferMutex()
     {
         const Tether::Rendering::Vulkan::QueueFamilyIndices indices = m_ContextCreator.GetQueueFamilyIndices();
         return indices.graphicsFamilyIndex == indices.transferFamilyIndex ? m_GraphicsQueueMutex : m_TransferQueueMutex;
     }
 
-    void VulkanGraphicsContext::CreateCameraDescriptorSetLayout()
+    void GraphicsContext::CreateCameraDescriptorSetLayout()
     {
         VkDescriptorSetLayoutBinding cameraSetBinding{};
         cameraSetBinding.binding = 0;
@@ -264,7 +264,7 @@ namespace le::vk
         m_SetLayouts.push_back(m_CameraLayout);
     }
 
-    void VulkanGraphicsContext::CreateSceneDescriptorSetLayout()
+    void GraphicsContext::CreateSceneDescriptorSetLayout()
     {
         VkDescriptorSetLayoutBinding uniformBinding{};
         uniformBinding.binding = 0;
@@ -284,7 +284,7 @@ namespace le::vk
         m_SetLayouts.push_back(m_SceneLayout);
     }
 
-    void VulkanGraphicsContext::CreateMaterialDescriptorSetLayout()
+    void GraphicsContext::CreateMaterialDescriptorSetLayout()
     {
         VkDescriptorSetLayoutBinding uniformBinding{};
         uniformBinding.binding = 0;
@@ -316,7 +316,7 @@ namespace le::vk
         m_SetLayouts.push_back(m_MaterialLayout);
     }
 
-    void VulkanGraphicsContext::CreateUniforms()
+    void GraphicsContext::CreateUniforms()
     {
         const uint32_t framesInFlight = m_GraphicsContext.GetFramesInFlight();
 
@@ -347,7 +347,7 @@ namespace le::vk
         m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
     }
 
-    void VulkanGraphicsContext::CreateTransferQueue()
+    void GraphicsContext::CreateTransferQueue()
     {
         const Tether::Rendering::Vulkan::QueueFamilyIndices indices = m_ContextCreator.GetQueueFamilyIndices();
         if (indices.graphicsFamilyIndex == indices.transferFamilyIndex)
@@ -367,22 +367,22 @@ namespace le::vk
         LE_CHECK_VK(vkCreateCommandPool(m_ContextCreator.GetDevice(), &info, nullptr, &m_TransferPool));
     }
 
-    Scope<le::Buffer> VulkanGraphicsContext::CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped)
+    Scope<le::Buffer> GraphicsContext::CreateSimpleBuffer(Buffer::Usage usage, size_t size, bool createMapped)
     {
 
     }
 
-    Scope<le::Buffer> VulkanGraphicsContext::CreateSmartBuffer(Buffer::Usage usage, size_t initialSize)
+    Scope<le::Buffer> GraphicsContext::CreateSmartBuffer(Buffer::Usage usage, size_t initialSize)
     {
 
     }
 
-    Scope<le::Buffer> VulkanGraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)
+    Scope<le::Buffer> GraphicsContext::CreatePerFrameBuffer(Buffer::Usage usage, size_t size)
     {
 
     }
 
-    Scope<le::CommandBuffer> VulkanGraphicsContext::CreateCommandBuffer(const bool transfer)
+    Scope<le::CommandBuffer> GraphicsContext::CreateCommandBuffer(const bool transfer)
     {
         if (transfer)
             return std::make_unique<CommandBuffer>(m_TransferQueue, m_TransferQueueMutex);
@@ -390,13 +390,13 @@ namespace le::vk
         return std::make_unique<CommandBuffer>(m_GraphicsContext.GetQueue(), m_GraphicsQueueMutex);
     }
 
-    Scope<le::DynamicUniforms> VulkanGraphicsContext::CreateDynamicUniforms(
+    Scope<le::DynamicUniforms> GraphicsContext::CreateDynamicUniforms(
         std::span<DynamicUniforms::DescriptorInfo> infos)
     {
         return std::make_unique<DynamicUniforms>();
     }
 
-    Scope<le::Pipeline> VulkanGraphicsContext::CreatePipeline(std::span<Shader::Stage> stages)
+    Scope<le::Pipeline> GraphicsContext::CreatePipeline(std::span<Shader::Stage> stages)
     {
         std::vector<VkPipelineShaderStageCreateInfo> vkStages;
         std::vector<ShaderModule> shaderModules;
@@ -443,17 +443,17 @@ namespace le::vk
         return std::make_unique<Pipeline>(m_GraphicsContext, pipelineInfo);
     }
 
-    Scope<le::Image> VulkanGraphicsContext::CreateImage(const Image::Info& info)
+    Scope<le::Image> GraphicsContext::CreateImage(const Image::Info& info)
     {
         return std::make_unique<Image>();
     }
 
-    Scope<le::ImageView> VulkanGraphicsContext::CreateImageView(const ImageView::Info& info)
+    Scope<le::ImageView> GraphicsContext::CreateImageView(const ImageView::Info& info)
     {
         return std::make_unique<ImageView>();
     }
 
-    Scope<le::Sampler> VulkanGraphicsContext::CreateSampler(const Sampler::Info& info)
+    Scope<le::Sampler> GraphicsContext::CreateSampler(const Sampler::Info& info)
     {
         return std::make_unique<Sampler>();
     }
@@ -469,7 +469,7 @@ namespace le::vk
     STAGES(solid);
     STAGES(textured);
 
-    void VulkanGraphicsContext::RegisterShaders()
+    void GraphicsContext::RegisterShaders()
     {
         ResourceManager& manager = Application::Get().GetResourceManager();
 

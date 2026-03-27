@@ -1,6 +1,6 @@
 #pragma once
 
-#include <VulkanGraphicsContext.hpp>
+#include <GraphicsContext.hpp>
 
 #include "API/Pipeline.hpp"
 
@@ -21,7 +21,7 @@ namespace le::vk
     {
     public:
         explicit Renderer(
-            VulkanGraphicsContext& context,
+            GraphicsContext& context,
             RenderTarget& renderTarget,
             VkSurfaceFormatKHR surfaceFormat
         );
@@ -69,7 +69,7 @@ namespace le::vk
         bool m_ShouldRecreateSwapchain = false;
 
         ResourceManager& m_resourceManager;
-        VulkanGraphicsContext& m_context;
+        GraphicsContext& m_context;
         TetherVulkan::GraphicsContext& m_TetherCtx;
         const TetherVulkan::DeviceLoader& m_DeviceLoader;
         VkSurfaceKHR m_Surface;
