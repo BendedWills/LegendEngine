@@ -39,16 +39,13 @@ namespace le::vk
 
         BufferDesc m_buffer1;
         BufferDesc m_buffer2;
+        BufferStager m_stager;
 
         std::mutex m_updateMutex;
         std::atomic<BufferDesc*> m_currentBuffer = nullptr;
         std::atomic<BufferDesc*> m_updatedBuffer = nullptr;
-        std::atomic_size_t m_size = 0;
-
         size_t m_framesSinceDeletion = 0;
 
         EventBusSubscriber m_sub;
-
-        BufferStager m_stager;
     };
 }

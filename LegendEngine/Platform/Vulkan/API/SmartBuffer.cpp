@@ -9,9 +9,8 @@ namespace le::vk
     SmartBuffer::SmartBuffer(GraphicsContext& context, const Usage usage, const size_t initialSize)
         :
         m_context(context.GetTetherGraphicsContext()),
-        m_size(initialSize),
-        m_sub(Application::Get().GetEventBus()),
-        m_stager(context)
+        m_stager(context),
+        m_sub(Application::Get().GetEventBus())
     {
         m_usage = ToVulkanUsageFlags(usage);
         m_sub.AddEventHandler<RenderEvent>([this](const RenderEvent&) { DeleteUnusedBuffers(); });
