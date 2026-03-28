@@ -49,5 +49,6 @@ sudo apt install libvulkan-dev vulkan-validationlayers vulkan-tools glslc
 * Kanban-style planners for managing development internally.
 * CodeQL static analysis
 * Unit testing using googletest
+* Flexible Archetype ECS framework
 
 ...and more as the project continues to grow!
