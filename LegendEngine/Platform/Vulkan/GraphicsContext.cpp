@@ -70,12 +70,6 @@ namespace le::vk
         if (const TetherVulkan::DeviceLoader& loader = m_GraphicsContext.GetDeviceLoader();
             !loader.vkCmdBeginRenderingKHR || !loader.vkCmdEndRenderingKHR)
             throw std::runtime_error("Couldn't load dynamic rendering funcs");
-        
-        // This order matters, because the sets get added to m_SetLayouts when
-        // they are created, and Vulkan cares about the order in vkCmdBindDescriptorSets
-        CreateCameraDescriptorSetLayout();
-        CreateSceneDescriptorSetLayout();
-        CreateMaterialDescriptorSetLayout();
 
         CreateUniforms();
         CreateTransferQueue();
@@ -90,10 +84,6 @@ namespace le::vk
     GraphicsContext::~GraphicsContext()
     {
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
-
-        vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_CameraLayout, nullptr);
-        vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_MaterialLayout, nullptr);
-        vkDestroyDescriptorSetLayout(m_GraphicsContext.GetDevice(), m_SceneLayout, nullptr);
     }
 
     Scope<le::Renderer> GraphicsContext::CreateRenderer(le::RenderTarget& renderTarget)
@@ -155,26 +145,6 @@ namespace le::vk
         return std::make_unique<RenderTarget>(m_GraphicsContext, window);
     }
 #endif
-
-    VkDescriptorSetLayout GraphicsContext::GetCameraLayout() const
-    {
-        return m_CameraLayout;
-    }
-
-    VkDescriptorSetLayout GraphicsContext::GetMaterialLayout() const
-    {
-        return m_MaterialLayout;
-    }
-
-    VkDescriptorSetLayout GraphicsContext::GetSceneLayout() const
-    {
-        return m_SceneLayout;
-    }
-
-    std::span<VkDescriptorSetLayout> GraphicsContext::GetSets()
-    {
-        return m_SetLayouts;
-    }
 
     VkFormat GraphicsContext::GetDepthFormat() const
     {
@@ -248,78 +218,6 @@ namespace le::vk
         return indices.graphicsFamilyIndex == indices.transferFamilyIndex ? m_GraphicsQueueMutex : m_TransferQueueMutex;
     }
 
-    void GraphicsContext::CreateCameraDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding cameraSetBinding{};
-        cameraSetBinding.binding = 0;
-        cameraSetBinding.descriptorCount = 1;
-        cameraSetBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cameraSetBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = 1;
-        setInfo.pBindings = &cameraSetBinding;
-
-        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
-                                        &setInfo, nullptr, &m_CameraLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-
-        m_SetLayouts.push_back(m_CameraLayout);
-    }
-
-    void GraphicsContext::CreateSceneDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding uniformBinding{};
-        uniformBinding.binding = 0;
-        uniformBinding.descriptorCount = 1;
-        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = 1;
-        setInfo.pBindings = &uniformBinding;
-
-        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
-                                        &setInfo, nullptr, &m_SceneLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-
-        m_SetLayouts.push_back(m_SceneLayout);
-    }
-
-    void GraphicsContext::CreateMaterialDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding uniformBinding{};
-        uniformBinding.binding = 0;
-        uniformBinding.descriptorCount = 1;
-        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding samplerBinding{};
-        samplerBinding.binding = 1;
-        samplerBinding.descriptorCount = 1;
-        samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding bindings[] =
-        {
-            uniformBinding,
-            samplerBinding
-        };
-
-        VkDescriptorSetLayoutCreateInfo setInfo{};
-        setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setInfo.bindingCount = std::size(bindings);
-        setInfo.pBindings = bindings;
-
-        if (vkCreateDescriptorSetLayout(m_GraphicsContext.GetDevice(),
-                                        &setInfo, nullptr, &m_MaterialLayout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
-
-        m_SetLayouts.push_back(m_MaterialLayout);
-    }
-
     void GraphicsContext::CreateUniforms()
     {
         const uint32_t framesInFlight = m_GraphicsContext.GetFramesInFlight();
@@ -337,18 +235,6 @@ namespace le::vk
             uniformsSize,
             samplersSize
         };
-
-        m_StaticUniformPool.emplace(m_GraphicsContext, framesInFlight * 3,
-                                    std::size(sizes), sizes);
-
-        m_CameraSet.emplace(*m_StaticUniformPool, m_CameraLayout, framesInFlight);
-        m_CameraUniforms.emplace(m_GraphicsContext, sizeof(Camera::CameraUniforms), *m_CameraSet,
-                                 0);
-
-        m_DefaultMatSet.emplace(*m_StaticUniformPool, m_MaterialLayout, framesInFlight);
-        m_DefaultMatUniforms.emplace(m_GraphicsContext, sizeof(Material::Uniforms), *m_DefaultMatSet, 0);
-
-        m_SceneSet.emplace(*m_StaticUniformPool, m_SceneLayout, framesInFlight);
     }
 
     void GraphicsContext::CreateTransferQueue()
@@ -406,7 +292,7 @@ namespace le::vk
         return std::make_unique<DynamicUniforms>(*this, infos);
     }
 
-    Scope<le::Pipeline> GraphicsContext::CreatePipeline(std::span<Shader::Stage> stages)
+    Scope<le::Pipeline> GraphicsContext::CreatePipeline(std::span<Shader::Stage> stages, std::span<le::DescriptorSetLayout*> layouts)
     {
         std::vector<VkPipelineShaderStageCreateInfo> vkStages;
         std::vector<ShaderModule> shaderModules;
@@ -446,8 +332,7 @@ namespace le::vk
         pipelineInfo.pDynamicStates = dynamicStates;
         pipelineInfo.dynamicStateCount = std::size(dynamicStates);
         pipelineInfo.pDynamicStates = dynamicStates;
-        pipelineInfo.setCount = m_SetLayouts.size();
-        pipelineInfo.pSetLayouts = m_SetLayouts.data();
+        pipelineInfo.setLayouts = layouts;
         pipelineInfo.depthFormat = m_DepthFormat;
 
         return std::make_unique<Pipeline>(m_GraphicsContext, pipelineInfo);

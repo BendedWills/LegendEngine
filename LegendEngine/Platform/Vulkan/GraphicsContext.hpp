@@ -4,7 +4,6 @@
 #include <Tether/Rendering/Vulkan/ContextCreator.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
 #include <Tether/Rendering/Vulkan/Instance.hpp>
-#include <Tether/Rendering/Vulkan/UniformBuffer.hpp>
 
 namespace le::vk
 {
@@ -27,16 +26,12 @@ namespace le::vk
         Scope<CommandBuffer> CreateCommandBuffer(bool transfer) override;
         Scope<DescriptorSetLayout> CreateDescriptorSetLayout(std::span<DescriptorSetLayout::Binding> bindings) override;
         Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos) override;
-        Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) override;
+        Scope<le::Pipeline> CreatePipeline(std::span<Shader::Stage> stages, std::span<DescriptorSetLayout*> layouts) override;
         Scope<Image> CreateImage(const Image::Info& info) override;
         Scope<Sampler> CreateSampler(const Sampler::Info& info) override;
 
         VkQueue GetTransferQueue() const;
         VkCommandPool GetTransferPool() const;
-        VkDescriptorSetLayout GetCameraLayout() const;
-        VkDescriptorSetLayout GetMaterialLayout() const;
-        VkDescriptorSetLayout GetSceneLayout() const;
-        std::span<VkDescriptorSetLayout> GetSets();
         VkFormat GetDepthFormat() const;
 
         std::mutex& GetGraphicsQueueMutex();
@@ -50,9 +45,6 @@ namespace le::vk
 
         std::mutex& FindTransferMutex();
 
-        void CreateCameraDescriptorSetLayout();
-        void CreateSceneDescriptorSetLayout();
-        void CreateMaterialDescriptorSetLayout();
         void RegisterShaders(ShaderManager& shaderManager) override;
         void CreateUniforms();
         void CreateTransferQueue();
@@ -76,21 +68,7 @@ namespace le::vk
 
         DebugCallback m_Callback;
 
-        VkDescriptorSetLayout m_CameraLayout = nullptr;
-        VkDescriptorSetLayout m_SceneLayout = nullptr;
-        VkDescriptorSetLayout m_MaterialLayout = nullptr;
-
         VkSurfaceFormatKHR m_SurfaceFormat{};
-
-        std::optional<TetherVulkan::DescriptorPool> m_StaticUniformPool;
-        std::optional<TetherVulkan::DescriptorSet> m_CameraSet;
-        std::optional<TetherVulkan::DescriptorSet> m_DefaultMatSet;
-        std::optional<TetherVulkan::DescriptorSet> m_SceneSet;
-        std::optional<TetherVulkan::UniformBuffer> m_CameraUniforms;
-        std::optional<TetherVulkan::UniformBuffer> m_DefaultMatUniforms;
-        std::optional<TetherVulkan::UniformBuffer> m_SceneUniforms;
-
-        std::vector<VkDescriptorSetLayout> m_SetLayouts;
 
         std::mutex m_GraphicsQueueMutex;
         std::mutex m_TransferQueueMutex;

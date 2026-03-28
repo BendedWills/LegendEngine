@@ -410,10 +410,6 @@ namespace le::vk
         // 3 for two uniforms and one sampler
         m_StaticUniformPool.emplace(m_TetherCtx, framesInFlight * 3,
             std::size(sizes), sizes);
-
-        m_CameraSet.emplace(*m_StaticUniformPool, m_context.GetCameraLayout(), framesInFlight);
-        m_CameraUniforms.emplace(m_TetherCtx, sizeof(Camera::CameraUniforms), *m_CameraSet,
-            0);
     }
 
     void Renderer::CreateDepthImages()

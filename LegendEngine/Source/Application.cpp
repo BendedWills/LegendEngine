@@ -49,7 +49,7 @@ namespace le
         m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
         m_Renderer(CreateRenderer())
     {
-        m_GraphicsResources.emplace();
+        m_GraphicsResources.emplace(m_GraphicsContext);
         m_GraphicsContext.RegisterShaders(m_GraphicsResources->GetShaderManager());
 
         LE_INFO("Application created");

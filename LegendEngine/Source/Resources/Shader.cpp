@@ -5,7 +5,9 @@ namespace le
 {
     Shader::Shader(const std::span<Stage> stages)
     {
-        m_pipeline = Application::Get().GetGraphicsContext().CreatePipeline(stages);
+        const std::span<DescriptorSetLayout*> layouts =
+            Application::Get().GetGraphicsResources().GetLayouts();
+        m_pipeline = Application::Get().GetGraphicsContext().CreatePipeline(stages, layouts);
     }
 
     void Shader::SetCullMode(const CullMode cullMode)

@@ -1,5 +1,6 @@
 #include "API/Pipeline.hpp"
 
+#include "API/DescriptorSetLayout.hpp"
 #include <LE/Resources/MeshData.hpp>
 
 namespace le::vk
@@ -17,10 +18,15 @@ namespace le::vk
         pushConstant.offset = 0;
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+    	std::vector<VkDescriptorSetLayout> layouts;
+    	layouts.reserve(info.setLayouts.size());
+    	for (le::DescriptorSetLayout* set : info.setLayouts)
+    		layouts.push_back(static_cast<DescriptorSetLayout*>(set)->GetDescriptorSetLayout());
+
         VkPipelineLayoutCreateInfo pipelineLayoutDesc{};
 		pipelineLayoutDesc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutDesc.setLayoutCount = info.setCount;
-		pipelineLayoutDesc.pSetLayouts = info.pSetLayouts;
+		pipelineLayoutDesc.setLayoutCount = layouts.size();
+		pipelineLayoutDesc.pSetLayouts = layouts.data();
         pipelineLayoutDesc.pushConstantRangeCount = 1;
         pipelineLayoutDesc.pPushConstantRanges = &pushConstant;
 

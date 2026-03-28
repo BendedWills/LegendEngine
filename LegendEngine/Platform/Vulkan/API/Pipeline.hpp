@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LE/Common/Defs.hpp>
+#include <LE/Graphics/API/DescriptorSetLayout.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
 #include <LE/Math/Types.hpp>
 #include <Tether/Rendering/Vulkan/GraphicsContext.hpp>
@@ -16,8 +17,7 @@ namespace le::vk
         {
             uint32_t stageCount;
             VkPipelineShaderStageCreateInfo* pStages;
-            uint32_t setCount;
-            VkDescriptorSetLayout* pSetLayouts;
+            std::span<le::DescriptorSetLayout*> setLayouts;
             uint32_t dynamicStateCount;
             VkDynamicState* pDynamicStates;
             VkSurfaceFormatKHR surfaceFormat;

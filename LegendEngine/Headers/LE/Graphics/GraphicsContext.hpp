@@ -42,7 +42,7 @@ namespace le
         virtual Scope<DescriptorSetLayout> CreateDescriptorSetLayout(std::span<DescriptorSetLayout::Binding> bindings) = 0;
         virtual Scope<DynamicUniforms> CreateDynamicUniforms(
             std::span<DynamicUniforms::DescriptorInfo> infos) = 0;
-        virtual Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) = 0;
+        virtual Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages, std::span<DescriptorSetLayout*> layouts) = 0;
         virtual Scope<Image> CreateImage(const Image::Info& info) = 0;
         virtual Scope<Sampler> CreateSampler(const Sampler::Info& info) = 0;
 
