@@ -79,7 +79,7 @@ namespace le::vk
 
         VkDescriptorImageInfo imageInfo{};
         imageInfo.sampler = vkSampler.GetSampler();
-        
+
         VkWriteDescriptorSet write{};
         write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
         write.pImageInfo = &imageInfo;
@@ -87,7 +87,22 @@ namespace le::vk
         WriteSet(binding, &write);
     }
 
-    void DynamicUniforms::UpdateCombinedImageSampler(le::Image& image, le::Sampler& sampler, uint32_t binding) {}
+    void DynamicUniforms::UpdateCombinedImageSampler(le::Image& image, le::Sampler& sampler, uint32_t binding)
+    {
+        const auto& vkImage = static_cast<Image&>(image);
+        const auto& vkSampler = static_cast<Sampler&>(sampler);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.sampler = vkSampler.GetSampler();
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = vkImage.GetImageView();
+
+        VkWriteDescriptorSet write{};
+        write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        write.pImageInfo = &imageInfo;
+
+        WriteSet(binding, &write);
+    }
 
     void DynamicUniforms::InvalidateBinding(const uint32_t binding)
     {
