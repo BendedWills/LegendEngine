@@ -78,9 +78,10 @@ namespace le
     void Material::UpdateUniforms()
     {
         m_uniforms->UpdateBuffer(*m_buffer, 0);
-
-        if (m_textureId != 0)
-            m_uniforms->UpdateCombinedImageSampler(1);
+        
+        // TODO:
+        // if (m_textureId != 0)
+        //     m_uniforms->UpdateCombinedImageSampler(1);
 
         m_Changed = false;
     }

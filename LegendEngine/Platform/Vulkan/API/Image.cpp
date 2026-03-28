@@ -70,6 +70,11 @@ namespace le::vk
         return m_image;
     }
 
+    VkImageView Image::GetImageView() const
+    {
+        return m_view;
+    }
+
     VkImageLayout Image::GetImageLayout(const Layout layout)
     {
         switch (layout)

@@ -13,9 +13,9 @@ namespace le::vk
         ~DynamicUniforms() override;
 
         void UpdateBuffer(le::Buffer& buffer, uint32_t binding) override;
-        void UpdateSampledImage(uint32_t binding) override;
-        void UpdateSampler(uint32_t binding) override;
-        void UpdateCombinedImageSampler(uint32_t binding) override;
+        void UpdateSampledImage(le::Image& image, uint32_t binding) override;
+        void UpdateSampler(le::Sampler& sampler, uint32_t binding) override;
+        void UpdateCombinedImageSampler(le::Image& image, le::Sampler& sampler, uint32_t binding) override;
 
         void InvalidateBinding(uint32_t binding) override;
 
@@ -31,6 +31,7 @@ namespace le::vk
         void CreateDescriptorPool(std::span<DescriptorInfo> infos);
         VkDescriptorSet GetDescriptorSet(uint32_t binding);
         void ValidateSet(uint32_t binding);
+        void WriteSet(uint32_t binding, VkWriteDescriptorSet* pWrite);
 
         static size_t GetDescriptorSetCount(const DescriptorInfo& info);
 

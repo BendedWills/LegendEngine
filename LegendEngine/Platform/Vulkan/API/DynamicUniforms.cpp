@@ -1,5 +1,7 @@
 #include "API/DynamicUniforms.hpp"
 
+#include <API/Image.hpp>
+
 #include "VkDefs.hpp"
 #include "API/Buffer.hpp"
 #include "API/DescriptorSetLayout.hpp"
@@ -39,12 +41,8 @@ namespace le::vk
         vkDestroyDescriptorPool(m_context.GetDevice(), m_descriptorPool, nullptr);
     }
 
-    void DynamicUniforms::UpdateBuffer(le::Buffer& buffer, uint32_t binding)
+    void DynamicUniforms::UpdateBuffer(le::Buffer& buffer, const uint32_t binding)
     {
-        LE_ASSERT(binding < m_bindings.size(), "Binding out of range");
-        LE_ASSERT(m_bindings.at(binding).descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            "Wrong descriptor type at binding");
-
         auto& vkBuffer = static_cast<Buffer&>(buffer);
         const auto [bufferObject, size] = vkBuffer.GetDesc();
 
@@ -53,22 +51,29 @@ namespace le::vk
         bufferInfo.range = size;
 
         VkWriteDescriptorSet write{};
-        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstBinding = binding;
-        write.dstSet = GetDescriptorSet(binding);
         write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write.descriptorCount = 1;
+        write.pBufferInfo = &bufferInfo;
 
-        vkUpdateDescriptorSets(m_context.GetDevice(), 1, &write, 0, nullptr);
-
-        ValidateSet(binding);
+        WriteSet(binding, &write);
     }
 
-    void DynamicUniforms::UpdateSampledImage(uint32_t binding)
-    {}
+    void DynamicUniforms::UpdateSampledImage(le::Image& image, const uint32_t binding)
+    {
+        const auto& vkImage = static_cast<Image&>(image);
 
-    void DynamicUniforms::UpdateSampler(uint32_t binding) {}
-    void DynamicUniforms::UpdateCombinedImageSampler(uint32_t binding) {}
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = vkImage.GetImageView();
+
+        VkWriteDescriptorSet write{};
+        write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        write.pImageInfo = &imageInfo;
+
+        WriteSet(binding, &write);
+    }
+
+    void DynamicUniforms::UpdateSampler(le::Sampler& sampler, uint32_t binding) {}
+    void DynamicUniforms::UpdateCombinedImageSampler(le::Image& image, le::Sampler& sampler, uint32_t binding) {}
 
     void DynamicUniforms::InvalidateBinding(const uint32_t binding)
     {
@@ -126,5 +131,30 @@ namespace le::vk
             setCount *= Application::FRAMES_IN_FLIGHT;
 
         return setCount;
+    }
+
+    VkDescriptorSet DynamicUniforms::GetDescriptorSet(uint32_t binding)
+    {
+
+    }
+
+    void DynamicUniforms::ValidateSet(uint32_t binding)
+    {
+
+    }
+
+    void DynamicUniforms::WriteSet(const uint32_t binding, VkWriteDescriptorSet* pWrite)
+    {
+        LE_ASSERT(binding < m_bindings.size(), "Binding out of range");
+        LE_ASSERT(m_bindings.at(binding).descriptorType == pWrite->descriptorType,
+            "Wrong descriptor type at binding");
+
+        pWrite->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        pWrite->dstBinding = binding;
+        pWrite->dstSet = GetDescriptorSet(binding);
+        pWrite->descriptorCount = 1;
+
+        vkUpdateDescriptorSets(m_context.GetDevice(), 1, pWrite, 0, nullptr);
+        ValidateSet(binding);
     }
 }

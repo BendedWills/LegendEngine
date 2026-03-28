@@ -15,6 +15,7 @@ namespace le::vk
         ~Image() override;
 
         VkImage GetImage() const;
+        VkImageView GetImageView() const;
 
         static VkImageLayout GetImageLayout(Layout layout);
         static VkImageAspectFlags GetImageAspectFlags(Aspect aspect);
