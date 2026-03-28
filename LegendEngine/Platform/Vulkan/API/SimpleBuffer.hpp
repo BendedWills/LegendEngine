@@ -26,5 +26,7 @@ namespace le::vk
         VkBuffer m_buffer = nullptr;
         VmaAllocation m_allocation = nullptr;
         VmaAllocationInfo m_allocationInfo{};
+        VkBufferUsageFlags m_usage = 0;
+        VmaAllocationCreateFlags m_allocFlags = 0;
     };
 }
