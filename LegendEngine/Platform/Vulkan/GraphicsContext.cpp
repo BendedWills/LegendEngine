@@ -2,6 +2,7 @@
 
 #include "API/Buffer.hpp"
 #include "API/CommandBuffer.hpp"
+#include "API/DescriptorSetLayout.hpp"
 #include "API/DynamicUniforms.hpp"
 #include "API/Image.hpp"
 #include "API/Pipeline.hpp"
@@ -393,6 +394,12 @@ namespace le::vk
             return std::make_unique<CommandBuffer>(*this, m_TransferPool, m_TransferQueue, m_TransferQueueMutex);
 
         return std::make_unique<CommandBuffer>(*this, m_GraphicsContext.GetCommandPool(), m_GraphicsContext.GetQueue(), m_GraphicsQueueMutex);
+    }
+
+    Scope<le::DescriptorSetLayout> GraphicsContext::CreateDescriptorSetLayout(
+        std::span<DescriptorSetLayout::Binding> bindings)
+    {
+        return std::make_unique<DescriptorSetLayout>(*this, bindings);
     }
 
     Scope<le::DynamicUniforms> GraphicsContext::CreateDynamicUniforms(

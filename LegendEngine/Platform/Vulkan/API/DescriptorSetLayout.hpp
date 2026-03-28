@@ -9,11 +9,13 @@ namespace le::vk
     class DescriptorSetLayout : public le::DescriptorSetLayout
     {
     public:
-        explicit DescriptorSetLayout(GraphicsContext& context);
+        explicit DescriptorSetLayout(GraphicsContext& context, std::span<Binding> bindings);
         ~DescriptorSetLayout() override;
 
         VkDescriptorSetLayout GetDescriptorSetLayout() const;
     private:
+        TetherVulkan::GraphicsContext& m_context;
+
         VkDescriptorSetLayout m_descriptorSetLayout = nullptr;
     };
 }
