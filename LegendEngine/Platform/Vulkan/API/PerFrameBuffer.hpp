@@ -16,8 +16,9 @@ namespace le::vk
 
         void Update(size_t size, const void* data) override;
         void Resize(size_t newSize) override;
+        size_t GetSize() override;
 
-        VkBuffer GetBuffer() override;
+        Desc GetDesc() override;
     private:
         void CreateBuffer(VkBuffer* pBuffer, VmaAllocation* pAlloc, VmaAllocationInfo* pAllocInfo,
             VkBufferUsageFlags bufferUsage, VmaAllocationCreateFlags allocCreateFlags, size_t size) const;

@@ -2,18 +2,14 @@
 
 #include <cstdint>
 #include <LE/Graphics/API/Buffer.hpp>
+#include <LE/Graphics/API/DescriptorSetLayout.hpp>
+#include <LE/Graphics/API/Types.hpp>
 
 namespace le
 {
     class DynamicUniforms
     {
     public:
-        enum class DescriptorType
-        {
-            UNIFORM_BUFFER,
-            COMBINED_IMAGE_SAMPLER
-        };
-
         enum class UpdateFrequency
         {
             OCCASIONAL,
@@ -25,6 +21,7 @@ namespace le
             DescriptorType type = DescriptorType::UNIFORM_BUFFER;
             UpdateFrequency updateFrequency = UpdateFrequency::OCCASIONAL;
             size_t amount = 0;
+            DescriptorSetLayout* pLayout = nullptr;
         };
 
         virtual ~DynamicUniforms() = default;
@@ -34,8 +31,6 @@ namespace le
         virtual void UpdateSampler(uint32_t binding) = 0;
         virtual void UpdateCombinedImageSampler(uint32_t binding) = 0;
 
-        virtual void Invalidate() = 0;
-
-        uint32_t m_currentFrame = 0;
+        virtual void InvalidateBinding(uint32_t binding) = 0;
     };
 }

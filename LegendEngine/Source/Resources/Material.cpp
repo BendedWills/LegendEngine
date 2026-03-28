@@ -22,12 +22,12 @@ namespace le
         DynamicUniforms::DescriptorInfo infos[] =
         {
             {
-                DynamicUniforms::DescriptorType::UNIFORM_BUFFER,
+                DescriptorType::UNIFORM_BUFFER,
                 DynamicUniforms::UpdateFrequency::PER_FRAME,
                 1
             },
             {
-                DynamicUniforms::DescriptorType::COMBINED_IMAGE_SAMPLER,
+                DescriptorType::COMBINED_IMAGE_SAMPLER,
                 DynamicUniforms::UpdateFrequency::OCCASIONAL,
                 1
             },

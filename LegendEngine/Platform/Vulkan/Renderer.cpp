@@ -248,7 +248,7 @@ namespace le::vk
         auto& vertexBuffer = static_cast<Buffer&>(meshData->GetVertexBuffer());
         auto& indexBuffer  = static_cast<Buffer&>(meshData->GetIndexBuffer());
 
-        if (!vertexBuffer.GetBuffer() || !indexBuffer.GetBuffer())
+        if (!vertexBuffer.GetDesc().buffer || !indexBuffer.GetDesc().buffer)
             return;
 
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
@@ -272,13 +272,13 @@ namespace le::vk
             m_HaveSetsChanged = false;
         }
 
-        const VkBuffer vBuffers[] = { vertexBuffer.GetBuffer() };
+        const VkBuffer vBuffers[] = { vertexBuffer.GetDesc().buffer };
         constexpr VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(buffer, 0, 1, vBuffers, offsets);
 
         vkCmdBindIndexBuffer(
             buffer,
-            indexBuffer.GetBuffer(),
+            indexBuffer.GetDesc().buffer,
             0,
             VK_INDEX_TYPE_UINT32
         );

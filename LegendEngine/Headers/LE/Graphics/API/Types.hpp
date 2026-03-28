@@ -30,4 +30,17 @@ namespace le
         TRANSFER_WRITE_BIT = 0x00001000,
         SHADER_READ_BIT = 0x00000020,
     };
+
+    enum class DescriptorType
+    {
+        UNIFORM_BUFFER,
+        COMBINED_IMAGE_SAMPLER
+    };
+
+    enum class ShaderStageFlags : uint32_t
+    {
+        VERTEX   = 0x00000001,
+        FRAGMENT = 0x00000010,
+        ALL      = 0x7FFFFFFF,
+    };
 }

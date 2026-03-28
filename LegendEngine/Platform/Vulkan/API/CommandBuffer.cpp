@@ -176,7 +176,7 @@ namespace le::vk
 
         vkCmdCopyBufferToImage(
             m_commandBuffer,
-            static_cast<Buffer&>(buffer).GetBuffer(),
+            static_cast<Buffer&>(buffer).GetDesc().buffer,
             static_cast<Image&>(image).GetImage(),
             Image::GetImageLayout(layout),
             1, vkRegions.data()

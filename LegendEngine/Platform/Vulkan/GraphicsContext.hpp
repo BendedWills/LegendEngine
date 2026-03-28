@@ -25,6 +25,7 @@ namespace le::vk
         Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage) override;
         Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size) override;
         Scope<CommandBuffer> CreateCommandBuffer(bool transfer) override;
+        Scope<DescriptorSetLayout> CreateDescriptorSetLayout(std::span<DescriptorSetLayout::Binding> bindings) override;
         Scope<DynamicUniforms> CreateDynamicUniforms(std::span<DynamicUniforms::DescriptorInfo> infos) override;
         Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) override;
         Scope<Image> CreateImage(const Image::Info& info) override;

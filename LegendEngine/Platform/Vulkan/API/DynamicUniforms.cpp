@@ -1,12 +1,37 @@
 #include "API/DynamicUniforms.hpp"
 
+#include "VkDefs.hpp"
+#include "API/Buffer.hpp"
+#include "API/DescriptorSetLayout.hpp"
+
+#include <LE/Application.hpp>
+
 namespace le::vk
 {
     DynamicUniforms::DynamicUniforms(GraphicsContext& context, std::span<DescriptorInfo> infos)
         :
         m_context(context.GetTetherGraphicsContext())
     {
+        CreateDescriptorPool(infos);
 
+        for (const DescriptorInfo& info : infos)
+        {
+            Binding& binding = m_bindings.emplace_back();
+            binding.framesUntilValid = Application::FRAMES_IN_FLIGHT;
+            binding.descriptorSets.resize(GetDescriptorSetCount(info));
+            binding.descriptorType = GetDescriptorType(info.type);
+
+            auto& vkLayout = static_cast<DescriptorSetLayout&>(*info.pLayout);
+            std::vector layouts(binding.descriptorSets.size(), vkLayout.GetDescriptorSetLayout());
+
+            VkDescriptorSetAllocateInfo allocInfo{};
+            allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            allocInfo.descriptorPool = m_descriptorPool;
+            allocInfo.descriptorSetCount = binding.descriptorSets.size();
+            allocInfo.pSetLayouts = layouts.data();
+
+            LE_CHECK_VK(vkAllocateDescriptorSets(m_context.GetDevice(), &allocInfo, binding.descriptorSets.data()));
+        }
     }
 
     DynamicUniforms::~DynamicUniforms()
@@ -14,7 +39,92 @@ namespace le::vk
         vkDestroyDescriptorPool(m_context.GetDevice(), m_descriptorPool, nullptr);
     }
 
-    void DynamicUniforms::UpdateBuffer(le::Buffer& buffer, uint32_t binding) {}
+    void DynamicUniforms::UpdateBuffer(le::Buffer& buffer, uint32_t binding)
+    {
+        LE_ASSERT(binding < m_bindings.size(), "Binding out of range");
+        LE_ASSERT(m_bindings.at(binding).descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            "Wrong descriptor type at binding");
+
+        auto& vkBuffer = static_cast<Buffer&>(buffer);
+        const auto [bufferObject, size] = vkBuffer.GetDesc();
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = bufferObject;
+        bufferInfo.range = size;
+
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstBinding = binding;
+        write.dstSet = GetDescriptorSet(binding);
+        write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write.descriptorCount = 1;
+
+        vkUpdateDescriptorSets(m_context.GetDevice(), 1, &write, 0, nullptr);
+
+        ValidateSet(binding);
+    }
+
+    void DynamicUniforms::UpdateSampledImage(uint32_t binding)
+    {}
+
+    void DynamicUniforms::UpdateSampler(uint32_t binding) {}
     void DynamicUniforms::UpdateCombinedImageSampler(uint32_t binding) {}
-    void DynamicUniforms::Invalidate() {}
+
+    void DynamicUniforms::InvalidateBinding(const uint32_t binding)
+    {
+        m_bindings.at(binding).framesUntilValid = Application::FRAMES_IN_FLIGHT;
+    }
+
+    void DynamicUniforms::CreateDescriptorPool(std::span<DescriptorInfo> infos)
+    {
+        std::unordered_map<VkDescriptorType, size_t> poolSizes;
+        size_t maxSets = 0;
+        for (const auto& info : infos)
+        {
+            const size_t setCount = GetDescriptorSetCount(info);
+            maxSets += setCount;
+            poolSizes[GetDescriptorType(info.type)] += setCount;
+        }
+
+        std::vector<VkDescriptorPoolSize> poolSizeStructs;
+        poolSizeStructs.reserve(poolSizes.size());
+        for (const auto [type, size] : poolSizes)
+        {
+            VkDescriptorPoolSize poolSize;
+            poolSize.type = type;
+            poolSize.descriptorCount = size;
+
+            poolSizeStructs.push_back(poolSize);
+        }
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.pNext = nullptr;
+        poolInfo.maxSets = maxSets;
+        poolInfo.poolSizeCount = poolSizeStructs.size();
+        poolInfo.pPoolSizes = poolSizeStructs.data();
+
+        LE_CHECK_VK(vkCreateDescriptorPool(m_context.GetDevice(), &poolInfo, nullptr, &m_descriptorPool));
+    }
+
+    VkDescriptorType DynamicUniforms::GetDescriptorType(const DescriptorType type)
+    {
+        switch (type)
+        {
+            case DescriptorType::UNIFORM_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            case DescriptorType::COMBINED_IMAGE_SAMPLER: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        }
+
+        LE_ASSERT(false, "Unknown descriptor type");
+        return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    }
+
+    size_t DynamicUniforms::GetDescriptorSetCount(const DescriptorInfo& info)
+    {
+        size_t setCount = info.amount;
+        if (info.updateFrequency == UpdateFrequency::PER_FRAME)
+            setCount *= Application::FRAMES_IN_FLIGHT;
+
+        return setCount;
+    }
 }

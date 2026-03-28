@@ -17,12 +17,27 @@ namespace le::vk
         void UpdateSampler(uint32_t binding) override;
         void UpdateCombinedImageSampler(uint32_t binding) override;
 
-        void Invalidate() override;
+        void InvalidateBinding(uint32_t binding) override;
+
+        static VkDescriptorType GetDescriptorType(DescriptorType type);
     private:
+        struct Binding
+        {
+            size_t framesUntilValid = 0;
+            std::vector<VkDescriptorSet> descriptorSets;
+            VkDescriptorType descriptorType;
+        };
+
+        void CreateDescriptorPool(std::span<DescriptorInfo> infos);
+        VkDescriptorSet GetDescriptorSet(uint32_t binding);
+        void ValidateSet(uint32_t binding);
+
+        static size_t GetDescriptorSetCount(const DescriptorInfo& info);
+
         TetherVulkan::GraphicsContext& m_context;
 
         VkDescriptorPool m_descriptorPool = nullptr;
 
-        size_t m_framesUntilValid = 0;
+        std::vector<Binding> m_bindings;
     };
 }

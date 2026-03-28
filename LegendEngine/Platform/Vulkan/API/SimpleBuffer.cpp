@@ -34,9 +34,22 @@ namespace le::vk
         memcpy(m_allocationInfo.pMappedData, data, size);
     }
 
-    VkBuffer SimpleBuffer::GetBuffer()
+    void SimpleBuffer::Resize(size_t newSize)
     {
-        return m_buffer;
+        // TODO
+    }
+
+    size_t SimpleBuffer::GetSize()
+    {
+        return m_allocationInfo.size;
+    }
+
+    Buffer::Desc SimpleBuffer::GetDesc()
+    {
+        return {
+            m_buffer,
+            m_allocationInfo.size,
+        };
     }
 
     void* SimpleBuffer::GetMappedData()

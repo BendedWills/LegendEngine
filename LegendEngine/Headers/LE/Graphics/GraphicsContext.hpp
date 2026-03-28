@@ -8,6 +8,7 @@
 #include <LE/Graphics/ShaderManager.hpp>
 #include <LE/Graphics/API/Buffer.hpp>
 #include <LE/Graphics/API/CommandBuffer.hpp>
+#include <LE/Graphics/API/DescriptorSetLayout.hpp>
 #include <LE/Graphics/API/DynamicUniforms.hpp>
 #include <LE/Graphics/API/Image.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
@@ -38,6 +39,7 @@ namespace le
         virtual Scope<Buffer> CreateSmartBuffer(Buffer::Usage usage) = 0;
         virtual Scope<Buffer> CreatePerFrameBuffer(Buffer::Usage usage, size_t size) = 0;
         virtual Scope<CommandBuffer> CreateCommandBuffer(bool transfer) = 0;
+        virtual Scope<DescriptorSetLayout> CreateDescriptorSetLayout(std::span<DescriptorSetLayout::Binding> bindings) = 0;
         virtual Scope<DynamicUniforms> CreateDynamicUniforms(
             std::span<DynamicUniforms::DescriptorInfo> infos) = 0;
         virtual Scope<Pipeline> CreatePipeline(std::span<Shader::Stage> stages) = 0;

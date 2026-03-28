@@ -37,13 +37,26 @@ namespace le::vk
         memcpy(pMappedData, data, size);
     }
 
-    VkBuffer PerFrameBuffer::GetBuffer()
+    void PerFrameBuffer::Resize(size_t newSize)
     {
-        return m_buffers[Application::Get().GetCurrentFrame()];
+        // TODO
+    }
+
+    size_t PerFrameBuffer::GetSize()
+    {
+        return m_allocationInfos[Application::Get().GetCurrentFrame()].size;
+    }
+
+    Buffer::Desc PerFrameBuffer::GetDesc()
+    {
+        return {
+            m_buffers[Application::Get().GetCurrentFrame()],
+            m_allocationInfos[Application::Get().GetCurrentFrame()].size,
+        };
     }
 
     void PerFrameBuffer::CreateBuffer(VkBuffer* pBuffer, VmaAllocation* pAlloc, VmaAllocationInfo* pAllocInfo,
-        const VkBufferUsageFlags bufferUsage, const VmaAllocationCreateFlags allocCreateFlags, const size_t size) const
+                                      const VkBufferUsageFlags bufferUsage, const VmaAllocationCreateFlags allocCreateFlags, const size_t size) const
     {
 
         VkBufferCreateInfo bufferCreateInfo{};

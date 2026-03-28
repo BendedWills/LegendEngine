@@ -9,7 +9,13 @@ namespace le::vk
     class Buffer : public le::Buffer
     {
     public:
-        virtual VkBuffer GetBuffer() = 0;
+        struct Desc
+        {
+            VkBuffer buffer;
+            size_t size;
+        };
+
+        virtual Desc GetDesc() = 0;
     protected:
         static VkBufferUsageFlags ToVulkanUsageFlags(Usage usage);
         static VmaAllocationCreateFlags ToVmaAllocationCreateFlags(Usage usage, bool mapped);

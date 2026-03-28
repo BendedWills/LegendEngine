@@ -73,9 +73,21 @@ namespace le::vk
         LE_WARN("Resize called on a smart buffer. This doesn't affect the size");
     }
 
-    VkBuffer SmartBuffer::GetBuffer()
+    size_t SmartBuffer::GetSize()
     {
-        return m_currentBuffer.load()->buffer;
+        return m_currentBuffer.load()->size;
+    }
+
+    Buffer::Desc SmartBuffer::GetDesc()
+    {
+        const BufferDesc* pDesc = m_currentBuffer.load();
+
+        const Desc desc {
+            pDesc->buffer,
+            pDesc->size,
+        };
+
+        return desc;
     }
 
     VkBuffer SmartBuffer::CreateBuffer(BufferDesc* target, const size_t size) const
