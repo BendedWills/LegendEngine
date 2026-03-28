@@ -30,7 +30,7 @@ namespace le
         virtual ~GraphicsContext() = 0;
         LE_NO_COPY(GraphicsContext);
 
-        virtual Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) = 0;
+        virtual Scope<Renderer> CreateRenderer(RenderTarget& renderTarget, GraphicsResources& resources) = 0;
         virtual Scope<RenderTarget> CreateHeadlessRenderTarget() = 0;
 #ifndef LE_HEADLESS
         virtual Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) = 0;
@@ -51,4 +51,49 @@ namespace le
         static Scope<GraphicsContext> Create(GraphicsAPI api,
             std::string_view applicationName);
     };
+
+#ifdef LE_VULKAN_API
+    Scope<GraphicsContext> CreateVulkanGraphicsContext(std::string_view);
+#endif
+#ifdef LE_OPENGL_API
+    Scope<GraphicsContext> CreateOpenGLGraphicsContext(std::string_view);
+#endif
+#ifdef LE_D3D11_API
+    Scope<GraphicsContext> CreateD3D11GraphicsContext(std::string_view);
+#endif
+#ifdef LE_D3D12_API
+    Scope<GraphicsContext> CreateD3D12GraphicsContext(std::string_view);
+#endif
+#ifdef LE_WEBGPU_API
+    Scope<GraphicsContext> CreateWebGPUGraphicsContext(std::string_view);
+#endif
+
+    inline Scope<GraphicsContext> GraphicsContext::Create(const GraphicsAPI api,
+        const std::string_view applicationName)
+    {
+        switch (api)
+        {
+#ifdef LE_VULKAN_API
+            case GraphicsAPI::VULKAN: return CreateVulkanGraphicsContext(applicationName);
+#endif
+#ifdef LE_OPENGL_API
+            case GraphicsAPI::OPENGL: return CreateOpenGLGraphicsContext(applicationName);
+#endif
+#ifdef LE_D3D11_API
+            case GraphicsAPI::D3D11:  return CreateD3D11GraphicsContext(applicationName);
+#endif
+#ifdef LE_D3D12_API
+            case GraphicsAPI::D3D12:  return CreateD3D12GraphicsContext(applicationName);
+#endif
+#ifdef LE_WEBGPU_API
+            case GraphicsAPI::WEBGPU: return CreateWebGPUGraphicsContext(applicationName);
+#endif
+
+                // Make clang tidy happy
+            default: break;
+        }
+
+        LE_ASSERT(false, "Unknown graphics API. Was the program linked with the relevant library for it?");
+        return nullptr;
+    }
 }

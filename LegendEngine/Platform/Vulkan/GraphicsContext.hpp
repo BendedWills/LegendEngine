@@ -15,7 +15,7 @@ namespace le::vk
         explicit GraphicsContext(std::string_view applicationName);
         ~GraphicsContext() override;
 
-        Scope<Renderer> CreateRenderer(RenderTarget& renderTarget) override;
+        Scope<Renderer> CreateRenderer(RenderTarget& renderTarget, GraphicsResources& resources) override;
         Scope<RenderTarget> CreateHeadlessRenderTarget() override;
 #ifndef LE_HEADLESS
         Scope<RenderTarget> CreateWindowRenderTarget(Tether::Window& window) override;

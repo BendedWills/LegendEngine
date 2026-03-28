@@ -5,6 +5,21 @@
 namespace le::Math
 {
 	template<typename T>
+	T Dot(Vector3<T> v1, Vector3<T> v2)
+	{
+		float product = v1.x * v2.x;
+		product += v1.y * v2.y;
+		product += v1.z * v2.z;
+		return product;
+	}
+
+	template<typename T>
+	T Length(Vector3<T> v)
+	{
+		return sqrt(Dot(v, v));
+	}
+
+	template<typename T>
 	Vector3<T> Normalize(Vector3<T> v)
 	{
 		float length = Length(v);
@@ -18,21 +33,6 @@ namespace le::Math
 		);
 
 		return vec;
-	}
-
-	template<typename T>
-	T Dot(Vector3<T> v1, Vector3<T> v2)
-	{
-		float product = v1.x * v2.x;
-		product += v1.y * v2.y;
-		product += v1.z * v2.z;
-		return product;
-	}
-
-	template<typename T>
-	T Length(Vector3<T> v)
-	{
-		return sqrt(Dot(v, v));
 	}
 
 	template<typename T>

@@ -6,39 +6,23 @@
 using namespace le;
 using namespace std::literals::chrono_literals;
 
-class ObjectManager
+class EntityManager
 {
 public:
-	explicit ObjectManager(Scene* pScene)
+	explicit EntityManager(Scene* pScene, const Resource::ID<MeshData> mesh)
+		:
+		m_entity(pScene->CreateEntity())
 	{
-		m_Object = pScene->CreateEntity();
-
-		// Add the mesh component
+		m_entity.AddComponent<Transform>();
+		m_entity.AddComponent<Mesh>();
+		m_entity.QueryComponents<Transform, Mesh>([&](Transform& transform, Mesh& meshComp)
 		{
-			MeshData::Vertex3 testVertices[] =
-			{
-				{  0.5f,  0.5f, 0.0f,  1.0f, 1.0f },
-				{  0.5f, -0.5f, 0.0f,  1.0f, 0.0f },
-				{ -0.5f, -0.5f, 0.0f,  0.0f, 0.0f },
-				{ -0.5f,  0.5f, 0.0f,  0.0f, 1.0f }
-			};
-
-			uint32_t indices[] =
-			{
-				0, 1, 3,
-				1, 2, 3
-			};
-
-			m_Mesh = &m_Object->AddComponent<Mesh>(
-				std::span<MeshData::Vertex3>(testVertices),
-				std::span<uint32_t>(indices), MeshData::UpdateFrequency::UPDATES_ONCE);
-		}
-
-		m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
+			transform.SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(0, 1, 0)));
+			meshComp.data = mesh;
+		});
 	}
 
-	Object* m_Object = nullptr;
-	Mesh* m_Mesh = nullptr;
+	Entity m_entity;
 };
 
 class CameraManager final : public Input::InputListener
@@ -46,20 +30,23 @@ class CameraManager final : public Input::InputListener
 public:
 	explicit CameraManager(Scene* pScene)
 		:
+		m_camera(pScene->CreateEntity()),
 		m_Window(Application::Get().GetWindow()),
 		m_Sub(Application::Get().GetEventBus())
 	{
-		// Create the camera
-		m_Camera = pScene->CreateObject<Camera>();
-		m_Camera->SetNearZ(0.01f);
+		m_camera.AddComponent<ActiveCamera>();
+		m_camera.AddComponent<Camera>();
+		m_camera.AddComponent<Transform>();
 
-		Application::Get().SetActiveCamera(m_Camera);
+		m_camera.QueryComponents<Camera, Transform>([](Camera& camera, Transform& transform)
+		{
+			camera.SetNearZ(0.01f);
+			transform.SetPosition(Vector3f(-1.0f, 2.0f, 4.0f));
+		});
 
 		m_Window.AddInputListener(*this, Input::InputType::KEY);
 		m_Window.AddInputListener(*this, Input::InputType::RAW_MOUSE_MOVE);
 		m_Window.AddInputListener(*this, Input::InputType::MOUSE_CLICK);
-
-		m_Camera->SetPosition(Vector3f(-1.0f, 2.0f, 4.0f));
 
 		m_Sub.AddEventHandler<UpdateEvent>([this](const UpdateEvent& e)
 		{
@@ -67,7 +54,7 @@ public:
 		});
 	}
 
-	void OnUpdate(const float delta) const
+	void OnUpdate(const float delta)
 	{
 		Vector2f moveDir;
 		if (keys.w)
@@ -83,18 +70,21 @@ public:
 		if (keys.ctrl)
 			normMoveDir *= 3.0f;
 
-		Vector3f forward = m_Camera->GetForwardVector();
-		forward.y = 0;
-		forward = Math::Normalize(forward);
+		m_camera.QueryComponents<Camera, Transform>([&](Camera& camera, Transform& transform)
+		{
+			Vector3f forward = camera.GetForwardVector();
+			forward.y = 0;
+			forward = Math::Normalize(forward);
 
-		m_Camera->AddPosition(forward * normMoveDir.x * delta);
-		m_Camera->AddPosition(m_Camera->GetRightVector() * normMoveDir.y * delta);
+			transform.AddPosition(forward * normMoveDir.x * delta);
+			transform.AddPosition(camera.GetRightVector() * normMoveDir.y * delta);
 
-		// Vertical movement
-		if (keys.space)
-			m_Camera->AddPosition(Vector3f(0, 1, 0) * delta);
-		if (keys.shift)
-			m_Camera->AddPosition(Vector3f(0, -1, 0) * delta);
+			// Vertical movement
+			if (keys.space)
+				transform.AddPosition(Vector3f(0, 1, 0) * delta);
+			if (keys.shift)
+				transform.AddPosition(Vector3f(0, -1, 0) * delta);
+		});
 	}
 
 	void OnKey(Input::KeyInfo& info) override
@@ -138,8 +128,11 @@ public:
 
 		Quaternion q = Math::AngleAxis(Math::Radians(vertical), Vector3f(1, 0, 0));
 		q *= Math::AngleAxis(Math::Radians(horizontal), Vector3f(0, 1, 0));
-		
-		m_Camera->SetRotation(q);
+
+		m_camera.QueryComponents<Transform>([&q](Transform& transform)
+		{
+			transform.SetRotation(q);
+		});
 	}
 
 	void OnMouseClick(Input::MouseClickInfo& info) override
@@ -168,7 +161,7 @@ public:
 private:
 	bool m_CaptureMouse = true;
 
-	Camera* m_Camera = nullptr;
+	Entity m_camera;
 	Tether::Window& m_Window;
 	EventBusSubscriber m_Sub;
 };
@@ -179,18 +172,22 @@ public:
 	explicit Legendary(Application& app)
 		:
 		m_App(app),
+		m_ResourceManager(app.GetResourceManager()),
 		m_Sub(m_App.GetEventBus()),
-		camera(testScene.get()),
-		cube1(testScene.get()),
-		cube2(testScene.get()),
-		floor(testScene.get())
+		m_mesh(CreateMesh()),
+		camera(&testScene),
+		cube1(&testScene, m_mesh),
+		cube2(&testScene, m_mesh),
+		floor(&testScene, m_mesh)
 	{
-		app.GetGraphicsContext().GetShaderManager().GetByID("textured")->SetCullMode(Shader::CullMode::NONE);
+		const Resource::ID<Shader> shaderID = app.GetGraphicsResources().GetShaderManager().GetByID("textured");
+		const Ref<Shader> shader = m_ResourceManager.GetResource<Shader>(shaderID);
+		shader->SetCullMode(Shader::CullMode::NONE);
 
 		CreateMaterials();
 		CreateObjects();
 
-		m_App.SetActiveScene(*testScene);
+		m_App.SetActiveScene(testScene);
 
 		Window& window = m_App.GetWindow();
 		window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
@@ -212,48 +209,85 @@ public:
 		m_Frames++;
 	}
 private:
+	Resource::ID<MeshData> CreateMesh()
+	{
+		MeshData::Vertex3 testVertices[] =
+		{
+			{0.5f, 0.5f, 0.0f, 1.0f, 1.0f},
+			{0.5f, -0.5f, 0.0f, 1.0f, 0.0f},
+			{-0.5f, -0.5f, 0.0f, 0.0f, 0.0f},
+			{-0.5f, 0.5f, 0.0f, 0.0f, 1.0f}
+		};
+
+		uint32_t indices[] =
+		{
+			0, 1, 3,
+			1, 2, 3
+		};
+
+		const Ref<MeshData> mesh = m_ResourceManager.CreateResource<MeshData>(
+			std::span<MeshData::Vertex3>(testVertices),
+			std::span<uint32_t>(indices), MeshData::UpdateFrequency::UPDATES_ONCE);
+
+		return mesh->id;
+	}
+
 	void CreateMaterials()
 	{
-		material = Material::Create();
-		material2 = Material::Create();
+		material = m_ResourceManager.CreateResource<Material>();
+		material2 = m_ResourceManager.CreateResource<Material>();
 
 		std::future<TextureData> planksLoader = TextureData::FromFile("Assets/planks.png");
 		std::future<TextureData> tilesLoader = TextureData::FromFile("Assets/tiles.png");
 
-		texture = Texture2D::Create(planksLoader.get());
-		texture2 = Texture2D::Create(tilesLoader.get());
+		texture = m_ResourceManager.CreateResource<Texture2D>(planksLoader.get());
+		texture2 = m_ResourceManager.CreateResource<Texture2D>(tilesLoader.get());
 
-		material->SetTexture(texture.get());
-		material2->SetTexture(texture2.get());
+		material->SetTexture(texture->id);
+		material2->SetTexture(texture2->id);
 	}
 
 	void CreateObjects()
 	{
-		cube1.m_Object->SetPosition(Vector3f(0, 0.5f, 0));
-		cube1.m_Mesh->SetMaterial(material.get());
-		cube2.m_Object->SetPosition(Vector3f(3, 0.5f, 0));
-		cube2.m_Mesh->SetMaterial(material.get());
-		floor.m_Object->SetScale(Vector3f(10));
-		floor.m_Object->SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
-		floor.m_Mesh->SetMaterial(material2.get());
+		cube1.m_entity.QueryComponents<Transform, Mesh>([&](Transform& transform, Mesh& mesh)
+		{
+			transform.SetPosition(Vector3f(0.0f, 0.5f, 0.0f));
+			mesh.material = material->id;
+		});
+
+		cube2.m_entity.QueryComponents<Transform, Mesh>([&](Transform& transform, Mesh& mesh)
+		{
+			transform.SetPosition(Vector3f(3.0f, 0.5f, 0.0f));
+			mesh.material = material->id;
+		});
+
+		floor.m_entity.QueryComponents<Transform, Mesh>([&](Transform& transform, Mesh& mesh)
+		{
+			transform.SetScale(Vector3f(10));
+			transform.SetRotation(Math::AngleAxis(Math::Radians(90.0f), Vector3f(1, 0, 0)));
+			mesh.material = material2->id;
+		});
 	}
 
 	Application& m_App;
+	ResourceManager& m_ResourceManager;
 	EventBusSubscriber m_Sub;
 
 	Stopwatch fpsTimer;
 
 	Scene testScene;
 
-	CameraManager camera;
-	ObjectManager cube1;
-	ObjectManager cube2;
-	ObjectManager floor;
+	Resource::ID<MeshData> m_mesh;
 
-	Scope<Material> material;
-	Scope<Material> material2;
-	Scope<Texture2D> texture;
-	Scope<Texture2D> texture2;
+	CameraManager camera;
+	EntityManager cube1;
+	EntityManager cube2;
+	EntityManager floor;
+
+	Ref<Material> material;
+	Ref<Material> material2;
+	Ref<Texture2D> texture;
+	Ref<Texture2D> texture2;
 
 	size_t m_Frames = 0;
 };
@@ -261,7 +295,7 @@ private:
 #include <LE/Common/Entrypoint.hpp>
 LEGENDENGINE_MAIN
 {
-	Application::Create(1280, 720, "Legendary", GraphicsAPI::VULKAN);
+	Application::Create(GraphicsAPI::VULKAN, "Legendary", 1280, 720);
 
 	{
 		Legendary legend(Application::Get());

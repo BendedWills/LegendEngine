@@ -10,12 +10,13 @@
 
 namespace le
 {
+    class GraphicsResources;
     class Application;
     class GraphicsContext;
     class Renderer
     {
     public:
-        explicit Renderer(RenderTarget& renderTarget);
+        explicit Renderer(RenderTarget& renderTarget, GraphicsContext& context, GraphicsResources& resources);
         virtual ~Renderer() = 0;
         LE_NO_COPY(Renderer);
 
@@ -29,8 +30,8 @@ namespace le
         [[nodiscard]] RenderTarget& GetRenderTarget() const;
     protected:
         virtual bool StartFrame() = 0;
-        virtual void UseMaterial(const Material& material) = 0;
-        virtual void DrawMesh(const Mesh& mesh, const Transform& transform) = 0;
+        virtual void UseMaterial(const Material& material, Ref<Shader> shader) = 0;
+        virtual void DrawMesh(const Mesh& mesh, const Transform& transform, Ref<MeshData> data) = 0;
         virtual void EndFrame() = 0;
 
         RenderTarget& m_RenderTarget;
@@ -43,6 +44,6 @@ namespace le
         void UpdateCamera(Scene& scene, UID cameraID) const;
         void UpdateCameraUniforms(const Camera& camera) const;
 
-        Material& m_defaultMaterial;
+        GraphicsResources& m_resources;
     };
 }

@@ -11,8 +11,6 @@ namespace le
         CreateCameraDescriptorSetLayout();
         CreateSceneDescriptorSetLayout();
         CreateMaterialDescriptorSetLayout();
-
-        m_defaultMaterial = Application::Get().GetResourceManager().CreateResource<Material>();
     }
 
     ShaderManager& GraphicsResources::GetShaderManager()
@@ -102,5 +100,10 @@ namespace le
 
         m_materialLayout = m_context.CreateDescriptorSetLayout(std::span(bindings));
         m_setLayouts.push_back(m_materialLayout.get());
+    }
+
+    void GraphicsResources::CreateResources(ResourceManager& resourceManager)
+    {
+        m_defaultMaterial = resourceManager.CreateResource<Material>();
     }
 }

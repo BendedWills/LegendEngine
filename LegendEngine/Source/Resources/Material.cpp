@@ -19,17 +19,21 @@ namespace le
         m_buffer = m_context.CreatePerFrameBuffer(Buffer::Usage::UNIFORM_BUFFER,
             sizeof(Uniforms));
 
+        GraphicsResources& resources = Application::Get().GetGraphicsResources();
+
         DynamicUniforms::DescriptorInfo infos[] =
         {
             {
                 DescriptorType::UNIFORM_BUFFER,
                 DynamicUniforms::UpdateFrequency::PER_FRAME,
-                1
+                1,
+                &resources.GetMaterialLayout()
             },
             {
                 DescriptorType::COMBINED_IMAGE_SAMPLER,
                 DynamicUniforms::UpdateFrequency::OCCASIONAL,
-                1
+                1,
+                &resources.GetMaterialLayout()
             },
         };
 

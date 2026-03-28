@@ -6,14 +6,14 @@
 
 namespace le
 {
+#ifndef LE_HEADLESS
     Scene::Scene()
         :
-        Scene(Application::Get().GetGraphicsContext())
+        Scene(Application::Get().GetGraphicsContext(), Application::Get().GetGraphicsResources())
     {}
 
-    Scene::Scene(GraphicsContext& context)
+    Scene::Scene(GraphicsContext& context, const GraphicsResources& resources)
     {
-#ifndef LE_HEADLESS
         m_buffer = context.CreatePerFrameBuffer(Buffer::Usage::UNIFORM_BUFFER,
             sizeof(Uniforms));
 
@@ -22,13 +22,14 @@ namespace le
             {
                 DescriptorType::UNIFORM_BUFFER,
                 DynamicUniforms::UpdateFrequency::PER_FRAME,
-                1
+                1,
+                &resources.GetSceneLayout()
             },
         };
 
         m_uniforms = context.CreateDynamicUniforms(std::span(infos));
-#endif
     }
+#endif
 
     Entity Scene::CreateEntity()
     {

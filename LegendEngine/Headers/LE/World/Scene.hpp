@@ -13,6 +13,7 @@
 
 namespace le
 {
+    class GraphicsResources;
     class GraphicsContext;
     class Entity;
     class Scene final
@@ -24,8 +25,10 @@ namespace le
             float ambientLight = 1.0f;
         };
 
+#ifndef LE_HEADLESS
         Scene();
-        explicit Scene(GraphicsContext& context);
+        explicit Scene(GraphicsContext& context, const GraphicsResources& resources);
+#endif
         LE_NO_COPY(Scene);
 
         Entity CreateEntity();
@@ -45,7 +48,7 @@ namespace le
 
             if (!m_archetypes.contains(record.archetypeID))
             {
-                AddComponentToEmptyEntity(record, entity, std::forward<Args>(args)...);
+                AddComponentToEmptyEntity<T>(record, entity, std::forward<Args>(args)...);
                 return;
             }
 
@@ -181,6 +184,7 @@ namespace le
             *pExistingData = component;
         }
 
+        // The entity must have the components queried, otherwise this will throw
         template <typename... Ts, typename Fn>
             requires std::invocable<Fn, Ts&...>
         void QueryEntityComponents(const UID entity, Fn queryFunc)

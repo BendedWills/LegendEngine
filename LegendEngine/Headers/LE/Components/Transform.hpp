@@ -1,13 +1,13 @@
 #pragma once
 
+#include <LE/Components/Component.hpp>
 #include <LE/Math/Math.hpp>
 #include <LE/Math/Quaternion.hpp>
 
 namespace le
 {
-    class Transform
+    struct Transform : Component
     {
-    public:
         void SetPosition(const Vector3f& position);
         void SetScale(const Vector3f& scale);
         void SetRotation(const Vector3f& rotation);

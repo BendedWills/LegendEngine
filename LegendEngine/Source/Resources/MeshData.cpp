@@ -43,4 +43,14 @@ namespace le
     {
         return m_indexCount;
     }
+
+    Buffer& MeshData::GetVertexBuffer() const
+    {
+        return *m_vertexBuffer;
+    }
+
+    Buffer& MeshData::GetIndexBuffer() const
+    {
+        return *m_indexBuffer;
+    }
 }

@@ -9,6 +9,8 @@
 #include <LE/Common/Stopwatch.hpp>
 #include <LE/Common/UID.hpp>
 
+#include <LE/Components/ActiveCamera.hpp>
+#include <LE/Components/Camera.hpp>
 #include <LE/Components/ComponentStorage.hpp>
 #include <LE/Components/Light.hpp>
 #include <LE/Components/Mesh.hpp>
@@ -27,7 +29,6 @@
 #include <LE/Graphics/API/CommandBuffer.hpp>
 #include <LE/Graphics/API/DynamicUniforms.hpp>
 #include <LE/Graphics/API/Image.hpp>
-#include <LE/Graphics/API/ImageView.hpp>
 #include <LE/Graphics/API/Pipeline.hpp>
 #include <LE/Graphics/API/Sampler.hpp>
 #include <LE/Graphics/API/Types.hpp>

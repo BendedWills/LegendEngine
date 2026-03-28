@@ -12,6 +12,7 @@ if (LE_OPENGL_API)
     add_library(LEOpenGL STATIC ${LE_OPENGL_SOURCES})
 
     target_include_directories(LEOpenGL PUBLIC "OpenGL")
+    target_compile_definitions(LEOpenGL PUBLIC LE_OPENGL_API)
     target_link_libraries(LEOpenGL PUBLIC LegendEngine)
 endif()
 
@@ -32,5 +33,6 @@ if (LE_VULKAN_API)
     get_property(compiled_shader_headers GLOBAL PROPERTY SPV_HEADERS_DIR)
 
     target_include_directories(LEVulkan PUBLIC "Vulkan" ${Vulkan_INCLUDE_DIR} PRIVATE ${compiled_shader_headers})
+    target_compile_definitions(LEVulkan PUBLIC LE_VULKAN_API)
     target_link_libraries(LEVulkan PUBLIC LegendEngine ${Vulkan_LIBRARIES})
 endif()

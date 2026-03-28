@@ -6,10 +6,11 @@
 
 namespace le
 {
+    class ResourceManager;
     class GraphicsResources final
     {
     public:
-        explicit GraphicsResources(GraphicsContext& context);
+        GraphicsResources(GraphicsContext& context);
 
         [[nodiscard]] ShaderManager& GetShaderManager();
 
@@ -19,6 +20,8 @@ namespace le
         DescriptorSetLayout& GetMaterialLayout() const;
         DescriptorSetLayout& GetSceneLayout() const;
         std::span<DescriptorSetLayout*> GetLayouts();
+
+        void CreateResources(ResourceManager& resourceManager);
     private:
         void CreateCameraDescriptorSetLayout();
         void CreateSceneDescriptorSetLayout();

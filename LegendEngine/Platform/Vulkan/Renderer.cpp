@@ -24,11 +24,11 @@ namespace le::vk
     Renderer::Renderer(
             GraphicsContext& context,
             le::RenderTarget& renderTarget,
+            GraphicsResources& resources,
             const VkSurfaceFormatKHR surfaceFormat
             )
         :
-        le::Renderer(renderTarget),
-        m_resourceManager(Application::Get().GetResourceManager()),
+        le::Renderer(renderTarget, context, resources),
         m_context(context),
         m_TetherCtx(context.GetTetherGraphicsContext()),
         m_DeviceLoader(m_TetherCtx.GetDeviceLoader()),
@@ -207,7 +207,7 @@ namespace le::vk
         m_currentShaderID = 0;
     }
 
-    void Renderer::UseMaterial(const Material& material)
+    void Renderer::UseMaterial(const Material& material, const Ref<Shader> shader)
     {
         const VkCommandBuffer buffer = m_CommandBuffers[m_CurrentFrame];
         const le::DynamicUniforms& dynamicUniforms = material.GetUniforms();
@@ -221,7 +221,6 @@ namespace le::vk
         if (material.GetShader() == m_currentShaderID)
             return;
 
-        const auto& shader = m_resourceManager.GetResource<Shader>(m_currentShaderID);
         const le::Pipeline& pipeline = shader->GetPipeline();
         const auto& vkPipeline = static_cast<const Pipeline&>(pipeline);
 
@@ -241,10 +240,8 @@ namespace le::vk
         m_currentShaderID = material.GetShader();
     }
 
-    void Renderer::DrawMesh(const Mesh& mesh, const Transform& transform)
+    void Renderer::DrawMesh(const Mesh& mesh, const Transform& transform, const Ref<MeshData> meshData)
     {
-        const Ref<MeshData> meshData =
-            m_resourceManager.GetResource<MeshData>(mesh.data);
         auto& vertexBuffer = static_cast<Buffer&>(meshData->GetVertexBuffer());
         auto& indexBuffer  = static_cast<Buffer&>(meshData->GetIndexBuffer());
 

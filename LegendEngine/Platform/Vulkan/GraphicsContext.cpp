@@ -24,6 +24,14 @@
 #include <LE/Common/Assert.hpp>
 #include <LE/IO/Logger.hpp>
 
+namespace le
+{
+    Scope<GraphicsContext> CreateVulkanGraphicsContext(std::string_view applicationName)
+    {
+        return std::make_unique<vk::GraphicsContext>(applicationName);
+    }
+}
+
 namespace le::vk
 {
     static const char* EXTENSIONS[] =
@@ -53,11 +61,6 @@ namespace le::vk
         .dynamicRendering = true,
     };
 
-    Scope<GraphicsContext> CreateVulkanGraphicsContext(std::string_view applicationName)
-    {
-        return std::make_unique<GraphicsContext>(applicationName);
-    }
-
     GraphicsContext::GraphicsContext(const std::string_view applicationName)
         :
         m_ContextCreator(GetContextInfo(applicationName)),
@@ -86,7 +89,7 @@ namespace le::vk
         m_ContextCreator.RemoveDebugMessenger(&m_Callback);
     }
 
-    Scope<le::Renderer> GraphicsContext::CreateRenderer(le::RenderTarget& renderTarget)
+    Scope<le::Renderer> GraphicsContext::CreateRenderer(le::RenderTarget& renderTarget, GraphicsResources& resources)
     {
         constexpr VkSurfaceFormatKHR surfaceFormat =
         {
@@ -95,7 +98,7 @@ namespace le::vk
         };
 
         return std::make_unique<Renderer>(
-            *this, renderTarget, surfaceFormat
+            *this, renderTarget, resources, surfaceFormat
         );
     }
 

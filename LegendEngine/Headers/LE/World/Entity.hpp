@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 #include <LE/Common/UID.hpp>
 #include <LE/World/Scene.hpp>
 
@@ -39,7 +37,7 @@ namespace le
         template <typename... Ts, typename Fn>
         void QueryComponents(Fn update)
         {
-            m_pScene->QueryEntityComponents<Ts..., Fn>(uid, update);
+            m_pScene->QueryEntityComponents<Ts...>(uid, update);
         }
 
         UID uid;

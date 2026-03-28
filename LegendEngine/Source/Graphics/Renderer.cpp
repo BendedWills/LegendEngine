@@ -12,13 +12,12 @@
 
 namespace le
 {
-    Renderer::Renderer(RenderTarget& renderTarget)
+    Renderer::Renderer(RenderTarget& renderTarget, GraphicsContext& context,
+        GraphicsResources& resources)
         :
         m_RenderTarget(renderTarget),
-        m_defaultMaterial(Application::Get().GetGraphicsResources().GetDefaultMaterial())
+        m_resources(resources)
     {
-        GraphicsContext& context = Application::Get().GetGraphicsContext();
-
         m_cameraUniformBuffer = context.CreatePerFrameBuffer(Buffer::Usage::UNIFORM_BUFFER,
             sizeof(Camera::CameraUniforms));
 
@@ -27,7 +26,8 @@ namespace le
             {
                 DescriptorType::UNIFORM_BUFFER,
                 DynamicUniforms::UpdateFrequency::PER_FRAME,
-                1
+                1,
+                &resources.GetCameraLayout()
             },
         };
 
@@ -66,8 +66,11 @@ namespace le
             return;
         }
 
+        ResourceManager& manager = Application::Get().GetResourceManager();
+        Material& defaultMaterial = m_resources.GetDefaultMaterial();
+
         UpdateCamera(*sceneWithCamera, cameraID);
-        UseMaterial(m_defaultMaterial);
+        UseMaterial(defaultMaterial, manager.GetResource<Shader>(defaultMaterial.GetShader()));
 
         for (Scene* pScene : scenes)
             if (pScene)
@@ -97,11 +100,11 @@ namespace le
 
                 material->CopyUniformData();
 
-                UseMaterial(*material);
+                UseMaterial(*material, manager.GetResource<Shader>(material->GetShader()));
                 lastMaterial = mesh.material;
             }
 
-            DrawMesh(mesh, transform);
+            DrawMesh(mesh, transform, resource);
         });
     }
 

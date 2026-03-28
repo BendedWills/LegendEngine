@@ -40,19 +40,18 @@ namespace le
     }
 
     Application::Application(
-        const int width, const int height,
+        Scope<GraphicsContext> graphicsContext,
         const std::string_view applicationName,
-        const GraphicsAPI api)
+        const int width, const int height)
         :
         m_ResizeHandler(*this),
-        m_GraphicsContext(CreateGraphicsContext(applicationName, api)),
+        m_ManagedGraphicsContext(std::move(graphicsContext)),
+        m_GraphicsContext(*m_ManagedGraphicsContext),
+        m_GraphicsResources(m_GraphicsContext),
         m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
         m_Renderer(CreateRenderer()),
-        m_GlobalScene(m_GraphicsContext)
+        m_GlobalScene(m_GraphicsContext, m_GraphicsResources.value())
     {
-        m_GraphicsResources.emplace(m_GraphicsContext);
-        m_GraphicsContext.RegisterShaders(m_GraphicsResources->GetShaderManager());
-
         LE_INFO("Application created");
     }
 
@@ -96,13 +95,6 @@ namespace le
         Render(delta);
     }
 
-    GraphicsContext& Application::CreateGraphicsContext(std::string_view applicationName,
-                                                                  GraphicsAPI api)
-    {
-        LE_INFO("Creating graphics context");
-        return *(m_ManagedGraphicsContext = GraphicsContext::Create(api, applicationName));
-    }
-
     RenderTarget& Application::CreateRenderTarget(const int width, const int height,
         const std::string_view applicationName)
     {
@@ -122,7 +114,7 @@ namespace le
     Renderer& Application::CreateRenderer()
     {
         LE_INFO("Creating renderer");
-        return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget));
+        return *(m_ManagedRenderer = m_ManagedGraphicsContext->CreateRenderer(m_RenderTarget, *m_GraphicsResources));
     }
 
     Tether::Window& Application::GetWindow() const
@@ -132,8 +124,7 @@ namespace le
 #else
     Application::Application(GraphicsContext& ctx)
         :
-        m_GraphicsContext(ctx),
-        m_GlobalScene(ctx)
+        m_GraphicsContext(ctx)
     {
         LE_INFO("Application created");
     }
@@ -252,5 +243,11 @@ namespace le
     size_t Application::GetCurrentFrame() const
     {
         return m_currentFrame;
+    }
+
+    void Application::CreateResources()
+    {
+        m_GraphicsContext.RegisterShaders(m_GraphicsResources->GetShaderManager());
+        m_GraphicsResources->CreateResources(m_resourceManager);
     }
 }

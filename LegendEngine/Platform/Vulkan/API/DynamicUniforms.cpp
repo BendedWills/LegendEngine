@@ -25,6 +25,8 @@ namespace le::vk
             binding.descriptorSets.resize(GetDescriptorSetCount(info));
             binding.descriptorType = GetDescriptorType(info.type);
 
+            LE_ASSERT(info.pLayout != nullptr, "Layout not set");
+
             auto& vkLayout = static_cast<DescriptorSetLayout&>(*info.pLayout);
             std::vector layouts(binding.descriptorSets.size(), vkLayout.GetDescriptorSetLayout());
 

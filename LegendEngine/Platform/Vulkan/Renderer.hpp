@@ -23,6 +23,7 @@ namespace le::vk
         explicit Renderer(
             GraphicsContext& context,
             RenderTarget& renderTarget,
+            GraphicsResources& resources,
             VkSurfaceFormatKHR surfaceFormat
         );
         ~Renderer() override;
@@ -45,8 +46,8 @@ namespace le::vk
 
         bool StartFrame() override;
         void BeginCommandBuffer();
-        void UseMaterial(const Material& material) override;
-        void DrawMesh(const Mesh& mesh, const Transform& transform) override;
+        void UseMaterial(const Material& material, Ref<Shader> shader) override;
+        void DrawMesh(const Mesh& mesh, const Transform& transform, Ref<MeshData> meshData) override;
         void EndCommandBuffer() const;
         void EndFrame() override;
 
@@ -66,7 +67,6 @@ namespace le::vk
         bool m_VSync = false;
         bool m_ShouldRecreateSwapchain = false;
 
-        ResourceManager& m_resourceManager;
         GraphicsContext& m_context;
         TetherVulkan::GraphicsContext& m_TetherCtx;
         const TetherVulkan::DeviceLoader& m_DeviceLoader;

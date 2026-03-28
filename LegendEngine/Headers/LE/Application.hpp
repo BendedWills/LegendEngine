@@ -23,14 +23,30 @@ namespace le
 #ifndef LE_HEADLESS
         // Creates the Application with a WindowRenderTarget
         Application(
-            int width, int height,
+            Scope<GraphicsContext> graphicsContext,
             std::string_view applicationName,
-            GraphicsAPI api);
+            int width, int height);
 
         [[nodiscard]] Renderer& GetRenderer() const;
         Tether::Window& GetWindow() const;
+
+        template<typename... Args>
+        static void Create(GraphicsAPI api, std::string_view applicationName, Args&&... args)
+        {
+            LE_ASSERT(!m_Instance, "Application already exists");
+            m_Instance = std::make_unique<Application>(GraphicsContext::Create(api, applicationName),
+                applicationName, args...);
+            m_Instance->CreateResources();
+        }
 #else
         Application(GraphicsContext& ctx); // Headless application constructor
+
+        template<typename... Args>
+        static void Create(Args&&... args)
+        {
+            LE_ASSERT(!m_Instance, "Application already exists");
+            m_Instance = std::make_unique<Application>(args...);
+        }
 #endif
         ~Application();
 
@@ -51,19 +67,14 @@ namespace le
         // Must be called on the main thread
         void RenderFrame(float delta = 1.0f);
 
-        template<typename... Args>
-        static void Create(Args&&... args)
-        {
-            LE_ASSERT(!m_Instance, "Application already exists");
-            m_Instance = std::make_unique<Application>(args...);
-        }
-
         static void Run();
         static void Destroy();
 
         static bool HasConstructed();
         static Application& Get();
     private:
+        void CreateResources();
+
         void RunInstance();
 
         void Update(float delta, bool updateWindow = true);
@@ -86,8 +97,6 @@ namespace le
         };
         ResizeHandler m_ResizeHandler;
 
-        GraphicsContext& CreateGraphicsContext(std::string_view applicationName,
-            GraphicsAPI api);
         RenderTarget& CreateRenderTarget(int width, int height,
             std::string_view applicationName);
         Renderer& CreateRenderer();
@@ -99,12 +108,11 @@ namespace le
         Scope<Window> m_Window = nullptr;
 #endif
         GraphicsContext& m_GraphicsContext;
+        std::optional<GraphicsResources> m_GraphicsResources;
 #ifndef LE_HEADLESS
         RenderTarget& m_RenderTarget;
         Renderer& m_Renderer;
 #endif
-
-        std::optional<GraphicsResources> m_GraphicsResources;
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;
