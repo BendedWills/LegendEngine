@@ -37,7 +37,7 @@ namespace le::vk
         memcpy(m_allocationInfo.pMappedData, data, size);
     }
 
-    void SimpleBuffer::Resize(size_t newSize)
+    void SimpleBuffer::Resize(const size_t newSize)
     {
         LE_WARN(
             "Resize called on a SimpleBuffer. SimpleBuffer functions as "

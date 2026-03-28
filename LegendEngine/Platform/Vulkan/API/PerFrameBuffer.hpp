@@ -22,11 +22,17 @@ namespace le::vk
     private:
         void CreateBuffer(VkBuffer* pBuffer, VmaAllocation* pAlloc, VmaAllocationInfo* pAllocInfo,
             VkBufferUsageFlags bufferUsage, VmaAllocationCreateFlags allocCreateFlags, size_t size) const;
+        void RecreateBuffer(size_t currentFrame);
 
         TetherVulkan::GraphicsContext& m_context;
+
+        size_t m_size = 0;
 
         std::vector<VkBuffer> m_buffers;
         std::vector<VmaAllocation> m_allocations;
         std::vector<VmaAllocationInfo> m_allocationInfos;
+
+        VkBufferUsageFlags m_usage = 0;
+        VmaAllocationCreateFlags m_allocFlags = 0;
     };
 }

@@ -7,16 +7,17 @@ namespace le::vk
 {
     PerFrameBuffer::PerFrameBuffer(GraphicsContext& context, Usage usage, size_t size)
         :
-        m_context(context.GetTetherGraphicsContext())
+        m_context(context.GetTetherGraphicsContext()),
+        m_size(size)
     {
         m_buffers.resize(Application::FRAMES_IN_FLIGHT);
         m_allocations.resize(Application::FRAMES_IN_FLIGHT);
         m_allocationInfos.resize(Application::FRAMES_IN_FLIGHT);
 
-        const VkBufferUsageFlags bufferUsage = ToVulkanUsageFlags(usage);
-        const VmaAllocationCreateFlags allocCreateFlags = ToVmaAllocationCreateFlags(usage, true);
+        m_usage = ToVulkanUsageFlags(usage);
+        m_allocFlags = ToVmaAllocationCreateFlags(usage, true);
         for (size_t i = 0; i < Application::FRAMES_IN_FLIGHT; i++)
-            CreateBuffer(&m_buffers[i], &m_allocations[i], &m_allocationInfos[i], bufferUsage, allocCreateFlags, size);
+            CreateBuffer(&m_buffers[i], &m_allocations[i], &m_allocationInfos[i], m_usage, m_allocFlags, size);
     }
 
     PerFrameBuffer::~PerFrameBuffer()
@@ -29,6 +30,10 @@ namespace le::vk
     {
         const size_t currentFrame = Application::Get().GetCurrentFrame();
         const size_t allocSize = m_allocationInfos[currentFrame].size;
+
+        if (allocSize != m_size)
+            RecreateBuffer(currentFrame);
+
         void* pMappedData = m_allocationInfos[currentFrame].pMappedData;
 
         LE_ASSERT(pMappedData != nullptr, "Buffer was updated but not mapped");
@@ -37,9 +42,9 @@ namespace le::vk
         memcpy(pMappedData, data, size);
     }
 
-    void PerFrameBuffer::Resize(size_t newSize)
+    void PerFrameBuffer::Resize(const size_t newSize)
     {
-        // TODO
+        m_size = newSize;
     }
 
     size_t PerFrameBuffer::GetSize()
@@ -56,9 +61,8 @@ namespace le::vk
     }
 
     void PerFrameBuffer::CreateBuffer(VkBuffer* pBuffer, VmaAllocation* pAlloc, VmaAllocationInfo* pAllocInfo,
-                                      const VkBufferUsageFlags bufferUsage, const VmaAllocationCreateFlags allocCreateFlags, const size_t size) const
+        const VkBufferUsageFlags bufferUsage, const VmaAllocationCreateFlags allocCreateFlags, const size_t size) const
     {
-
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.size = size;
@@ -70,5 +74,12 @@ namespace le::vk
 
         LE_CHECK_VK(vmaCreateBuffer(m_context.GetAllocator(), &bufferCreateInfo, &allocInfo,
             pBuffer, pAlloc, pAllocInfo));
+    }
+
+    void PerFrameBuffer::RecreateBuffer(const size_t currentFrame)
+    {
+        vmaDestroyBuffer(m_context.GetAllocator(), m_buffers[currentFrame], m_allocations[currentFrame]);
+        CreateBuffer(&m_buffers[currentFrame], &m_allocations[currentFrame],
+            &m_allocationInfos[currentFrame], m_usage, m_allocFlags, m_size);
     }
 }
