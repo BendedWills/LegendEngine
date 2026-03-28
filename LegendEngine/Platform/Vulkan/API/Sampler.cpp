@@ -68,4 +68,9 @@ namespace le::vk
     {
         vkDestroySampler(m_context.GetDevice(), m_sampler, nullptr);
     }
+
+    VkSampler Sampler::GetSampler() const
+    {
+        return m_sampler;
+    }
 }

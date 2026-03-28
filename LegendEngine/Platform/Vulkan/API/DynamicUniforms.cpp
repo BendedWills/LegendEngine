@@ -4,6 +4,7 @@
 
 #include "VkDefs.hpp"
 #include "API/Buffer.hpp"
+#include "API/Sampler.hpp"
 #include "API/DescriptorSetLayout.hpp"
 
 #include <LE/Application.hpp>
@@ -72,7 +73,20 @@ namespace le::vk
         WriteSet(binding, &write);
     }
 
-    void DynamicUniforms::UpdateSampler(le::Sampler& sampler, uint32_t binding) {}
+    void DynamicUniforms::UpdateSampler(le::Sampler& sampler, uint32_t binding)
+    {
+        const auto& vkSampler = static_cast<Sampler&>(sampler);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.sampler = vkSampler.GetSampler();
+        
+        VkWriteDescriptorSet write{};
+        write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        write.pImageInfo = &imageInfo;
+
+        WriteSet(binding, &write);
+    }
+
     void DynamicUniforms::UpdateCombinedImageSampler(le::Image& image, le::Sampler& sampler, uint32_t binding) {}
 
     void DynamicUniforms::InvalidateBinding(const uint32_t binding)

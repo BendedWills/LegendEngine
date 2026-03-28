@@ -11,6 +11,8 @@ namespace le::vk
     public:
         Sampler(GraphicsContext& context, const Info& info);
         ~Sampler() override;
+
+        VkSampler GetSampler() const;
     private:
         TetherVulkan::GraphicsContext& m_context;
 
