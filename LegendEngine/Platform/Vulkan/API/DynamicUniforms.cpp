@@ -20,6 +20,7 @@ namespace le::vk
         for (const DescriptorInfo& info : infos)
         {
             Binding& binding = m_bindings.emplace_back();
+            binding.updateFrequency = info.updateFrequency;
             binding.framesUntilValid = Application::FRAMES_IN_FLIGHT;
             binding.descriptorSets.resize(GetDescriptorSetCount(info));
             binding.descriptorType = GetDescriptorType(info.type);
@@ -44,6 +45,9 @@ namespace le::vk
 
     void DynamicUniforms::UpdateBuffer(le::Buffer& buffer, const uint32_t binding)
     {
+        if (IsValidSet(binding))
+            return;
+
         auto& vkBuffer = static_cast<Buffer&>(buffer);
         const auto [bufferObject, size] = vkBuffer.GetDesc();
 
@@ -60,6 +64,9 @@ namespace le::vk
 
     void DynamicUniforms::UpdateSampledImage(le::Image& image, const uint32_t binding)
     {
+        if (IsValidSet(binding))
+            return;
+
         const auto& vkImage = static_cast<Image&>(image);
 
         VkDescriptorImageInfo imageInfo{};
@@ -75,6 +82,9 @@ namespace le::vk
 
     void DynamicUniforms::UpdateSampler(le::Sampler& sampler, uint32_t binding)
     {
+        if (IsValidSet(binding))
+            return;
+
         const auto& vkSampler = static_cast<Sampler&>(sampler);
 
         VkDescriptorImageInfo imageInfo{};
@@ -89,6 +99,9 @@ namespace le::vk
 
     void DynamicUniforms::UpdateCombinedImageSampler(le::Image& image, le::Sampler& sampler, uint32_t binding)
     {
+        if (IsValidSet(binding))
+            return;
+
         const auto& vkImage = static_cast<Image&>(image);
         const auto& vkSampler = static_cast<Sampler&>(sampler);
 
@@ -162,19 +175,31 @@ namespace le::vk
         return setCount;
     }
 
-    VkDescriptorSet DynamicUniforms::GetDescriptorSet(uint32_t binding)
+    VkDescriptorSet DynamicUniforms::GetDescriptorSet(const uint32_t binding) const
     {
+        const Binding& bindingInfo = m_bindings.at(binding);
 
+        if (bindingInfo.descriptorSets.size() == 1)
+            return bindingInfo.descriptorSets[0];
+
+        return bindingInfo.descriptorSets[Application::Get().GetCurrentFrame()];
     }
 
-    void DynamicUniforms::ValidateSet(uint32_t binding)
+    void DynamicUniforms::ValidateSet(const uint32_t binding)
     {
+        Binding& bindingInfo = m_bindings.at(binding);
+        bindingInfo.framesUntilValid = std::max<size_t>(bindingInfo.framesUntilValid - 1, 0);
+    }
 
+    bool DynamicUniforms::IsValidSet(const uint32_t binding) const
+    {
+        LE_ASSERT(binding < m_bindings.size(), "Binding out of range");
+        const Binding& bindingInfo = m_bindings.at(binding);
+        return bindingInfo.framesUntilValid == 0 && bindingInfo.updateFrequency == UpdateFrequency::PER_FRAME;
     }
 
     void DynamicUniforms::WriteSet(const uint32_t binding, VkWriteDescriptorSet* pWrite)
     {
-        LE_ASSERT(binding < m_bindings.size(), "Binding out of range");
         LE_ASSERT(m_bindings.at(binding).descriptorType == pWrite->descriptorType,
             "Wrong descriptor type at binding");
 
@@ -182,6 +207,13 @@ namespace le::vk
         pWrite->dstBinding = binding;
         pWrite->dstSet = GetDescriptorSet(binding);
         pWrite->descriptorCount = 1;
+
+        // Occasional is something like a sampler that only updates when the user changes
+        // graphics settings. A set can't be updated when it is in use. For the occasional
+        // update where there isn't a dedicated set per frame in flight, we'll wait for
+        // the frames to render. After it isn't in use, update it.
+        if (m_bindings.at(binding).updateFrequency == UpdateFrequency::OCCASIONAL)
+            vkDeviceWaitIdle(m_context.GetDevice());
 
         vkUpdateDescriptorSets(m_context.GetDevice(), 1, pWrite, 0, nullptr);
         ValidateSet(binding);

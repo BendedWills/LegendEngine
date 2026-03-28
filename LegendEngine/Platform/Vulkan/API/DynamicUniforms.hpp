@@ -26,11 +26,13 @@ namespace le::vk
             size_t framesUntilValid = 0;
             std::vector<VkDescriptorSet> descriptorSets;
             VkDescriptorType descriptorType;
+            UpdateFrequency updateFrequency;
         };
 
         void CreateDescriptorPool(std::span<DescriptorInfo> infos);
-        VkDescriptorSet GetDescriptorSet(uint32_t binding);
+        VkDescriptorSet GetDescriptorSet(uint32_t binding) const;
         void ValidateSet(uint32_t binding);
+        bool IsValidSet(uint32_t binding) const;
         void WriteSet(uint32_t binding, VkWriteDescriptorSet* pWrite);
 
         static size_t GetDescriptorSetCount(const DescriptorInfo& info);
