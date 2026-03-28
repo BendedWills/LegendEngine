@@ -19,18 +19,7 @@ namespace le
     {
     public:
         static constexpr size_t FRAMES_IN_FLIGHT = 2;
-
-        class Listener
-        {
-        public:
-            virtual ~Listener() = default;
-
-            virtual void OnSetup() = 0;
-
-            virtual void OnUpdate(float delta) {}
-            virtual void OnRender(float delta) {}
-        };
-
+        
 #ifndef LE_HEADLESS
         // Creates the Application with a WindowRenderTarget
         Application(
