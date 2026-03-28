@@ -41,6 +41,6 @@ namespace le
         void RenderScene(Scene& scene);
         void UpdateCamera(Scene& scene, UID cameraID);
 
-        Scene* m_Scene = nullptr;
+        Material& m_defaultMaterial;
     };
 }

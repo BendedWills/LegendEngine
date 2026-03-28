@@ -1,3 +1,4 @@
+#include <LE/Application.hpp>
 #include <LE/Graphics/GraphicsResources.hpp>
 
 namespace le
@@ -10,11 +11,18 @@ namespace le
         CreateCameraDescriptorSetLayout();
         CreateSceneDescriptorSetLayout();
         CreateMaterialDescriptorSetLayout();
+
+        m_defaultMaterial = Application::Get().GetResourceManager().CreateResource<Material>();
     }
 
     ShaderManager& GraphicsResources::GetShaderManager()
     {
         return m_shaderManager;
+    }
+
+    Material& GraphicsResources::GetDefaultMaterial() const
+    {
+        return *m_defaultMaterial;
     }
 
     DescriptorSetLayout& GraphicsResources::GetCameraLayout() const

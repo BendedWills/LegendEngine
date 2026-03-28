@@ -47,7 +47,8 @@ namespace le
         m_ResizeHandler(*this),
         m_GraphicsContext(CreateGraphicsContext(applicationName, api)),
         m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
-        m_Renderer(CreateRenderer())
+        m_Renderer(CreateRenderer()),
+        m_GlobalScene(m_GraphicsContext)
     {
         m_GraphicsResources.emplace(m_GraphicsContext);
         m_GraphicsContext.RegisterShaders(m_GraphicsResources->GetShaderManager());
@@ -131,7 +132,8 @@ namespace le
 #else
     Application::Application(GraphicsContext& ctx)
         :
-        m_GraphicsContext(ctx)
+        m_GraphicsContext(ctx),
+        m_GlobalScene(ctx)
     {
         LE_INFO("Application created");
     }

@@ -3,18 +3,29 @@
 #include <unordered_map>
 #include <vector>
 #include <LE/Common/Defs.hpp>
+#include <LE/Common/Types.hpp>
 #include <LE/Common/UID.hpp>
 #include <LE/World/Archetype.hpp>
 #include <LE/World/ECS.hpp>
 
+#include <LE/Graphics/API/Buffer.hpp>
+#include <LE/Graphics/API/DynamicUniforms.hpp>
+
 namespace le
 {
+    class GraphicsContext;
     class Entity;
     class Scene final
     {
         friend Entity;
     public:
-        Scene() = default;
+        struct Uniforms
+        {
+            float ambientLight = 1.0f;
+        };
+
+        Scene();
+        explicit Scene(GraphicsContext& context);
         LE_NO_COPY(Scene);
 
         Entity CreateEntity();
@@ -206,6 +217,7 @@ namespace le
             }
         }
 
+        void UpdateUniforms() const;
         void Clear();
     private:
         template<typename T, typename... Args>
@@ -262,5 +274,8 @@ namespace le
         std::unordered_map<UID, ECS::EntityRecord> m_entities;
         std::unordered_map<size_t, std::vector<size_t>> m_findArchetypeResults;
         std::unordered_map<size_t, Archetype> m_archetypes;
+
+        Scope<Buffer> m_buffer;
+        Scope<DynamicUniforms> m_uniforms;
     };
 }

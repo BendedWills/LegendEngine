@@ -13,6 +13,8 @@ namespace le
 
         [[nodiscard]] ShaderManager& GetShaderManager();
 
+        [[nodiscard]] Material& GetDefaultMaterial() const;
+
         DescriptorSetLayout& GetCameraLayout() const;
         DescriptorSetLayout& GetMaterialLayout() const;
         DescriptorSetLayout& GetSceneLayout() const;
@@ -25,6 +27,8 @@ namespace le
         GraphicsContext& m_context;
 
         ShaderManager m_shaderManager;
+
+        Ref<Material> m_defaultMaterial;
 
         Scope<DescriptorSetLayout> m_cameraLayout = nullptr;
         Scope<DescriptorSetLayout> m_sceneLayout = nullptr;

@@ -1,10 +1,35 @@
 #include <ranges>
 #include <LE/Application.hpp>
-#include <LE/World/Scene.hpp>
+#include <LE/Graphics/GraphicsContext.hpp>
 #include <LE/World/Entity.hpp>
+#include <LE/World/Scene.hpp>
 
 namespace le
 {
+    Scene::Scene()
+        :
+        Scene(Application::Get().GetGraphicsContext())
+    {}
+
+    Scene::Scene(GraphicsContext& context)
+    {
+#ifndef LE_HEADLESS
+        m_buffer = context.CreatePerFrameBuffer(Buffer::Usage::UNIFORM_BUFFER,
+            sizeof(Uniforms));
+
+        DynamicUniforms::DescriptorInfo infos[] =
+        {
+            {
+                DescriptorType::UNIFORM_BUFFER,
+                DynamicUniforms::UpdateFrequency::PER_FRAME,
+                1
+            },
+        };
+
+        m_uniforms = context.CreateDynamicUniforms(std::span(infos));
+#endif
+    }
+
     Entity Scene::CreateEntity()
     {
         const Entity obj(*this);
@@ -63,5 +88,13 @@ namespace le
     void Scene::ClearCachedArchetypeLookups()
     {
         m_findArchetypeResults.clear();
+    }
+
+    void Scene::UpdateUniforms() const
+    {
+        constexpr Uniforms uniforms;
+        m_buffer->Update(sizeof(Uniforms), &uniforms);
+
+        m_uniforms->UpdateBuffer(*m_buffer, 0);
     }
 }

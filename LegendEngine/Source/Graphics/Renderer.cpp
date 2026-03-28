@@ -13,7 +13,8 @@ namespace le
 {
     Renderer::Renderer(RenderTarget& renderTarget)
         :
-        m_RenderTarget(renderTarget)
+        m_RenderTarget(renderTarget),
+        m_defaultMaterial(Application::Get().GetGraphicsResources().GetDefaultMaterial())
     {}
 
     Renderer::~Renderer() = default;
@@ -49,6 +50,7 @@ namespace le
         }
 
         UpdateCamera(*sceneWithCamera, cameraID);
+        UseMaterial(m_defaultMaterial);
 
         for (Scene* pScene : scenes)
             if (pScene)

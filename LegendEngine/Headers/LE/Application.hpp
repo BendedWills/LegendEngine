@@ -19,7 +19,7 @@ namespace le
     {
     public:
         static constexpr size_t FRAMES_IN_FLIGHT = 2;
-        
+
 #ifndef LE_HEADLESS
         // Creates the Application with a WindowRenderTarget
         Application(
