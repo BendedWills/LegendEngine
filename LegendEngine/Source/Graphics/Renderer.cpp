@@ -2,6 +2,7 @@
 #include <LE/Graphics/Renderer.hpp>
 
 #include <LE/Components/ActiveCamera.hpp>
+#include <LE/Components/Camera.hpp>
 #include <LE/Components/Mesh.hpp>
 #include <LE/Components/Transform.hpp>
 #include <LE/Graphics/RenderTarget.hpp>
@@ -15,7 +16,23 @@ namespace le
         :
         m_RenderTarget(renderTarget),
         m_defaultMaterial(Application::Get().GetGraphicsResources().GetDefaultMaterial())
-    {}
+    {
+        GraphicsContext& context = Application::Get().GetGraphicsContext();
+
+        m_cameraUniformBuffer = context.CreatePerFrameBuffer(Buffer::Usage::UNIFORM_BUFFER,
+            sizeof(Camera::CameraUniforms));
+
+        DynamicUniforms::DescriptorInfo infos[] =
+        {
+            {
+                DescriptorType::UNIFORM_BUFFER,
+                DynamicUniforms::UpdateFrequency::PER_FRAME,
+                1
+            },
+        };
+
+        m_cameraUniforms = context.CreateDynamicUniforms(std::span(infos));
+    }
 
     Renderer::~Renderer() = default;
 
@@ -98,27 +115,32 @@ namespace le
         return m_RenderTarget;
     }
 
-    void Renderer::UpdateCamera(Scene& scene, const UID cameraID)
+    void Renderer::UpdateCamera(Scene& scene, const UID cameraID) const
     {
-        bool updated = false;
-
         scene.QueryEntityComponents<Camera, Transform>(cameraID, [&](Camera& camera, Transform& transform)
         {
             if (camera.IsCameraDirty())
             {
                 camera.CalculateProjectionMatrix();
-                updated = true;
             }
 
             if (transform.dirty)
             {
                 camera.CalculateViewMatrix(transform);
                 transform.dirty = true;
-                updated = true;
             }
         });
 
-        if (updated)
-            UpdateCameraUniforms(scene.GetComponentData<Camera>(cameraID));
+        UpdateCameraUniforms(scene.GetComponentData<Camera>(cameraID));
+    }
+
+    void Renderer::UpdateCameraUniforms(const Camera& camera) const
+    {
+        Camera::CameraUniforms uniforms;
+        uniforms.projection = camera.GetProjectionMatrix();
+        uniforms.view = camera.GetViewMatrix();
+
+        m_cameraUniformBuffer->Update(sizeof(uniforms), &uniforms);
+        m_cameraUniforms->UpdateBuffer(*m_cameraUniformBuffer, 0);
     }
 }

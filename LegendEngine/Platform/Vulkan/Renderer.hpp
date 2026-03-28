@@ -50,8 +50,6 @@ namespace le::vk
         void EndCommandBuffer() const;
         void EndFrame() override;
 
-        void UpdateCameraUniforms(const Camera& camera) override;
-
         void CreateSwapchain(const TetherVulkan::SwapchainDetails& details);
         void CreateUniforms();
         void CreateDepthImages();

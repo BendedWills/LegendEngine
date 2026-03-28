@@ -33,13 +33,15 @@ namespace le
         virtual void DrawMesh(const Mesh& mesh, const Transform& transform) = 0;
         virtual void EndFrame() = 0;
 
-        virtual void UpdateCameraUniforms(const Camera& camera) = 0;
-
         RenderTarget& m_RenderTarget;
         Vector4f m_ClearColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+
+        Scope<Buffer> m_cameraUniformBuffer;
+        Scope<DynamicUniforms> m_cameraUniforms;
     private:
         void RenderScene(Scene& scene);
-        void UpdateCamera(Scene& scene, UID cameraID);
+        void UpdateCamera(Scene& scene, UID cameraID) const;
+        void UpdateCameraUniforms(const Camera& camera) const;
 
         Material& m_defaultMaterial;
     };

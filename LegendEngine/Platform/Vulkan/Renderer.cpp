@@ -365,19 +365,6 @@ namespace le::vk
         m_GraphicsQueueMutex.unlock();
     }
 
-    void Renderer::UpdateCameraUniforms(const Camera& camera)
-    {
-        Camera::CameraUniforms uniforms;
-        uniforms.projection = camera.GetProjectionMatrix();
-        uniforms.view = camera.GetViewMatrix();
-
-        for (uint32_t i = 0; i < m_TetherCtx.GetFramesInFlight(); i++)
-        {
-            void* data = m_CameraUniforms->GetMappedData(i);
-            *static_cast<Camera::CameraUniforms*>(data) = uniforms;
-        }
-    }
-
     void Renderer::CreateSwapchain(const TetherVulkan::SwapchainDetails& details)
     {
         m_Swapchain.emplace(m_TetherCtx, details, m_SurfaceFormat,
