@@ -35,9 +35,4 @@ namespace le
         LE_ASSERT(false, "Unknown graphics API");
         return nullptr;
     }
-
-    const ShaderManager& GraphicsContext::GetShaderManager() const
-    {
-        return m_shaderManager;
-    }
 }

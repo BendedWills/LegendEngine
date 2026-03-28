@@ -49,6 +49,9 @@ namespace le
         m_RenderTarget(CreateRenderTarget(width, height, applicationName)),
         m_Renderer(CreateRenderer())
     {
+        m_GraphicsResources.emplace();
+        m_GraphicsContext.RegisterShaders(m_GraphicsResources->GetShaderManager());
+
         LE_INFO("Application created");
     }
 
@@ -154,6 +157,11 @@ namespace le
     GraphicsContext& Application::GetGraphicsContext() const
     {
         return m_GraphicsContext;
+    }
+
+    GraphicsResources& Application::GetGraphicsResources()
+    {
+        return *m_GraphicsResources;
     }
 
     EventBus& Application::GetEventBus()

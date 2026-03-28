@@ -6,6 +6,7 @@
 #include <LE/Common/Defs.hpp>
 #include <LE/Events/EventBus.hpp>
 #include <LE/Graphics/GraphicsContext.hpp>
+#include <LE/Graphics/GraphicsResources.hpp>
 #include <LE/Graphics/Renderer.hpp>
 #include <LE/IO/Logger.hpp>
 #include <LE/Resources/ResourceManager.hpp>
@@ -50,6 +51,7 @@ namespace le
         void ClearActiveScene();
 
         GraphicsContext& GetGraphicsContext() const;
+        GraphicsResources& GetGraphicsResources();
         RenderTarget& GetRenderTarget() const;
         EventBus& GetEventBus();
         ResourceManager& GetResourceManager();
@@ -112,6 +114,8 @@ namespace le
         RenderTarget& m_RenderTarget;
         Renderer& m_Renderer;
 #endif
+
+        std::optional<GraphicsResources> m_GraphicsResources;
 
         Scene m_GlobalScene;
         Scene* m_pActiveScene = nullptr;

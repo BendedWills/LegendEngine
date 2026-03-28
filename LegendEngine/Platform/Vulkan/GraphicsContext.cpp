@@ -70,9 +70,7 @@ namespace le::vk
         if (const TetherVulkan::DeviceLoader& loader = m_GraphicsContext.GetDeviceLoader();
             !loader.vkCmdBeginRenderingKHR || !loader.vkCmdEndRenderingKHR)
             throw std::runtime_error("Couldn't load dynamic rendering funcs");
-
-        RegisterShaders();
-
+        
         // This order matters, because the sets get added to m_SetLayouts when
         // they are created, and Vulkan cares about the order in vkCmdBindDescriptorSets
         CreateCameraDescriptorSetLayout();
@@ -476,11 +474,11 @@ namespace le::vk
     STAGES(solid);
     STAGES(textured);
 
-    void GraphicsContext::RegisterShaders()
+    void GraphicsContext::RegisterShaders(ShaderManager& shaderManager)
     {
         ResourceManager& manager = Application::Get().GetResourceManager();
 
-        m_shaderManager.RegisterShader("solid", manager.CreateResource<Shader>(std::span(STAGES_solid))->id);
-        m_shaderManager.RegisterShader("textured", manager.CreateResource<Shader>(std::span(STAGES_textured))->id);
+        shaderManager.RegisterShader("solid", manager.CreateResource<Shader>(std::span(STAGES_solid))->id);
+        shaderManager.RegisterShader("textured", manager.CreateResource<Shader>(std::span(STAGES_textured))->id);
     }
 }

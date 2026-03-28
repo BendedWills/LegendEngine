@@ -46,11 +46,9 @@ namespace le
         virtual Scope<Image> CreateImage(const Image::Info& info) = 0;
         virtual Scope<Sampler> CreateSampler(const Sampler::Info& info) = 0;
 
-        [[nodiscard]] const ShaderManager& GetShaderManager() const;
+        virtual void RegisterShaders(ShaderManager& shaderManager) = 0;
 
         static Scope<GraphicsContext> Create(GraphicsAPI api,
             std::string_view applicationName);
-    protected:
-        ShaderManager m_shaderManager;
     };
 }

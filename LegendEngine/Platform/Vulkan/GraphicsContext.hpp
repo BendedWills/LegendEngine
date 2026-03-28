@@ -53,7 +53,7 @@ namespace le::vk
         void CreateCameraDescriptorSetLayout();
         void CreateSceneDescriptorSetLayout();
         void CreateMaterialDescriptorSetLayout();
-        void RegisterShaders();
+        void RegisterShaders(ShaderManager& shaderManager) override;
         void CreateUniforms();
         void CreateTransferQueue();
 
